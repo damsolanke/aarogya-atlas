@@ -264,7 +264,9 @@ async def databricks_vector_search(query: str, k: int = 5) -> dict[str, Any]:
             },
             json={
                 "query_text": query,
-                "columns": ["facility_id", "name", "address_state", "address_city", "facility_type"],
+                # Index only stores facility_id, name, score (Free Edition managed embeddings).
+                # Other facility metadata is joined back via Postgres in subsequent calls.
+                "columns": ["facility_id", "name"],
                 "num_results": k,
             },
         )
