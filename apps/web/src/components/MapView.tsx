@@ -332,6 +332,7 @@ export default function MapView({
     });
 
     mapRef.current = map;
+    (window as unknown as { __aaMap?: maplibregl.Map }).__aaMap = map;
 
     return () => {
       rankedMarkersRef.current.forEach((m) => m.remove());
