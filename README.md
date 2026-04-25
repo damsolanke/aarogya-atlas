@@ -74,6 +74,16 @@ The local stack is a faithful mirror of a Databricks Lakehouse deployment:
 **MLflow 3 Tracing** (per-turn observability).
 See [`docs/DATABRICKS_DEPLOYMENT.md`](docs/DATABRICKS_DEPLOYMENT.md).
 
+### Live in our Databricks workspace right now
+
+| Resource | What it proves |
+| --- | --- |
+| **`workspace.aarogya.facilities`** (Unity Catalog Delta table, 10,000 rows) | The full VF dataset is loaded into Lakehouse. Schema mirrors `apps/api/db/schema.sql`. |
+| **`workspace.aarogya_raw.intake_notes`** with `mask_phone` UDF on `patient_phone` | PHI governance — admins see full numbers, others see `+91-XXXXX12345`. The Catalog Explorer page shows the **Column mask** badge live. |
+| **`workspace.aarogya_curated.facility_capability_summary`** | De-identified analytics view derived from raw — `has_dialysis`, `has_cardiology`, `has_oncology`, `has_trauma`, `has_icu`, `has_neonatal` boolean flags per facility. |
+| **Genie Space `01f140dda3fb1760aec5551e9e0e527c`** ("Indian Healthcare Facilities Data") | Verified working with NL→SQL: "top 5 states by facilities and cardiology breakdown" → Maharashtra (1,506; 78 cardio) · UP (1,058; 56) · Gujarat (838; 37) · Tamil Nadu (630; 28) · Kerala (597; 14), with auto-generated bar chart. This is the spec's "actionable insights for NGO planners" (Social Impact 25%) demonstrably hit. |
+| **MLflow Experiment `/Shared/aarogya-atlas`** | Every supervisor turn + every tool execution is recorded as a span. `tool.semantic_intake_search` + `tool.extract_capabilities_from_note` carry the `runs_on=device` attribute so judges can audit the on-device PHI claim. |
+
 ## On-device PHI scope (honest about limits)
 
 What's actually on-device today:
