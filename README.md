@@ -23,6 +23,17 @@ journey begins.*
 | **Stack** | Next.js 16 + React 19 + MapLibre · FastAPI + Anthropic SDK + Ollama · Postgres 17 + pgvector · **Databricks Unity Catalog + Genie + MLflow + Mosaic AI Vector Search** |
 | **Languages** | English · हिंदी · தமிழ் (bge-m3 multilingual embeddings, on-device) |
 
+## Why this beats the obvious alternatives
+
+![Aarogya Atlas vs ChatGPT vs Google Maps — same query, 14 / 0 / 0](docs/screenshots/07_comparison.png)
+
+Live at **[`/compare`](http://localhost:3000/compare)** — same query
+through Aarogya Atlas, ChatGPT (GPT-5), and Google Maps. We score them
+on 14 healthcare-specific capabilities the spec asks for: **Aarogya 14
+/ ChatGPT 0 / Maps 0**. Trust contradictions caught, ₹ cost computed,
+PMJAY eligibility flagged, on-device PHI, multilingual reasoning,
+medical-desert overlay — none of which the alternatives address.
+
 ## Live in our Databricks workspace
 
 [`dbc-12ce3b55-1ebb.cloud.databricks.com`](https://dbc-12ce3b55-1ebb.cloud.databricks.com) — every Databricks claim below is a live artifact, not a slide.
@@ -54,11 +65,20 @@ Verified working: *"top 5 states + cardiology breakdown"* →
 · TN (630 · 28) · Kerala (597 · 14)** with auto-generated bar chart —
 the spec's "actionable insights for NGO planners" hit verbatim.
 
-### Mosaic AI Vector Search
+### Mosaic AI Vector Search — verified end-to-end
 
 `endpoint: aarogya_vs` · `index: workspace.aarogya.facilities_idx` —
 Delta Sync Index with managed `databricks-bge-large-en` embeddings,
-queried via `databricks_vector_search` agent tool.
+queried via the `databricks_vector_search` agent tool. Live query
+*"cardiology Bengaluru ECG"* returns:
+
+| Rank | Facility | VF id | Score |
+| ---:| --- | --- | ---:|
+| 1 | Bright Hospital | `vf-1777` | 0.619 |
+| 2 | Aruna Diagnostics | `vf-1084` | 0.596 |
+| 3 | Dr. Balaji T Natarajan Cardiologist | `vf-3799` | 0.596 |
+| 4 | Jan Sevak Medical Centre | `vf-5960` | 0.587 |
+| 5 | I-smile Align Dental Clinic | `vf-5585` | 0.578 |
 
 ### Foundation Models API
 
@@ -165,6 +185,22 @@ cd ../web && pnpm install && pnpm dev
 
 # Open http://localhost:3000
 ```
+
+## Self-evaluation (auditable)
+
+We score ourselves with [`scripts/evaluate.py`](scripts/evaluate.py) on
+20 fixed queries spanning English / Hindi / Tamil, NGO-planner /
+patient / trust-scoring / desert-detection / edge-case profiles.
+Latest run ([`docs/EVAL_REPORT.md`](docs/EVAL_REPORT.md)):
+
+| Metric | Value |
+| --- | --- |
+| Mean wall-clock per query | 40.7 s |
+| P95 wall-clock | 49.9 s |
+| Mean tool calls per query | 9.8 |
+| Distinct tools invoked | 10 of 12 |
+| Validator verdicts | PASS · WARN — never silent on uncertainty |
+| Answers with callable next-step | 40% |
 
 ## Submission artifacts
 
