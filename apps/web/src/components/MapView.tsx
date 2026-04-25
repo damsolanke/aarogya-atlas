@@ -40,6 +40,7 @@ const LAYER_UNCLUSTERED = "facilities-unclustered";
 const LAYER_ROUTE = "route-line";
 const LAYER_BUILDINGS = "ofm-3d-buildings";
 const LAYER_DESERT_HALO = "desert-halo";
+const LAYER_DESERT_PULSE = "desert-pulse";
 const LAYER_DESERT_DOT = "desert-dot";
 const LAYER_DESERT_LABEL = "desert-label";
 
@@ -220,12 +221,24 @@ export default function MapView({
         type: "circle",
         source: SRC_DESERTS,
         paint: {
-          "circle-radius": 4,
+          "circle-radius": 5,
           "circle-color": "#ef4444",
-          "circle-stroke-width": 1.5,
-          "circle-stroke-color": "rgba(255,255,255,0.7)",
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "rgba(254, 202, 202, 0.85)",
         },
       });
+      // Pulse layer underneath desert dots — animated via setInterval below.
+      map.addLayer({
+        id: LAYER_DESERT_PULSE,
+        type: "circle",
+        source: SRC_DESERTS,
+        paint: {
+          "circle-radius": 5,
+          "circle-color": "rgba(239, 68, 68, 0.5)",
+          "circle-blur": 0.6,
+          "circle-opacity": 0.6,
+        },
+      }, LAYER_DESERT_DOT);
       map.addLayer({
         id: LAYER_DESERT_LABEL,
         type: "symbol",
@@ -334,7 +347,20 @@ export default function MapView({
     mapRef.current = map;
     (window as unknown as { __aaMap?: maplibregl.Map }).__aaMap = map;
 
+    // Pulse animation loop — radius oscillates between 5 and 26
+    let pulseFrame = 0;
+    const pulseInterval = window.setInterval(() => {
+      if (!map.getLayer(LAYER_DESERT_PULSE)) return;
+      pulseFrame = (pulseFrame + 1) % 60;
+      const t = pulseFrame / 60;
+      const radius = 5 + Math.sin(t * Math.PI) * 22;
+      const opacity = 0.7 - Math.sin(t * Math.PI) * 0.55;
+      map.setPaintProperty(LAYER_DESERT_PULSE, "circle-radius", radius);
+      map.setPaintProperty(LAYER_DESERT_PULSE, "circle-opacity", Math.max(0, opacity));
+    }, 50);
+
     return () => {
+      window.clearInterval(pulseInterval);
       rankedMarkersRef.current.forEach((m) => m.remove());
       rankedMarkersRef.current.clear();
       map.remove();
