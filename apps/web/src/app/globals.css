@@ -1,26 +1,139 @@
 @import "tailwindcss";
+@import "maplibre-gl/dist/maplibre-gl.css";
 
+/* ----- Theme tokens ----- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
+
+  --bg:           #08090d;
+  --bg-elevated:  #0e1015;
+  --bg-card:      #11141b;
+  --border:       #1f2330;
+  --border-soft:  #181c25;
+
+  --fg:           #f4f5f7;
+  --fg-muted:     #a8acba;
+  --fg-dim:       #6b7080;
+
+  --accent:        #5eead4;   /* mint */
+  --accent-warm:   #fb923c;   /* amber */
+  --accent-cool:   #818cf8;   /* indigo */
+  --accent-cyan:   #22d3ee;   /* cyan, used for on-device markers */
+  --accent-purple: #a78bfa;   /* purple, used for cloud reasoning */
+
+  --pulse:         radial-gradient(ellipse at center,
+                    rgba(94, 234, 212, 0.18) 0%,
+                    rgba(94, 234, 212, 0) 60%);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-fg: var(--fg);
+  --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont,
+               "Segoe UI", system-ui, "Noto Sans Devanagari", "Noto Sans Tamil",
+               sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "JetBrains Mono",
+               SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--border);
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-image:
+    radial-gradient(circle at 12% -10%, rgba(94, 234, 212, 0.06) 0%, transparent 38%),
+    radial-gradient(circle at 92% 5%,   rgba(167, 139, 250, 0.05) 0%, transparent 42%),
+    radial-gradient(circle at 50% 110%, rgba(34, 211, 238, 0.04) 0%, transparent 50%);
+  background-attachment: fixed;
 }
+
+/* ----- Reusable primitives ----- */
+.glass {
+  background: linear-gradient(180deg,
+    rgba(17, 20, 27, 0.78) 0%,
+    rgba(11, 13, 18, 0.78) 100%);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid var(--border);
+}
+
+.subtle-grid {
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.tab-num {
+  font-variant-numeric: tabular-nums;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.scrollbar-thin::-webkit-scrollbar { width: 8px; height: 8px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 9999px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover { background: var(--fg-dim); }
+
+/* ----- Status indicators ----- */
+.dot-pulse {
+  position: relative;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--accent);
+}
+.dot-pulse::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  background: var(--accent);
+  opacity: 0.4;
+  animation: dot-pulse 1.6s ease-out infinite;
+}
+@keyframes dot-pulse {
+  0%   { transform: scale(1);   opacity: 0.45; }
+  80%  { transform: scale(2.4); opacity: 0;    }
+  100% { transform: scale(2.4); opacity: 0;    }
+}
+
+/* ----- Streaming text caret ----- */
+.caret::after {
+  content: "▋";
+  display: inline-block;
+  margin-left: 1px;
+  color: var(--accent);
+  animation: blink 1.1s step-end infinite;
+  vertical-align: baseline;
+}
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* ----- Map tweaks ----- */
+.maplibregl-canvas { outline: none !important; }
+.maplibregl-ctrl-attrib {
+  background: rgba(8, 9, 13, 0.7) !important;
+  color: var(--fg-dim) !important;
+  font-size: 10px !important;
+}
+.maplibregl-ctrl-attrib a { color: var(--fg-muted) !important; }
+.maplibregl-ctrl-bottom-left,
+.maplibregl-ctrl-bottom-right { z-index: 1; }
