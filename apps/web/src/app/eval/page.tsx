@@ -9,6 +9,7 @@ import {
   Languages,
   Phone,
 } from "lucide-react";
+import Footer from "@/components/Footer";
 
 // The numbers below mirror docs/EVAL_REPORT.md, last refreshed against
 // the parallel-tool-fan-out agent. Re-run `make eval` to update both.
@@ -236,6 +237,7 @@ export default function EvalPage() {
           </p>
         </section>
       </main>
+      <Footer />
     </div>
   );
 }

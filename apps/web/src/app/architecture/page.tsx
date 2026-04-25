@@ -19,6 +19,7 @@ import {
   Cpu,
   Sparkles,
 } from "lucide-react";
+import Footer from "@/components/Footer";
 
 type Tool = {
   name: string;
@@ -231,6 +232,7 @@ export default function ArchitecturePage() {
           />
         </div>
       </main>
+      <Footer />
     </div>
   );
 }
