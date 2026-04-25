@@ -127,6 +127,53 @@ body {
   50% { opacity: 0; }
 }
 
+/* ----- Final answer prose ----- */
+.prose-aarogya {
+  color: var(--fg);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.prose-aarogya h2 {
+  margin: 0.6rem 0 0.35rem;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+  letter-spacing: -0.01em;
+}
+.prose-aarogya h3 {
+  margin: 0.5rem 0 0.25rem;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fg-muted);
+}
+.prose-aarogya p { margin: 0 0 0.4rem; }
+.prose-aarogya ul, .prose-aarogya ol {
+  margin: 0.25rem 0 0.5rem;
+  padding-left: 1.1rem;
+}
+.prose-aarogya ul li { list-style: disc; margin-bottom: 0.15rem; }
+.prose-aarogya ol li { list-style: decimal; margin-bottom: 0.15rem; }
+.prose-aarogya strong { color: var(--fg); font-weight: 600; }
+.prose-aarogya em { color: var(--fg-muted); }
+.prose-aarogya code {
+  background: rgba(255,255,255,0.06);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  color: var(--accent-cyan);
+}
+.prose-aarogya blockquote {
+  border-left: 2px solid var(--accent-cyan);
+  padding-left: 0.6rem;
+  margin: 0.4rem 0;
+  color: var(--fg-muted);
+  font-style: italic;
+}
+.prose-aarogya a { color: var(--accent-cyan); text-decoration: underline; }
+.prose-aarogya hr { border-color: var(--border); margin: 0.8rem 0; }
+
 /* ----- Map tweaks ----- */
 .maplibregl-canvas { outline: none !important; }
 .maplibregl-ctrl-attrib {
