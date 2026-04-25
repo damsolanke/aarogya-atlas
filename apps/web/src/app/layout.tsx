@@ -15,9 +15,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Aarogya Atlas — On-device healthcare intelligence for India",
+  title: "Aarogya Atlas — Agentic healthcare intelligence for 1.4B people",
   description:
-    "Agentic, FHIR-native healthcare facility intelligence. Local LLM inference, zero PHI egress.",
+    "Trust-scored, cost-aware, multilingual recommender over the Virtue Foundation 10,000-facility India dataset. On-device PHI extraction, Mosaic AI Vector Search, MLflow tracing, district-level desert detection.",
+  openGraph: {
+    title: "Aarogya Atlas",
+    description:
+      "Agentic healthcare facility intelligence for 1.4B people. Trust-scored, cost-aware, multilingual.",
+    images: ["/og.png"],
+  },
 };
 
 export default function RootLayout({
