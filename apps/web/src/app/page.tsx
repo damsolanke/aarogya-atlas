@@ -29,12 +29,13 @@ const MapView = dynamic(() => import("@/components/MapView"), {
   ),
 });
 
-const KARNATAKA_CENTER: [number, number] = [12.9716, 77.5946];
+// All-India centroid — first impression is the country, not Karnataka.
+const INDIA_CENTER: [number, number] = [22.5937, 78.9629];
 
 export default function HomePage() {
   const [allFacilities, setAllFacilities] = useState<Facility[]>([]);
-  const [center, setCenter] = useState<[number, number]>(KARNATAKA_CENTER);
-  const [zoom, setZoom] = useState<number>(6.4);
+  const [center, setCenter] = useState<[number, number]>(INDIA_CENTER);
+  const [zoom, setZoom] = useState<number>(4.4);
   const [origin, setOrigin] = useState<[number, number] | undefined>();
   const [highlightRanks, setHighlightRanks] = useState<Map<string, number>>(new Map());
   const [desertSpecialty, setDesertSpecialty] = useState<string | null>(null);
@@ -163,10 +164,12 @@ export default function HomePage() {
             )}
             <div className="glass flex items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] text-zinc-400">
               <span className="inline-block h-2.5 w-2.5 rounded-full bg-cyan-400/40" />
-              All indexed facilities
-              <span className="ml-1 tab-num text-zinc-300">
+              <span className="tab-num text-zinc-300">10,000</span>
+              <span>facilities · agent searches all,</span>
+              <span className="tab-num text-zinc-300">
                 {allFacilities.length.toLocaleString()}
               </span>
+              <span>rendered for perf</span>
             </div>
           </div>
 
