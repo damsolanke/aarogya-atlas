@@ -74,7 +74,7 @@ export default function HomePage() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
-      <Header facilityCount={allFacilities.length || 8504} />
+      <Header facilityCount={allFacilities.length} loaded={allFacilities.length > 0} />
 
       <div className="flex flex-1 overflow-hidden">
         <aside className="flex w-[44%] min-w-[440px] max-w-[640px] flex-col border-r border-[var(--border)] bg-[var(--bg)]/50">

@@ -23,6 +23,7 @@ from anthropic.types import Message, ToolUseBlock
 
 from . import tools as T
 from . import trust as TR
+from .observability import maybe_span, mlflow_enabled
 from .settings import settings
 
 
@@ -336,10 +337,21 @@ async def _execute_tool(name: str, args: dict[str, Any]) -> Any:
     impl = TOOL_IMPLS.get(name)
     if impl is None:
         return {"error": f"unknown tool: {name}"}
-    try:
-        return await impl(**args)
-    except Exception as e:
-        return {"error": str(e), "tool": name}
+    is_local = name in LOCAL_TOOLS
+    with maybe_span(
+        f"tool.{name}",
+        span_type="TOOL",
+        inputs={"args": args},
+        attributes={"runs_on": "device" if is_local else "host", "tool_name": name},
+    ) as span:
+        try:
+            result = await impl(**args)
+            span.set_outputs({"result": result})
+            return result
+        except Exception as e:
+            err = {"error": str(e), "tool": name}
+            span.set_outputs(err)
+            return err
 
 
 def _summarise_thinking(msg: Message) -> str:
@@ -371,65 +383,89 @@ async def stream_answer(query: str, max_iterations: int = 8) -> AsyncIterator[di
     system = SYSTEM_PROMPT.format(now_iso=datetime.now().isoformat(timespec="seconds"))
     messages: list[dict[str, Any]] = [{"role": "user", "content": query}]
 
-    for _iter in range(max_iterations):
-        # Stream the supervisor turn so we never hit non-stream HTTP timeouts.
-        async with aclient.messages.stream(
-            model=s.supervisor_model,
-            max_tokens=8192,
-            system=system,
-            tools=TOOL_DEFS,
-            messages=messages,
-            thinking={"type": "adaptive", "display": "summarized"},
-            extra_body={"output_config": {"effort": "high"}},
-        ) as stream:
-            msg = await stream.get_final_message()
+    with maybe_span(
+        "agent.aarogya_atlas",
+        span_type="AGENT",
+        inputs={"query": query},
+        attributes={"model": s.supervisor_model, "max_iterations": max_iterations},
+    ) as agent_span:
+        for _iter in range(max_iterations):
+            # Stream the supervisor turn so we never hit non-stream HTTP timeouts.
+            with maybe_span(
+                f"supervisor.turn_{_iter}",
+                span_type="LLM",
+                inputs={"messages_len": len(messages)},
+                attributes={"iteration": _iter},
+            ) as turn_span:
+                async with aclient.messages.stream(
+                    model=s.supervisor_model,
+                    max_tokens=8192,
+                    system=system,
+                    tools=TOOL_DEFS,
+                    messages=messages,
+                    thinking={"type": "adaptive", "display": "summarized"},
+                    extra_body={"output_config": {"effort": "high"}},
+                ) as stream:
+                    msg = await stream.get_final_message()
+                turn_span.set_outputs({
+                    "stop_reason": msg.stop_reason,
+                    "usage": msg.usage.model_dump() if hasattr(msg.usage, "model_dump") else dict(msg.usage),
+                    "content_blocks": len(msg.content),
+                })
 
-        thinking_text = _summarise_thinking(msg)
-        if thinking_text:
+            thinking_text = _summarise_thinking(msg)
+            if thinking_text:
+                yield {"event": "step", "data": {
+                    "type": "thought",
+                    "content": thinking_text,
+                    "tool_calls": [],
+                }}
+
+            tool_calls = _tool_uses(msg)
+
+            # If no tool calls, this is the final answer.
+            if not tool_calls:
+                final_text = _final_text(msg)
+                agent_span.set_outputs({"final_text": final_text, "iterations": _iter + 1})
+                yield {"event": "final", "data": {"text": final_text}}
+                return
+
+            # Surface the tool requests in the trace.
             yield {"event": "step", "data": {
-                "type": "thought",
-                "content": thinking_text,
-                "tool_calls": [],
+                "type": "tool_request",
+                "content": _final_text(msg),  # any preamble text
+                "tool_calls": [
+                    {"name": tc.name, "args": tc.input} for tc in tool_calls
+                ],
             }}
 
-        tool_calls = _tool_uses(msg)
+            # Append the assistant turn (full content — preserve thinking signatures).
+            messages.append({"role": "assistant", "content": msg.content})
 
-        # If no tool calls, this is the final answer.
-        if not tool_calls:
-            yield {"event": "final", "data": {"text": _final_text(msg)}}
-            return
+            # Execute tools and emit results.
+            tool_results: list[dict[str, Any]] = []
+            for tc in tool_calls:
+                result = await _execute_tool(tc.name, dict(tc.input))
+                content = json.dumps(result, default=str)
+                tool_results.append({
+                    "type": "tool_result",
+                    "tool_use_id": tc.id,
+                    "content": content,
+                })
+                yield {"event": "step", "data": {
+                    "type": "tool_result",
+                    "tool": tc.name,
+                    "content": content,
+                }}
 
-        # Surface the tool requests in the trace.
-        yield {"event": "step", "data": {
-            "type": "tool_request",
-            "content": _final_text(msg),  # any preamble text
-            "tool_calls": [
-                {"name": tc.name, "args": tc.input} for tc in tool_calls
-            ],
+            messages.append({"role": "user", "content": tool_results})
+
+        # Iteration cap reached without a final.
+        agent_span.set_outputs({"final_text": None, "iterations": max_iterations, "hit_cap": True})
+        yield {"event": "error", "data": {
+            "kind": "iteration_cap",
+            "text": (
+                "Agent reached its tool-call iteration limit without producing a final "
+                "answer. Try a more specific query, or break the question into parts."
+            ),
         }}
-
-        # Append the assistant turn (full content — preserve thinking signatures).
-        messages.append({"role": "assistant", "content": msg.content})
-
-        # Execute tools and emit results.
-        tool_results: list[dict[str, Any]] = []
-        for tc in tool_calls:
-            result = await _execute_tool(tc.name, dict(tc.input))
-            content = json.dumps(result, default=str)
-            tool_results.append({
-                "type": "tool_result",
-                "tool_use_id": tc.id,
-                "content": content,
-            })
-            yield {"event": "step", "data": {
-                "type": "tool_result",
-                "tool": tc.name,
-                "content": content,
-            }}
-
-        messages.append({"role": "user", "content": tool_results})
-
-    # Iteration cap reached without a final.
-    yield {"event": "final", "data": {
-        "text": "(Agent reached its tool-call iteration limit without producing a final answer.)"
-    }}

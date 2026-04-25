@@ -11,7 +11,8 @@ export type TraceEvent =
 
 export type StreamEvent =
   | { event: "step"; data: TraceEvent }
-  | { event: "final"; data: { text: string } };
+  | { event: "final"; data: { text: string } }
+  | { event: "error"; data: { kind: string; text: string } };
 
 export async function* streamQuery(
   query: string,

@@ -87,6 +87,9 @@ export default function AgentChat({
           } else if (evt.event === "final") {
             setFinalText(evt.data.text);
             setStatus("done");
+          } else if (evt.event === "error") {
+            setError(evt.data.text);
+            setStatus("error");
           }
         }
         onResult({ centerLatLon: center, facilities: collectedFacilities });

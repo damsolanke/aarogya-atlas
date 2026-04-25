@@ -202,7 +202,14 @@ async def check_hours(location_id: str, when_iso: str | None = None) -> dict[str
         row = (await session.execute(text(sql), {"id": location_id})).first()
     if not row:
         return {"location_id": location_id, "open": "unknown", "reason": "not-found"}
-    hours_raw = row[0].get("raw") if row[0] else None
+    cell = row[0]
+    # JSONB column can come back as dict, str, or None.
+    if isinstance(cell, dict):
+        hours_raw = cell.get("raw") or cell.get("opening_hours") or json.dumps(cell)
+    elif isinstance(cell, str):
+        hours_raw = cell
+    else:
+        hours_raw = None
     return {"location_id": location_id, "open": _is_open_now(hours_raw, when), "raw": hours_raw}
 
 
@@ -237,6 +244,9 @@ async def status_feed(location_id: str, service: str) -> dict[str, Any]:
 
 async def semantic_intake_search(query: str, k: int = 5) -> list[dict[str, Any]]:
     [vec] = await embed([query])
+    # Format vector as Postgres array literal: '[0.1,0.2,...]'. pgvector
+    # accepts this string form directly via the explicit ::vector cast.
+    vec_literal = "[" + ",".join(f"{x:.6f}" for x in vec) + "]"
     sql = """
     SELECT n.id, n.location_id, l.name AS facility_name, n.text, n.language,
            1 - (n.embedding <=> CAST(:q AS vector)) AS similarity
@@ -247,7 +257,7 @@ async def semantic_intake_search(query: str, k: int = 5) -> list[dict[str, Any]]
     """
     async with SessionLocal() as session:
         rows = (await session.execute(
-            text(sql), {"q": str(vec), "k": k}
+            text(sql), {"q": vec_literal, "k": k}
         )).mappings().all()
     return [dict(r) for r in rows]
 
