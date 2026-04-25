@@ -71,8 +71,8 @@ export default function Header({
               </>
             ) : (
               <>
-                <span className="inline-block h-2 w-2 rounded-full bg-amber-400/80" />
-                <span>connecting to API…</span>
+                <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-amber-400/80" />
+                <span>connecting to backend (localhost:8000)…</span>
               </>
             )}
           </div>

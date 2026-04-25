@@ -28,7 +28,8 @@ export default function HomePage() {
   const [allFacilities, setAllFacilities] = useState<Facility[]>([]);
   const [center, setCenter] = useState<[number, number]>(KARNATAKA_CENTER);
   const [zoom, setZoom] = useState<number>(6.4);
-  const [highlight, setHighlight] = useState<Set<string>>(new Set());
+  const [origin, setOrigin] = useState<[number, number] | undefined>();
+  const [highlightRanks, setHighlightRanks] = useState<Map<string, number>>(new Map());
 
   useEffect(() => {
     // Load a stratified sample across India for the map dataviz; the agent
@@ -41,10 +42,13 @@ export default function HomePage() {
   const handleResult = useCallback((r: AgentResult) => {
     if (r.centerLatLon) {
       setCenter(r.centerLatLon);
-      setZoom(12.5);
+      setZoom(13);
     }
+    if (r.origin) setOrigin(r.origin);
     if (r.facilities && r.facilities.length > 0) {
-      setHighlight(new Set(r.facilities.map((f) => f.id)));
+      const ranks = new Map<string, number>();
+      r.facilities.forEach((f) => ranks.set(f.id, f.rank ?? 99));
+      setHighlightRanks(ranks);
       setAllFacilities((prev) => {
         const map = new Map(prev.map((f) => [f.id, f]));
         for (const f of r.facilities!) {
@@ -55,7 +59,7 @@ export default function HomePage() {
               latitude: f.lat,
               longitude: f.lon,
               address_district: null,
-              address_state: "Karnataka",
+              address_state: null,
               services: [],
             });
           }
@@ -70,7 +74,8 @@ export default function HomePage() {
     name: f.name,
     lat: f.latitude,
     lon: f.longitude,
-    highlight: highlight.has(f.id),
+    highlight: highlightRanks.has(f.id),
+    rank: highlightRanks.get(f.id),
     subtitle: f.services?.slice(0, 2).join(" · ") || undefined,
   }));
 
@@ -84,19 +89,27 @@ export default function HomePage() {
         </aside>
 
         <main className="relative flex-1 bg-[var(--bg-elevated)]">
-          <MapView pins={pins} center={center} zoom={zoom} />
+          <MapView pins={pins} center={center} zoom={zoom} origin={origin} />
 
           {/* Legend overlay */}
           <div className="pointer-events-none absolute bottom-4 left-4 flex flex-col gap-1.5">
             <div className="glass flex items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] text-zinc-300">
-              <span className="inline-block h-2.5 w-2.5 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.9)]" />
-              Selected by agent
+              <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-violet-500 text-[9px] font-bold text-zinc-900">
+                1
+              </span>
+              Agent picks (ranked)
               <span className="ml-1 tab-num text-cyan-300">
-                {highlight.size}
+                {highlightRanks.size}
               </span>
             </div>
+            {origin && (
+              <div className="glass flex items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] text-zinc-300">
+                <span className="inline-block h-2 w-6 rounded-full bg-cyan-400" />
+                OSRM route (driving)
+              </div>
+            )}
             <div className="glass flex items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] text-zinc-400">
-              <span className="inline-block h-2.5 w-2.5 rounded-full bg-zinc-500/70" />
+              <span className="inline-block h-2.5 w-2.5 rounded-full bg-cyan-400/40" />
               All indexed facilities
               <span className="ml-1 tab-num text-zinc-300">
                 {allFacilities.length.toLocaleString()}
