@@ -33,6 +33,10 @@ export default function AgentChat({
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Only auto-scroll once a conversation is active — otherwise the idle
+    // hero (with stat trio + etymology + sample card) is hidden below
+    // the fold on mobile because we'd jump to the bottom on mount.
+    if (status === "idle" && !finalText && trace.length === 0) return;
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [trace.length, finalText, status]);

@@ -54,9 +54,10 @@ function NavLink({
     <Link
       href={href}
       className="inline-flex items-center gap-1 rounded-md px-2 py-1 transition-colors hover:bg-zinc-900/60 hover:text-zinc-100"
+      title={typeof children === "string" ? children : undefined}
     >
-      <Icon className="h-3 w-3 opacity-70" />
-      {children}
+      <Icon className="h-3.5 w-3.5 opacity-80" />
+      <span className="hidden sm:inline">{children}</span>
     </Link>
   );
 }
@@ -89,22 +90,21 @@ export default function Header({
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Status badges */}
-          <div className="flex items-center gap-1.5">
+          {/* Status badges — hidden on mobile to keep header on one line */}
+          <div className="hidden items-center gap-1.5 lg:flex">
             <Pill icon={ShieldCheck} label="Zero PHI Egress" tone="mint" />
             <Pill icon={Database} label="FHIR R4" tone="cyan" />
             <Pill icon={Sparkles} label="Hack-Nation 2026" />
           </div>
 
-          {/* Visual divider */}
-          <div className="hidden h-5 w-px bg-zinc-800 md:block" />
+          <div className="hidden h-5 w-px bg-zinc-800 lg:block" />
 
-          {/* Nav links */}
+          {/* Nav links — collapse to icon-only on small screens */}
           <nav className="flex items-center gap-0.5 text-[11.5px] font-medium text-zinc-400">
             <NavLink href="/" icon={Activity}>Atlas</NavLink>
             <NavLink href="/compare" icon={GitCompare}>vs ChatGPT</NavLink>
             <NavLink href="/equity" icon={ShieldAlert}>Equity</NavLink>
-            <NavLink href="/architecture" icon={Network}>Architecture</NavLink>
+            <NavLink href="/architecture" icon={Network}>Arch</NavLink>
             <NavLink href="/eval" icon={CheckCircle2}>Eval</NavLink>
           </nav>
 
