@@ -1,0 +1,61 @@
+# Node
+node_modules/
+.pnp
+.pnp.js
+.next/
+out/
+build/
+dist/
+.turbo/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Env / secrets
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/
+*.swp
+
+# Vercel
+.vercel
+
+# Data (large files, never commit)
+data/raw/
+data/processed/
+data/*.csv
+data/*.parquet
+data/*.json
+data/*.geojson
+!data/sample/
+!data/.gitkeep
+
+# Logs
+*.log
+logs/
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Build artifacts
+*.zip
+submission.zip
