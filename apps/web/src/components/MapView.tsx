@@ -89,7 +89,10 @@ export default function MapView({
     if (!map) return;
 
     const apply = () => {
-      const visible = pins.slice(0, 400);
+      // Always render every highlighted pin; cap regulars to keep DOM light.
+      const highlighted = pins.filter((p) => p.highlight);
+      const regular = pins.filter((p) => !p.highlight).slice(0, 400);
+      const visible = [...highlighted, ...regular];
       const seen = new Set<string>();
 
       for (const p of visible) {
