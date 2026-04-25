@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 
 export type MapPin = {
@@ -42,6 +42,7 @@ export default function MapView({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const rankedMarkersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
+  const [mapReady, setMapReady] = useState(false);
 
   // ---- Mount once ----
   useEffect(() => {
@@ -71,6 +72,7 @@ export default function MapView({
     );
 
     map.on("load", () => {
+      setMapReady(true);
       // ---- Facilities GeoJSON source (clustered) ----
       map.addSource(SRC_FACILITIES, {
         type: "geojson",
@@ -244,27 +246,21 @@ export default function MapView({
     };
   }, []);
 
-  // ---- Update facilities source whenever pins change ----
+  // ---- Update facilities source whenever pins change (gated on mapReady) ----
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
-    const apply = () => {
-      const src = map.getSource(SRC_FACILITIES) as maplibregl.GeoJSONSource | undefined;
-      if (!src) return;
-      const features: GeoJSON.Feature<GeoJSON.Point>[] = pins.map((p) => ({
+    if (!map || !mapReady) return;
+    const src = map.getSource(SRC_FACILITIES) as maplibregl.GeoJSONSource | undefined;
+    if (!src) return;
+    const features: GeoJSON.Feature<GeoJSON.Point>[] = pins
+      .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lon))
+      .map((p) => ({
         type: "Feature",
         geometry: { type: "Point", coordinates: [p.lon, p.lat] },
-        properties: {
-          id: p.id,
-          name: p.name,
-          subtitle: p.subtitle || "",
-        },
+        properties: { id: p.id, name: p.name, subtitle: p.subtitle || "" },
       }));
-      src.setData({ type: "FeatureCollection", features });
-    };
-    if (map.isStyleLoaded()) apply();
-    else map.once("load", apply);
-  }, [pins]);
+    src.setData({ type: "FeatureCollection", features });
+  }, [pins, mapReady]);
 
   // ---- Update ranked DOM markers (numbered) for agent-picked facilities ----
   useEffect(() => {
@@ -272,7 +268,9 @@ export default function MapView({
     if (!map) return;
 
     const apply = () => {
-      const ranked = pins.filter((p) => p.highlight);
+      const ranked = pins.filter((p) => p.highlight && Number.isFinite(p.lat) && Number.isFinite(p.lon));
+      // Debug aid: stash count for inspection
+      (window as unknown as { __aaRanked?: number }).__aaRanked = ranked.length;
       const seen = new Set<string>();
 
       ranked.forEach((p, i) => {
@@ -312,15 +310,35 @@ export default function MapView({
       }
     };
 
-    if (map.isStyleLoaded()) apply();
-    else map.once("load", apply);
-  }, [pins]);
+    apply();
+  }, [pins, mapReady]);
 
-  // ---- Cinematic flyTo when center / zoom changes ----
+  // ---- Cinematic camera: fitBounds over highlights if many, else flyTo ----
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    const fly = () => {
+    const ranked = pins.filter(
+      (p) => p.highlight && Number.isFinite(p.lat) && Number.isFinite(p.lon)
+    );
+    const move = () => {
+      if (ranked.length >= 2) {
+        const bounds = ranked.reduce(
+          (b, p) => b.extend([p.lon, p.lat] as [number, number]),
+          new maplibregl.LngLatBounds(
+            [ranked[0].lon, ranked[0].lat],
+            [ranked[0].lon, ranked[0].lat]
+          )
+        );
+        map.fitBounds(bounds, {
+          padding: 80,
+          maxZoom: 14,
+          pitch: 50,
+          bearing: -17,
+          duration: 1800,
+          essential: true,
+        });
+        return;
+      }
       const targetZoom = zoom > 9 ? Math.max(zoom, 12) : zoom;
       map.flyTo({
         center: [center[1], center[0]],
@@ -334,9 +352,8 @@ export default function MapView({
         essential: true,
       });
     };
-    if (map.isStyleLoaded()) fly();
-    else map.once("load", fly);
-  }, [center, zoom]);
+    if (mapReady) move();
+  }, [center, zoom, pins, mapReady]);
 
   // ---- Draw OSRM route from `origin` to top-ranked facility (rank=1) ----
   useEffect(() => {
@@ -380,9 +397,8 @@ export default function MapView({
         /* OSRM rate-limited or down — silently skip */
       }
     };
-    if (map.isStyleLoaded()) drawRoute();
-    else map.once("load", drawRoute);
-  }, [origin, pins]);
+    if (mapReady) drawRoute();
+  }, [origin, pins, mapReady]);
 
   return (
     <div className="relative h-full w-full bg-[#08090d]">
