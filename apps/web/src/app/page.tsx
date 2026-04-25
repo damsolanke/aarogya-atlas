@@ -135,12 +135,12 @@ export default function HomePage() {
     <div className="flex h-screen flex-col overflow-hidden">
       <Header facilityCount={allFacilities.length} loaded={allFacilities.length > 0} />
 
-      <div className="flex flex-1 overflow-hidden">
-        <aside className="flex w-[44%] min-w-[440px] max-w-[640px] flex-col border-r border-[var(--border)] bg-[var(--bg)]/50">
+      <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
+        <aside className="flex max-h-[60vh] w-full flex-col border-b border-[var(--border)] bg-[var(--bg)]/50 md:max-h-none md:w-[44%] md:min-w-[440px] md:max-w-[640px] md:border-b-0 md:border-r">
           <AgentChat onResult={handleResult} />
         </aside>
 
-        <main className="relative flex-1 bg-[var(--bg-elevated)]">
+        <main className="relative min-h-[40vh] flex-1 bg-[var(--bg-elevated)] md:min-h-0">
           <MapView
             pins={pins}
             center={center}
