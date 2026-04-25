@@ -6,9 +6,27 @@ Submitted to **Hack-Nation 2026 · Challenge 3 (Databricks): *Building Agentic
 Healthcare Maps for 1.4 Billion Lives***.
 
 **Live in Databricks** (workspace `dbc-12ce3b55`):
-- Unity Catalog: `workspace.aarogya.facilities` (10k rows) · `workspace.aarogya_raw` (PHI-masked) · `workspace.aarogya_curated` (NGO analytics view)
-- **Genie Space** `01f140dda3fb1760aec5551e9e0e527c` — NL→SQL over the facilities table
-- **MLflow experiment** `/Shared/aarogya-atlas` — every supervisor turn + tool call traced as a span (runs_on=device|host attribute)
+- **Unity Catalog**: `workspace.aarogya.facilities` (10k rows) · `workspace.aarogya_raw.intake_notes` (PHI-masked column on `patient_phone`) · `workspace.aarogya_curated.facility_capability_summary` (NGO analytics view)
+- **Genie Space** `01f140dda3fb1760aec5551e9e0e527c` — verified NL→SQL: "top 5 states + cardiology breakdown" → Maharashtra (1506) · UP (1058) · Gujarat (838) with auto bar chart
+- **MLflow experiment** `/Shared/aarogya-atlas` — every supervisor turn + tool call as a nested span (`runs_on=device|host` attribute)
+- **Mosaic AI Vector Search** endpoint `aarogya_vs` + Delta Sync Index `workspace.aarogya.facilities_idx` with managed `databricks-bge-large-en` embeddings (queried via `/api/2.0/vector-search/indexes/.../query`)
+- **Foundation Models API**: 20+ pre-provisioned endpoints (`databricks-bge-large-en`, `databricks-gte-large-en`, GPT-5.x, Llama 4, Qwen 3) — embedding model used by the Vector Search index above
+
+**Spec stretches and research areas — coverage**:
+
+| Spec | Status | Where |
+|---|---|---|
+| Agentic Traceability (row + step citations) | ✅ | `trust_score` returns evidence snippet per flag · MLflow span tree per turn |
+| Self-Correction Loop (Validator Agent) | ✅ | `validate_recommendation` returns PASS/WARN/FAIL with source-text snippet |
+| Dynamic Crisis Mapping (deserts by district) | ✅ | `/api/deserts?specialty=dialysis` + red severity halos on map |
+| Confidence Scoring / prediction intervals | ✅ | `trust_score` returns `trust_score_ci_80=[low,high]` based on source completeness + flag-severity bootstrap |
+| Mosaic AI Vector Search | ✅ | Endpoint + Delta Sync Index live in workspace |
+| MLflow 3 observability | ✅ | Experiment `/Shared/aarogya-atlas` |
+| Genie | ✅ | Genie Space over the facilities table |
+| Unity Catalog | ✅ | 3 schemas (`aarogya`, `aarogya_raw`, `aarogya_curated`) + column mask UDF |
+| VF Pydantic schema | ✅ | Mirrored in `apps/api/aarogya_api/vf_schema/` |
+| Multi-attribute reasoning | ✅ | 12 tools coordinated by Claude Opus 4.7 supervisor |
+| Trust Scorer (spec example: surgery without anesthesia) | ✅ | `trust_score` rule `advanced_surgery_no_anesthesia` — verbatim spec example |
 
 > *In rural India, a postal code can determine a lifespan. We turn the 10,000-record
 > Virtue Foundation dataset of Indian medical facilities into a living intelligence
