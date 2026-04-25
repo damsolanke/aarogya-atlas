@@ -40,11 +40,25 @@ export default function HomePage() {
   }, []);
 
   const handleResult = useCallback((r: AgentResult) => {
-    if (r.centerLatLon) {
-      setCenter(r.centerLatLon);
+    if (r.origin) setOrigin(r.origin);
+
+    // Center: prefer agent-provided geocoded center, else centroid of picks.
+    let nextCenter = r.centerLatLon;
+    if (!nextCenter && r.facilities && r.facilities.length > 0) {
+      const valid = r.facilities.filter(
+        (f) => Number.isFinite(f.lat) && Number.isFinite(f.lon)
+      );
+      if (valid.length > 0) {
+        const lat = valid.reduce((s, f) => s + f.lat, 0) / valid.length;
+        const lon = valid.reduce((s, f) => s + f.lon, 0) / valid.length;
+        nextCenter = [lat, lon];
+      }
+    }
+    if (nextCenter) {
+      setCenter(nextCenter);
       setZoom(13);
     }
-    if (r.origin) setOrigin(r.origin);
+
     if (r.facilities && r.facilities.length > 0) {
       const ranks = new Map<string, number>();
       r.facilities.forEach((f) => ranks.set(f.id, f.rank ?? 99));
@@ -52,7 +66,7 @@ export default function HomePage() {
       setAllFacilities((prev) => {
         const map = new Map(prev.map((f) => [f.id, f]));
         for (const f of r.facilities!) {
-          if (!map.has(f.id)) {
+          if (!map.has(f.id) && Number.isFinite(f.lat) && Number.isFinite(f.lon)) {
             map.set(f.id, {
               id: f.id,
               name: f.name,
