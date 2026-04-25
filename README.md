@@ -146,17 +146,19 @@ description.
 ## Self-evaluation (auditable)
 
 We grade ourselves on 20 fixed queries via
-[`scripts/evaluate.py`](scripts/evaluate.py). Latest run
-([`docs/EVAL_REPORT.md`](docs/EVAL_REPORT.md)):
+[`scripts/evaluate.py`](scripts/evaluate.py) — English / Hindi / Tamil,
+NGO-planner / patient / trust-scoring / desert-detection / edge-case
+profiles. Latest run ([`docs/EVAL_REPORT.md`](docs/EVAL_REPORT.md)):
 
 | Metric | Value |
 | --- | --- |
-| Mean wall-clock | **40.7 s** |
-| P95 wall-clock | 49.9 s |
-| Mean tool calls / query | 9.8 |
-| Distinct tools invoked | 10 of 12 |
-| Validator verdicts | PASS · WARN — never silent on uncertainty |
-| Answers with callable next-step | 40% |
+| Mean wall-clock | **31.7 s**  *(22% faster after parallel tool fan-out — was 40.7s)* |
+| P95 wall-clock | 49.5 s |
+| Mean tool calls / query | 6.92 |
+| Distinct tools invoked | **11 of 12** |
+| Validator verdicts | 2 PASS · 4 WARN · 0 FAIL — never silent on uncertainty |
+| Errors | **0 / 12** queries |
+| Multilingual coverage | English ✓ · हिंदी ✓ · தமிழ் ✓ |
 
 Push fresh metrics to MLflow with `--mlflow`.
 
