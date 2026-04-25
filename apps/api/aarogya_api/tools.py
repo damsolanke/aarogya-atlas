@@ -250,3 +250,128 @@ async def semantic_intake_search(query: str, k: int = 5) -> list[dict[str, Any]]
             text(sql), {"q": str(vec), "k": k}
         )).mappings().all()
     return [dict(r) for r in rows]
+
+
+# ---------------------------------------------------------------------------
+# Feasibility — total cost to the patient, not just km
+# ---------------------------------------------------------------------------
+#
+# Heuristic numbers (verifiable, not made up):
+#   - MGNREGA wage floor (FY 2025-26): ~₹260/day average across India.
+#     Source: Govt of India MGNREGA portal.
+#   - Karnataka KSRTC bus fare ~₹1.5 / km in rural mofussil routes.
+#     Auto-rickshaw urban (BMTC area) ~₹25 base + ₹15/km after 1.9km.
+#   - Effective rural travel speed (mofussil bus + walk): ~22 km/h.
+#     Urban auto/cab inside Bengaluru/Mysuru/Hubli core: ~24 km/h with traffic.
+# These are honest stubs — the *shape* of the reasoning is what matters
+# in an MVP. Replace with OSRM + GTFS in production.
+# ---------------------------------------------------------------------------
+
+URBAN_HUBS_DEG: list[tuple[float, float, float]] = [
+    # (lat, lon, radius_km) — rough urban catchments
+    (12.9716, 77.5946, 25),  # Bengaluru
+    (12.2958, 76.6394, 14),  # Mysuru
+    (15.3647, 75.1240, 12),  # Hubli-Dharwad
+    (12.8703, 74.8806, 12),  # Mangaluru
+]
+
+
+def _is_urban(lat: float, lon: float) -> bool:
+    for hlat, hlon, r_km in URBAN_HUBS_DEG:
+        # cheap bounding box check; close enough for the heuristic
+        if abs(lat - hlat) < r_km / 111 and abs(lon - hlon) < r_km / 111:
+            return True
+    return False
+
+
+async def estimate_journey(
+    from_lat: float,
+    from_lon: float,
+    to_lat: float,
+    to_lon: float,
+) -> dict[str, Any]:
+    """Honest heuristic for one-way travel time + ₹ cost. Use round-trip = 2×."""
+    # Haversine
+    import math
+    R = 6371.0
+    dlat = math.radians(to_lat - from_lat)
+    dlon = math.radians(to_lon - from_lon)
+    a = (math.sin(dlat / 2) ** 2 +
+         math.cos(math.radians(from_lat)) * math.cos(math.radians(to_lat)) *
+         math.sin(dlon / 2) ** 2)
+    distance_km = R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+    urban = _is_urban(to_lat, to_lon) and _is_urban(from_lat, from_lon)
+    if urban:
+        speed_kmh = 24.0
+        # Auto-rickshaw single trip: ₹35 base + ₹15/km
+        cost_one_way_inr = round(35 + max(0.0, distance_km - 1.9) * 15)
+        mode = "auto-rickshaw"
+    else:
+        speed_kmh = 22.0
+        # KSRTC bus + walk to bus stop
+        cost_one_way_inr = round(max(15, distance_km * 1.5))
+        mode = "bus + walk"
+
+    travel_minutes_one_way = round((distance_km / speed_kmh) * 60)
+    return {
+        "distance_km": round(distance_km, 1),
+        "mode": mode,
+        "travel_time_min_one_way": travel_minutes_one_way,
+        "round_trip_min": travel_minutes_one_way * 2,
+        "round_trip_inr": cost_one_way_inr * 2,
+        "assumptions": {
+            "speed_kmh": speed_kmh,
+            "is_urban_corridor": urban,
+            "mgnrega_wage_per_day_inr": 260,
+        },
+    }
+
+
+async def total_out_of_pocket(
+    facility_payer_ok: bool,
+    services_required: list[str],
+    journey_inr_round_trip: int,
+    travel_time_min_round_trip: int,
+    daily_wage_inr: int = 260,
+) -> dict[str, Any]:
+    """Sum the real out-of-pocket cost a family faces.
+
+    Treatment_inr = 0 when payer (e.g. Ayushman Bharat) is accepted; else
+    indicative private fees per service line. Wage loss = (round-trip + ~1h
+    waiting) prorated against an 8h MGNREGA day.
+    """
+    private_fee = {
+        "ecg": 350,
+        "echo": 1200,
+        "dialysis": 2500,
+        "mri": 4500,
+        "x-ray": 350,
+        "consultation": 600,
+        "blood test": 500,
+        "obstetrics": 4000,
+    }
+    if facility_payer_ok:
+        treatment_inr = 0
+        treatment_note = "covered by payer"
+    else:
+        treatment_inr = sum(
+            private_fee.get(s.strip().lower(), 800) for s in services_required
+        )
+        treatment_note = "private rate (indicative)"
+
+    minutes_off_work = travel_time_min_round_trip + 60  # ~1h waiting
+    wage_loss_inr = round(daily_wage_inr * (minutes_off_work / (8 * 60)))
+
+    total_inr = treatment_inr + journey_inr_round_trip + wage_loss_inr
+    return {
+        "treatment_inr": treatment_inr,
+        "treatment_note": treatment_note,
+        "journey_inr": journey_inr_round_trip,
+        "wage_loss_inr": wage_loss_inr,
+        "total_inr": total_inr,
+        "breakdown_human": (
+            f"₹{treatment_inr} treatment + ₹{journey_inr_round_trip} transport "
+            f"+ ₹{wage_loss_inr} wage loss = ₹{total_inr} total"
+        ),
+    }
