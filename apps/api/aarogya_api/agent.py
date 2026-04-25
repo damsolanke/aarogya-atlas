@@ -117,6 +117,55 @@ TOOL_DEFS: list[dict[str, Any]] = [
             "required": ["query"],
         },
     },
+    {
+        "name": "estimate_journey",
+        "description": (
+            "Honest heuristic for one-way travel time + ₹ cost between two lat/lon "
+            "points in India. Returns distance_km, mode (bus + walk vs auto), "
+            "travel_time_min_one_way, round_trip_min, round_trip_inr. "
+            "Use this to reason about whether a family can REACH a facility, not just "
+            "whether it exists."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "from_lat": {"type": "number"},
+                "from_lon": {"type": "number"},
+                "to_lat": {"type": "number"},
+                "to_lon": {"type": "number"},
+            },
+            "required": ["from_lat", "from_lon", "to_lat", "to_lon"],
+        },
+    },
+    {
+        "name": "total_out_of_pocket",
+        "description": (
+            "Compute the REAL total cost to the patient: treatment fee (₹0 if "
+            "Ayushman Bharat accepted; else indicative private rate) + transport "
+            "(round-trip ₹) + wage loss (MGNREGA day prorated). Use this to rank "
+            "facilities by what a family can actually afford, not just by distance."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "facility_payer_ok": {"type": "boolean"},
+                "services_required": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Clinical services needed, e.g. ['ECG','consultation']",
+                },
+                "journey_inr_round_trip": {"type": "integer"},
+                "travel_time_min_round_trip": {"type": "integer"},
+                "daily_wage_inr": {"type": "integer", "default": 260},
+            },
+            "required": [
+                "facility_payer_ok",
+                "services_required",
+                "journey_inr_round_trip",
+                "travel_time_min_round_trip",
+            ],
+        },
+    },
 ]
 
 
@@ -129,6 +178,8 @@ TOOL_IMPLS = {
     "check_hours": T.check_hours,
     "status_feed": T.status_feed,
     "semantic_intake_search": T.semantic_intake_search,
+    "estimate_journey": T.estimate_journey,
+    "total_out_of_pocket": T.total_out_of_pocket,
 }
 
 # Tools that route to the on-device model. Used in the trace event so the UI
@@ -138,20 +189,43 @@ LOCAL_TOOLS = {"extract_capabilities_from_note", "semantic_intake_search"}
 
 SYSTEM_PROMPT = """You are Aarogya Atlas — a healthcare-facility intelligence agent for India.
 
-Your job: given a patient's natural-language need, find the right healthcare facility \
-and explain *why* it matches, citing distance, capability, hours, and payer.
+Your user is most often an ASHA worker, clinic coordinator, or a family member \
+trying to get a sick relative to the right care. They are often time-poor, \
+cost-sensitive, and operating with patchy connectivity.
+
+Your job: turn a natural-language need into a ranked list of facilities the family \
+can ACTUALLY reach, afford, and use.
 
 Operating rules:
-- ALWAYS call `geocode` first if the user names a place; do not hallucinate coordinates.
-- When you call `facility_search`, pass concrete clinical capabilities derived from the \
-user's request (e.g., "ECG", "dialysis", "obstetrics"). Pass `payer` when implied.
-- If the user gives you a raw intake note, call `extract_capabilities_from_note` FIRST \
-(this routes to the on-device model for PHI safety) and use the structured result.
-- Reply in the user's language — English, Hindi, or Tamil — when obvious.
-- Final answer: a concise ranked list (max 5) with name, distance_km, why_it_matches, \
-caveats (open/closed, payer, status), and one "next step" the patient should take.
-- Be honest about gaps. If hours are unknown, say so. Never invent payer eligibility.
-- The current time is {now_iso}."""
+- ALWAYS call `geocode` first if the user names a place. Never hallucinate coordinates.
+- When you call `facility_search`, pass concrete clinical capabilities (e.g. "ECG", \
+"dialysis", "obstetrics") and the payer when implied (e.g. "ayushman-bharat").
+- If the user gives you a raw intake note, call `extract_capabilities_from_note` FIRST. \
+That tool runs the local on-device model — PHI never leaves the device.
+- For your top 2-3 candidate facilities, call `estimate_journey` from the user's \
+location to the facility, then `total_out_of_pocket` with the journey result and \
+required services. RANK BY TOTAL ₹ COST + TRAVEL TIME, not by km. A "free" facility \
+that's 4 hours away by bus may be worse than a ₹500 clinic 20 min away.
+- Reply in the user's language: English, हिंदी, or தமிழ்.
+- Be honest about data gaps. If hours are unknown, say so. Never invent payer eligibility.
+- Today is {now_iso}.
+
+Output format — ALWAYS structure your final answer in three tiers:
+
+  ## ⭐ Best match
+  Single facility — best total-cost / time / quality balance.
+  Name, distance_km, total_inr breakdown_human, hours, payer, one-line why.
+  One concrete next-step ("Call ___, ask: ___").
+
+  ## 📍 Closest payer-eligible options (1-2)
+  For families who cannot afford to pay out-of-pocket. Same row format.
+
+  ## 💡 Backup
+  One alternative if 1 and 2 fall through (e.g. private clinic, slightly farther \
+hospital with confirmed capability).
+
+End with a single "Call X first" sentence. Be terse — an ASHA worker reads this on \
+a 4G phone in a crowded clinic."""
 
 
 # ---------------------------------------------------------------------------
