@@ -55,3 +55,21 @@ A 24-hour build cannot include credential provisioning, Unity Catalog
 setup, and Lakeflow pipeline configuration without burning the demo
 window. The local stack is intentionally chosen so that the production
 port is mechanical, not architectural.
+
+## What we DID stand up in Databricks during the hackathon
+
+| Live in workspace `https://dbc-12ce3b55-1ebb.cloud.databricks.com` | Status |
+| --- | --- |
+| `workspace.aarogya.facilities` Delta table — 10,000 VF rows | ✅ |
+| `workspace.aarogya_raw.intake_notes` with `mask_phone()` column-mask UDF on `patient_phone` | ✅ |
+| `workspace.aarogya_curated.facility_capability_summary` view — 6 capability flags per facility | ✅ |
+| Genie Space `01f140dda3fb1760aec5551e9e0e527c` over the facilities table | ✅ |
+| MLflow experiment `/Shared/aarogya-atlas` capturing AGENT/LLM/TOOL spans from the local FastAPI process | ✅ |
+| Mosaic AI Vector Search delta-sync index over `intake_notes` | ❌ — Free Edition restricts Vector Search endpoint creation. Local pgvector serves the same role; production Lakehouse swap is one `create_delta_sync_index()` call documented in the table above. |
+| Databricks Apps deployment of the Next.js frontend | ❌ — out of scope for the 24-hour window; the Vercel frontend is the demo URL. |
+
+Reproduce the live workspace with two scripts:
+```bash
+uv run python scripts/databricks_setup.py     # creates aarogya.facilities (10k rows)
+uv run python scripts/databricks_uc_setup.py  # creates aarogya_raw + aarogya_curated + mask UDF
+```
