@@ -44,7 +44,11 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!desertSpecialty) {
-      setDeserts([]);
+      // Idle showcase: preload the top critical dialysis districts so the
+      // map has narrative even before the user picks an overlay.
+      fetchDeserts("dialysis")
+        .then((d) => setDeserts(d.slice(0, 8)))
+        .catch(() => setDeserts([]));
       return;
     }
     setDesertLoading(true);
