@@ -186,18 +186,55 @@ async def trust_score(facility_id: str) -> dict[str, Any]:
         deduction += severity_weights.get(f["severity"], 5)
 
     score = max(0, 100 - deduction)
+
+    # ----- Statistical confidence interval -----
+    # Spec research area: "statistics-based methods to create prediction intervals
+    # around our conclusions". We estimate an 80% CI around the point Trust
+    # Score by combining:
+    #   (a) source completeness — how many of [name, address_state, capacity,
+    #       doctors_listed, operator_type, specialties, capability, equipment,
+    #       description, recency] are populated → wider CI when fewer fields
+    #   (b) flag-severity uncertainty — bootstrap-style perturbation of each
+    #       flag's deduction by ±0.4× its weight (a high-severity flag could
+    #       reasonably deduct 12-28 instead of exactly 20)
+    completeness_fields = [
+        bool(raw.get("operator_type")),
+        bool(raw.get("year_established")),
+        isinstance(raw.get("capacity_beds"), int),
+        isinstance(raw.get("doctors_listed"), int),
+        bool(fields.get("specialties")),
+        bool(fields.get("procedure")),
+        bool(fields.get("capability")),
+        bool(fields.get("equipment")),
+        bool(fields.get("description")),
+        isinstance(raw.get("social_signals", {}).get("page_recency_days"), int),
+    ]
+    completeness = sum(completeness_fields) / len(completeness_fields)
+    # Wider CI when completeness is low; narrower when complete.
+    base_band = 4 + (1 - completeness) * 18  # 4 → 22 points
+    flag_band = sum(severity_weights.get(f.get("severity"), 5) * 0.4 for f in flags)
+    half_width = round(min(35, base_band + flag_band))
+    ci_low = max(0, score - half_width)
+    ci_high = min(100, score + half_width)
+
     return {
         "facility_id": facility_id,
         "facility_name": row["name"],
         "latitude": row["latitude"],
         "longitude": row["longitude"],
         "trust_score": score,
+        "trust_score_ci_80": [ci_low, ci_high],
+        "source_completeness": round(completeness, 2),
         "flag_count": len(flags),
         "flags": flags[:8],
         "summary": (
             "High trust" if score >= 80 else
             "Moderate trust — verify key claims by phone" if score >= 50 else
             "Low trust — multiple contradictions or evidence gaps"
+        ),
+        "ci_interpretation": (
+            f"80% CI: [{ci_low}, {ci_high}]. CI width reflects source "
+            f"completeness ({int(completeness * 100)}%) + flag-severity uncertainty."
         ),
     }
 

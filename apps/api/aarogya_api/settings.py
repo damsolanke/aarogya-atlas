@@ -31,6 +31,10 @@ class Settings(BaseSettings):
     # Default geographic scope for the demo
     default_state: str = "Karnataka"
 
+    # Databricks (Mosaic AI Vector Search + MLflow tracing)
+    databricks_host: str | None = None
+    databricks_token: str | None = None
+
 
 @lru_cache
 def settings() -> Settings:

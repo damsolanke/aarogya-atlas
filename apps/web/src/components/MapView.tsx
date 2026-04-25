@@ -13,6 +13,17 @@ export type MapPin = {
   subtitle?: string;
 };
 
+export type DesertPoint = {
+  district: string;
+  state: string;
+  lat: number;
+  lon: number;
+  total: number;
+  coverage: number;
+  severity: number;
+  specialty: string;
+};
+
 const BASEMAP_STYLE =
   "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
 
@@ -21,23 +32,29 @@ const OFM_VECTOR = "https://tiles.openfreemap.org/planet";
 const OFM_URL = "https://openfreemap.org";
 
 const SRC_FACILITIES = "facilities";
+const SRC_DESERTS = "deserts";
 const LAYER_HEAT = "facilities-heat";
 const LAYER_CLUSTER = "facilities-cluster";
 const LAYER_CLUSTER_COUNT = "facilities-cluster-count";
 const LAYER_UNCLUSTERED = "facilities-unclustered";
 const LAYER_ROUTE = "route-line";
 const LAYER_BUILDINGS = "ofm-3d-buildings";
+const LAYER_DESERT_HALO = "desert-halo";
+const LAYER_DESERT_DOT = "desert-dot";
+const LAYER_DESERT_LABEL = "desert-label";
 
 export default function MapView({
   pins,
   center,
   zoom = 5.4,
   origin,
+  deserts,
 }: {
   pins: MapPin[];
   center: [number, number];
   zoom?: number;
-  origin?: [number, number]; // [lat, lon] of user / agent's geocoded start
+  origin?: [number, number];
+  deserts?: DesertPoint[];
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -171,6 +188,84 @@ export default function MapView({
         },
       });
 
+      // ---- Medical desert overlay (district centroids with red severity halo) ----
+      map.addSource(SRC_DESERTS, {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
+      map.addLayer({
+        id: LAYER_DESERT_HALO,
+        type: "circle",
+        source: SRC_DESERTS,
+        paint: {
+          "circle-radius": [
+            "interpolate", ["linear"], ["zoom"],
+            4, ["+", 14, ["*", 30, ["coalesce", ["get", "severity"], 0]]],
+            10, ["+", 28, ["*", 60, ["coalesce", ["get", "severity"], 0]]],
+          ],
+          "circle-color": [
+            "interpolate", ["linear"], ["coalesce", ["get", "severity"], 0],
+            0, "rgba(248,113,113,0)",
+            0.4, "rgba(248,113,113,0.18)",
+            0.7, "rgba(239,68,68,0.32)",
+            1.0, "rgba(220,38,38,0.45)",
+          ],
+          "circle-blur": 0.55,
+          "circle-stroke-width": 1,
+          "circle-stroke-color": "rgba(248,113,113,0.7)",
+        },
+      });
+      map.addLayer({
+        id: LAYER_DESERT_DOT,
+        type: "circle",
+        source: SRC_DESERTS,
+        paint: {
+          "circle-radius": 4,
+          "circle-color": "#ef4444",
+          "circle-stroke-width": 1.5,
+          "circle-stroke-color": "rgba(255,255,255,0.7)",
+        },
+      });
+      map.addLayer({
+        id: LAYER_DESERT_LABEL,
+        type: "symbol",
+        source: SRC_DESERTS,
+        minzoom: 5,
+        layout: {
+          "text-field": ["get", "district"],
+          "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+          "text-size": 11,
+          "text-offset": [0, 1.2],
+          "text-anchor": "top",
+        },
+        paint: {
+          "text-color": "#fecaca",
+          "text-halo-color": "#7f1d1d",
+          "text-halo-width": 1.2,
+        },
+      });
+
+      // ---- Hover popup for desert dots ----
+      const desertPopup = new maplibregl.Popup({
+        closeButton: false,
+        closeOnClick: false,
+        offset: 12,
+        className: "aa-popup",
+      });
+      map.on("mouseenter", LAYER_DESERT_DOT, (e) => {
+        const f = e.features?.[0];
+        if (!f) return;
+        const p = f.properties as DesertPoint & { coverage: number; total_facilities: number };
+        const html = `<div style="font:500 12px/1.4 system-ui;color:#fecaca;background:#7f1d1d;border:1px solid #b91c1c;padding:8px 10px;border-radius:8px;min-width:200px"><div style="font-weight:700">⚠ ${escape(p.district)}, ${escape(p.state)}</div><div style="font-size:10.5px;margin-top:2px">${p.coverage}/${p.total_facilities} facilities offer ${escape(p.specialty)}</div><div style="font-size:10.5px;margin-top:2px;color:#fecaca">Severity: ${(Number(p.severity) * 100).toFixed(0)}%</div></div>`;
+        const coords = (f.geometry as GeoJSON.Point).coordinates as [number, number];
+        desertPopup.setLngLat(coords).setHTML(html).addTo(map);
+        map.getCanvas().style.cursor = "pointer";
+      });
+      map.on("mouseleave", LAYER_DESERT_DOT, () => {
+        desertPopup.remove();
+        map.getCanvas().style.cursor = "";
+      });
+
       // ---- 3D buildings (OpenFreeMap, kicks in at zoom ≥14) ----
       map.addSource("ofm", { type: "vector", url: OFM_VECTOR });
       map.addLayer({
@@ -245,6 +340,27 @@ export default function MapView({
       mapRef.current = null;
     };
   }, []);
+
+  // ---- Sync desert overlay GeoJSON ----
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+    const src = map.getSource(SRC_DESERTS) as maplibregl.GeoJSONSource | undefined;
+    if (!src) return;
+    const features: GeoJSON.Feature<GeoJSON.Point>[] = (deserts || []).map((d) => ({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [d.lon, d.lat] },
+      properties: {
+        district: d.district,
+        state: d.state,
+        total_facilities: d.total,
+        coverage: d.coverage,
+        severity: d.severity,
+        specialty: d.specialty,
+      },
+    }));
+    src.setData({ type: "FeatureCollection", features });
+  }, [deserts, mapReady]);
 
   // ---- Update facilities source whenever pins change (gated on mapReady) ----
   useEffect(() => {
