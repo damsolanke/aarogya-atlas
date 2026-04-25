@@ -375,7 +375,7 @@ def _tool_uses(msg: Message) -> list[ToolUseBlock]:
     return [b for b in msg.content if b.type == "tool_use"]
 
 
-async def stream_answer(query: str, max_iterations: int = 8) -> AsyncIterator[dict[str, Any]]:
+async def stream_answer(query: str, max_iterations: int = 14) -> AsyncIterator[dict[str, Any]]:
     """Yield SSE-shaped events: thoughts, tool requests, tool results, final answer."""
     query = (query or "").strip()
     if not query:

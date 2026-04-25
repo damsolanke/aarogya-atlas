@@ -1,16 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowUp, Sparkles, Square } from "lucide-react";
+import { ArrowUp, Square } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/cn";
 import { streamQuery, type TraceEvent } from "@/lib/api";
 import Suggestions from "./Suggestions";
-import TraceStep from "./TraceStep";
+import LiveStatus from "./LiveStatus";
+import FinalAnswer from "./FinalAnswer";
+import ReasoningDrawer from "./ReasoningDrawer";
 
 export type AgentResult = {
   centerLatLon?: [number, number];
-  facilities?: { id: string; name: string; lat: number; lon: number }[];
+  origin?: [number, number]; // geocoded user location for routing
+  facilities?: { id: string; name: string; lat: number; lon: number; rank?: number }[];
 };
 
 type Status = "idle" | "streaming" | "done" | "error";
@@ -29,11 +32,10 @@ export default function AgentChat({
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // auto-scroll
   useEffect(() => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [trace, finalText]);
+  }, [trace.length, finalText, status]);
 
   const send = useCallback(
     async (q: string) => {
@@ -51,19 +53,39 @@ export default function AgentChat({
       setLastQuery(query);
       setInput("");
 
-      const collectedFacilities: AgentResult["facilities"] = [];
+      const collectedMap = new Map<string, AgentResult["facilities"][number]>();
       let center: AgentResult["centerLatLon"] | undefined;
+      let origin: AgentResult["origin"] | undefined;
+      const rankOrder: string[] = []; // first-seen order = rank 1, 2, 3...
+
+      const trackFacility = (
+        id: string,
+        name: string,
+        lat: number,
+        lon: number
+      ) => {
+        if (!collectedMap.has(id)) {
+          rankOrder.push(id);
+          collectedMap.set(id, { id, name, lat, lon, rank: rankOrder.length });
+        }
+      };
+
+      const pushUpdate = () => {
+        const facilities = Array.from(collectedMap.values());
+        onResult({ centerLatLon: center, origin, facilities });
+      };
 
       try {
         for await (const evt of streamQuery(query, ctl.signal)) {
           if (evt.event === "step") {
             setTrace((prev) => [...prev, evt.data]);
-
             if (evt.data.type === "tool_result") {
               try {
                 const parsed = JSON.parse(evt.data.content);
                 if (evt.data.tool === "geocode" && parsed?.ok) {
+                  origin = [parsed.latitude, parsed.longitude];
                   center = [parsed.latitude, parsed.longitude];
+                  pushUpdate();
                 }
                 if (
                   evt.data.tool === "facility_search" &&
@@ -71,31 +93,25 @@ export default function AgentChat({
                 ) {
                   for (const f of parsed.slice(0, 6)) {
                     if (typeof f.latitude === "number") {
-                      collectedFacilities.push({
-                        id: f.id,
-                        name: f.name,
-                        lat: f.latitude,
-                        lon: f.longitude,
-                      });
+                      trackFacility(f.id, f.name, f.latitude, f.longitude);
                     }
                   }
+                  pushUpdate();
                 }
-                // Trust scorer / validator address facilities by ID without
-                // returning lat/lon — collect just the IDs so the map can
-                // highlight them via the existing facility set.
                 if (
                   (evt.data.tool === "trust_score" ||
                     evt.data.tool === "validate_recommendation") &&
                   parsed?.facility_id &&
                   typeof parsed.latitude === "number"
                 ) {
-                  collectedFacilities.push({
-                    id: parsed.facility_id,
-                    name: parsed.facility_name || parsed.facility_id,
-                    lat: parsed.latitude,
-                    lon: parsed.longitude,
-                  });
+                  trackFacility(
+                    parsed.facility_id,
+                    parsed.facility_name || parsed.facility_id,
+                    parsed.latitude,
+                    parsed.longitude
+                  );
                   if (!center) center = [parsed.latitude, parsed.longitude];
+                  pushUpdate();
                 }
               } catch {
                 /* ignore */
@@ -109,7 +125,7 @@ export default function AgentChat({
             setStatus("error");
           }
         }
-        onResult({ centerLatLon: center, facilities: collectedFacilities });
+        pushUpdate();
       } catch (e) {
         if ((e as Error).name === "AbortError") {
           setStatus("idle");
@@ -127,6 +143,15 @@ export default function AgentChat({
     setStatus("idle");
   };
 
+  const reset = () => {
+    abortRef.current?.abort();
+    setStatus("idle");
+    setTrace([]);
+    setFinalText("");
+    setError(null);
+    setLastQuery("");
+  };
+
   const idleEmpty = status === "idle" && trace.length === 0 && !finalText;
 
   return (
@@ -135,20 +160,19 @@ export default function AgentChat({
         {idleEmpty ? (
           <IdleHero onPick={send} />
         ) : (
-          <div className="mx-auto max-w-2xl space-y-4">
-            <UserBubble query={lastQuery} />
-            <AnimatePresence initial={false}>
-              {trace.map((step, i) => (
-                <TraceStep key={i} step={step} />
-              ))}
-            </AnimatePresence>
+          <div className="mx-auto max-w-2xl space-y-3">
+            <UserBubble query={lastQuery} onClear={reset} />
+            <LiveStatus trace={trace} status={status} />
             {(status === "streaming" || finalText) && (
-              <FinalAnswerCard text={finalText} streaming={status === "streaming"} />
+              <FinalAnswer text={finalText} streaming={status === "streaming"} />
             )}
             {error && (
-              <div className="rounded-lg border border-red-900/60 bg-red-950/30 px-3 py-2 text-[12px] text-red-300">
+              <div className="rounded-xl border border-amber-900/60 bg-amber-950/30 px-4 py-3 text-[13px] text-amber-200">
                 {error}
               </div>
+            )}
+            {trace.length > 0 && status !== "streaming" && (
+              <ReasoningDrawer trace={trace} />
             )}
           </div>
         )}
@@ -172,7 +196,11 @@ export default function AgentChat({
                   send(input);
                 }
               }}
-              placeholder="Ask in English, हिंदी, or தமிழ் — e.g., dialysis near Bengaluru, Ayushman Bharat…"
+              placeholder={
+                status === "streaming"
+                  ? "Agent is thinking…"
+                  : "Ask in English, हिंदी, or தமிழ்"
+              }
               rows={1}
               className="w-full resize-none bg-transparent px-4 py-3 pr-14 text-[14px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none"
               style={{ maxHeight: 120 }}
@@ -182,10 +210,10 @@ export default function AgentChat({
               <button
                 type="button"
                 onClick={stop}
-                className="absolute bottom-2 right-2 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-red-500/20 text-red-300 ring-1 ring-red-500/40 hover:bg-red-500/30"
-                aria-label="Stop streaming"
+                className="absolute bottom-2 right-2 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-red-500/15 text-red-300 ring-1 ring-red-500/40 hover:bg-red-500/25"
+                aria-label="Stop"
               >
-                <Square className="h-4 w-4" fill="currentColor" />
+                <Square className="h-3.5 w-3.5" fill="currentColor" />
               </button>
             ) : (
               <button
@@ -194,8 +222,8 @@ export default function AgentChat({
                 className={cn(
                   "absolute bottom-2 right-2 inline-flex h-9 w-9 items-center justify-center rounded-lg ring-1 transition-all",
                   input.trim()
-                    ? "bg-emerald-500 text-emerald-950 ring-emerald-400/60 hover:bg-emerald-400"
-                    : "bg-zinc-800/60 text-zinc-600 ring-zinc-800"
+                    ? "bg-emerald-500 text-emerald-950 ring-emerald-400/60 hover:bg-emerald-400 shadow-[0_0_18px_rgba(16,185,129,0.35)]"
+                    : "bg-zinc-800/40 text-zinc-600 ring-zinc-800/60"
                 )}
                 aria-label="Send"
               >
@@ -204,61 +232,34 @@ export default function AgentChat({
             )}
           </div>
         </form>
-        <div className="mx-auto mt-2 flex max-w-2xl items-center justify-between text-[10px] text-zinc-600">
-          <span>
-            Local: Qwen 2.5 32B · MedGemma 27B · bge-m3 · Cloud: Claude Opus 4.7
-          </span>
-          <span>↵ to send</span>
-        </div>
       </div>
     </div>
   );
 }
 
-function UserBubble({ query }: { query: string }) {
+function UserBubble({
+  query,
+  onClear,
+}: {
+  query: string;
+  onClear: () => void;
+}) {
   if (!query) return null;
   return (
-    <div className="flex justify-end">
-      <div className="max-w-[85%] rounded-2xl rounded-tr-sm border border-zinc-700/60 bg-zinc-100/95 px-4 py-2.5 text-[14px] leading-relaxed text-zinc-900 shadow-md">
-        {query}
-      </div>
-    </div>
-  );
-}
-
-function FinalAnswerCard({
-  text,
-  streaming,
-}: {
-  text: string;
-  streaming: boolean;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl border border-emerald-900/60 bg-gradient-to-br from-emerald-950/30 via-[var(--bg-card)] to-[var(--bg-card)] p-4 shadow-lg shadow-black/20"
-    >
-      <div className="mb-2 flex items-center gap-2">
-        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-500/15 ring-1 ring-emerald-500/30">
-          <Sparkles className="h-3.5 w-3.5 text-emerald-300" />
-        </div>
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-300/90">
-          Final answer
+    <div className="flex items-start justify-between gap-3">
+      <div className="flex-1 text-[14px] leading-relaxed text-zinc-300">
+        <span className="text-[10.5px] font-semibold uppercase tracking-wider text-zinc-500">
+          Question
         </span>
-        {streaming && !text && (
-          <span className="text-[10px] text-zinc-500">streaming…</span>
-        )}
+        <p className="mt-1">{query}</p>
       </div>
-      <div
-        className={cn(
-          "max-w-none whitespace-pre-wrap text-[13.5px] leading-relaxed text-zinc-100",
-          streaming && !text && "caret"
-        )}
+      <button
+        onClick={onClear}
+        className="text-[10.5px] uppercase tracking-wider text-zinc-500 hover:text-zinc-300"
       >
-        {text || ""}
-      </div>
-    </motion.div>
+        New
+      </button>
+    </div>
   );
 }
 
@@ -268,7 +269,7 @@ function IdleHero({ onPick }: { onPick: (p: string) => void }) {
       <div className="text-center">
         <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-900/60 bg-emerald-950/30 px-3 py-1 text-[10.5px] font-medium uppercase tracking-wider text-emerald-300">
           <span className="dot-pulse" />
-          Live · 10,000 VF facilities · all India · Trust-Scored
+          10,000 facilities · trust-scored · all India
         </div>
         <h1 className="bg-gradient-to-br from-zinc-50 via-zinc-200 to-zinc-400 bg-clip-text text-3xl font-semibold leading-tight tracking-tight text-transparent sm:text-4xl">
           The right hospital,
@@ -276,9 +277,9 @@ function IdleHero({ onPick }: { onPick: (p: string) => void }) {
           before the journey begins.
         </h1>
         <p className="mx-auto mt-3 max-w-md text-[13px] leading-relaxed text-zinc-500">
-          Ask in any language. The agent reasons across capabilities, hours,
-          payer (Ayushman Bharat / cash / private), and live status — with{" "}
-          <span className="text-cyan-300">PHI extraction running on-device</span>.
+          Ask in any language. The agent reasons across capability, hours,
+          payer (Ayushman Bharat / cash / private), trust score, and total cost
+          — with PHI extraction running on-device.
         </p>
       </div>
 
