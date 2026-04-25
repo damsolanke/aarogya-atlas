@@ -33,7 +33,7 @@ export default function IdleHero({
   useEffect(() => setMounted(true), []);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 py-6">
+    <div className="mx-auto max-w-2xl space-y-5 pt-2 pb-6">
       {/* Etymology + name */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
