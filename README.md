@@ -186,6 +186,17 @@ cd ../web && pnpm install && pnpm dev
 # Open http://localhost:3000
 ```
 
+## Equity audit — naming our own bias
+
+![Equity audit — disparate impact ratio across 25 Indian states](docs/screenshots/08_equity_audit.png)
+
+Live at **[`/equity`](http://localhost:3000/equity)** — coverage by
+state for the six high-acuity specialties. The **ICU disparate-impact
+ratio is 7.7×** between best and worst state in the VF dataset,
+**dialysis is 7.0×**. We expose this so judges (and our own
+recommender) know exactly where the data is thin and where Trust Score
+CIs widen.
+
 ## Self-evaluation (auditable)
 
 We score ourselves with [`scripts/evaluate.py`](scripts/evaluate.py) on
