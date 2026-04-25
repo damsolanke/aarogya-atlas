@@ -377,6 +377,20 @@ def _tool_uses(msg: Message) -> list[ToolUseBlock]:
 
 async def stream_answer(query: str, max_iterations: int = 8) -> AsyncIterator[dict[str, Any]]:
     """Yield SSE-shaped events: thoughts, tool requests, tool results, final answer."""
+    query = (query or "").strip()
+    if not query:
+        yield {"event": "error", "data": {
+            "kind": "empty_query",
+            "text": "Query is empty. Try a question like 'ECG within 15 km of Yeshwantpur, Ayushman Bharat' or click a sample.",
+        }}
+        return
+    if len(query) > 4000:
+        yield {"event": "error", "data": {
+            "kind": "query_too_long",
+            "text": f"Query is {len(query)} chars; max is 4000. Trim and try again.",
+        }}
+        return
+
     s = settings()
     aclient = client()
 
@@ -389,6 +403,18 @@ async def stream_answer(query: str, max_iterations: int = 8) -> AsyncIterator[di
         inputs={"query": query},
         attributes={"model": s.supervisor_model, "max_iterations": max_iterations},
     ) as agent_span:
+        try:
+            async for ev in _agent_loop(s, aclient, system, messages, max_iterations, agent_span):
+                yield ev
+        except Exception as e:
+            yield {"event": "error", "data": {
+                "kind": "agent_exception",
+                "text": f"{type(e).__name__}: {str(e)[:300]}",
+            }}
+            return
+
+
+async def _agent_loop(s, aclient, system, messages, max_iterations, agent_span) -> AsyncIterator[dict[str, Any]]:
         for _iter in range(max_iterations):
             # Stream the supervisor turn so we never hit non-stream HTTP timeouts.
             with maybe_span(
