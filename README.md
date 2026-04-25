@@ -13,10 +13,10 @@
 [![Hack-Nation 2026](https://img.shields.io/badge/Hack--Nation-2026-5eead4?style=for-the-badge)](https://projects.hack-nation.ai)
 [![License MIT](https://img.shields.io/badge/License-MIT-zinc?style=for-the-badge)](LICENSE)
 
-[**▶ Live demo**](http://localhost:3000) ·
-[**vs ChatGPT / Maps**](http://localhost:3000/compare) ·
-[**Equity audit**](http://localhost:3000/equity) ·
-[**Architecture**](http://localhost:3000/architecture) ·
+**▶ [Live demo — click to try](https://formal-rogers-poster-meanwhile.trycloudflare.com)** ·
+[**vs ChatGPT / Maps**](https://formal-rogers-poster-meanwhile.trycloudflare.com/compare) ·
+[**Equity audit**](https://formal-rogers-poster-meanwhile.trycloudflare.com/equity) ·
+[**Architecture**](https://formal-rogers-poster-meanwhile.trycloudflare.com/architecture) ·
 [**60s video**](docs/DEMO_SCRIPT.md)
 
 </div>
@@ -62,7 +62,7 @@ explicit trust caveats and the exact words to ask the receptionist.
 
 ![Aarogya Atlas vs ChatGPT vs Google Maps — same query, 14 / 0 / 0](docs/screenshots/07_comparison.png)
 
-Live at **[`/compare`](http://localhost:3000/compare)**. Same Indian
+Live at **[`/compare`](https://formal-rogers-poster-meanwhile.trycloudflare.com/compare)**. Same Indian
 healthcare-discovery query — *"I need an ECG within 15km of
 Yeshwantpur, accepts Ayushman Bharat"* — through three systems, scored
 on 14 healthcare-specific capabilities the spec asks for:
@@ -79,7 +79,7 @@ none of which the alternatives address.
 
 ![Equity audit — disparate impact ratio across 25 Indian states](docs/screenshots/08_equity_audit.png)
 
-Live at **[`/equity`](http://localhost:3000/equity)**. Per-state
+Live at **[`/equity`](https://formal-rogers-poster-meanwhile.trycloudflare.com/equity)**. Per-state
 coverage of the six high-acuity specialties. **Disparate-impact ratio
 across the VF dataset:**
 
@@ -95,7 +95,7 @@ this in the answer card instead of pretending it has a recommendation.
 
 ![Architecture — 4 planes, 12 tools, animated data flow](docs/screenshots/09_architecture.png)
 
-Live at **[`/architecture`](http://localhost:3000/architecture)**.
+Live at **[`/architecture`](https://formal-rogers-poster-meanwhile.trycloudflare.com/architecture)**.
 Four planes — **UI** (Next.js + MapLibre), **Supervisor** (Claude
 Opus 4.7 with adaptive thinking, manual streaming loop, no LangGraph),
 **12 Tools** (3 cloud, 2 on-device, 7 local DB), **Data Plane**
@@ -216,7 +216,7 @@ uv run uvicorn aarogya_api.app:app --reload
 # Frontend
 cd ../web && pnpm install && pnpm dev
 
-# Open http://localhost:3000
+# Open https://formal-rogers-poster-meanwhile.trycloudflare.com
 ```
 
 ## Submission artifacts
