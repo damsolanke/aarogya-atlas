@@ -30,9 +30,17 @@ def _init() -> None:
         return
     _INIT_ATTEMPTED = True
 
+    # Force-load .env so env-vars are present even when uvicorn started before settings()
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+    except ImportError:
+        pass
+
     host = os.environ.get("DATABRICKS_HOST")
     token = os.environ.get("DATABRICKS_TOKEN")
     if not host or not token:
+        print("[mlflow] DATABRICKS_HOST/DATABRICKS_TOKEN not set; tracing disabled")
         return
 
     try:
@@ -55,8 +63,10 @@ def _init() -> None:
         except Exception:
             mlflow.set_experiment("aarogya-atlas")
         _MLFLOW_READY = True
-    except Exception:
+        print(f"[mlflow] tracing enabled → {host}/Shared/aarogya-atlas")
+    except Exception as e:
         # Never let observability break the demo.
+        print(f"[mlflow] init failed: {type(e).__name__}: {e}")
         _MLFLOW_READY = False
 
 
@@ -79,21 +89,11 @@ def maybe_span(
         return
 
     import mlflow
-    from mlflow.entities import SpanType
 
-    span_type_map = {
-        "AGENT": SpanType.AGENT,
-        "TOOL": SpanType.TOOL,
-        "LLM": SpanType.LLM,
-        "RETRIEVER": SpanType.RETRIEVER,
-        "CHAIN": SpanType.CHAIN,
-    }
     started = time.monotonic()
     try:
-        with mlflow.start_span(
-            name=name,
-            span_type=span_type_map.get(span_type, SpanType.TOOL),
-        ) as span:
+        # mlflow.start_span accepts string span types in 2.x and 3.x
+        with mlflow.start_span(name=name, span_type=span_type) as span:
             if inputs is not None:
                 try:
                     span.set_inputs(inputs)
