@@ -13,6 +13,7 @@ is streamed to the UI as typed events so a judge can audit *how* it answered.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 from datetime import datetime
@@ -486,10 +487,18 @@ async def _agent_loop(s, aclient, system, messages, max_iterations, agent_span) 
             # Append the assistant turn (full content — preserve thinking signatures).
             messages.append({"role": "assistant", "content": msg.content})
 
-            # Execute tools and emit results.
+            # Execute tools in PARALLEL — Anthropic's tool-use protocol allows
+            # multiple tool_use blocks per turn, and most of our tools (geocode,
+            # facility_search, trust_score, validate_recommendation, journey,
+            # cost) are independent IO. asyncio.gather collapses the wall-clock.
+            results = await asyncio.gather(
+                *(_execute_tool(tc.name, dict(tc.input)) for tc in tool_calls),
+                return_exceptions=True,
+            )
             tool_results: list[dict[str, Any]] = []
-            for tc in tool_calls:
-                result = await _execute_tool(tc.name, dict(tc.input))
+            for tc, result in zip(tool_calls, results):
+                if isinstance(result, BaseException):
+                    result = {"error": f"{type(result).__name__}: {result}"}
                 content = json.dumps(result, default=str)
                 tool_results.append({
                     "type": "tool_result",
