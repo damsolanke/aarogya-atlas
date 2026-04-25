@@ -31,7 +31,13 @@ function Pill({
   );
 }
 
-export default function Header({ facilityCount }: { facilityCount: number }) {
+export default function Header({
+  facilityCount,
+  loaded,
+}: {
+  facilityCount: number;
+  loaded: boolean;
+}) {
   return (
     <header className="relative z-30 border-b border-[var(--border)] bg-[var(--bg)]/60 backdrop-blur-xl">
       <div className="flex items-center justify-between px-6 py-3.5">
@@ -57,9 +63,18 @@ export default function Header({ facilityCount }: { facilityCount: number }) {
           <Pill icon={Database} label="FHIR R4" tone="cyan" />
           <Pill icon={Sparkles} label="Hack-Nation 2026" />
           <div className="ml-2 hidden items-center gap-1.5 text-[11px] text-zinc-500 md:flex">
-            <span className="dot-pulse" />
-            <span className="tab-num">{facilityCount.toLocaleString()}</span>
-            <span>facilities indexed</span>
+            {loaded ? (
+              <>
+                <span className="dot-pulse" />
+                <span className="tab-num">{facilityCount.toLocaleString()}</span>
+                <span>facilities indexed</span>
+              </>
+            ) : (
+              <>
+                <span className="inline-block h-2 w-2 rounded-full bg-amber-400/80" />
+                <span>connecting to API…</span>
+              </>
+            )}
           </div>
         </div>
       </div>
