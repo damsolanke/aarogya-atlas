@@ -60,8 +60,13 @@ export type Facility = {
   services: string[];
 };
 
-export async function listFacilities(state = "Karnataka", limit = 500): Promise<Facility[]> {
-  const r = await fetch(`${API_URL}/api/facilities?state=${state}&limit=${limit}`);
+export async function listFacilities(
+  state?: string,
+  limit = 1500
+): Promise<Facility[]> {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (state) params.set("state", state);
+  const r = await fetch(`${API_URL}/api/facilities?${params}`);
   if (!r.ok) return [];
   return (await r.json()) as Facility[];
 }

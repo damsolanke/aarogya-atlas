@@ -80,6 +80,23 @@ export default function AgentChat({
                     }
                   }
                 }
+                // Trust scorer / validator address facilities by ID without
+                // returning lat/lon — collect just the IDs so the map can
+                // highlight them via the existing facility set.
+                if (
+                  (evt.data.tool === "trust_score" ||
+                    evt.data.tool === "validate_recommendation") &&
+                  parsed?.facility_id &&
+                  typeof parsed.latitude === "number"
+                ) {
+                  collectedFacilities.push({
+                    id: parsed.facility_id,
+                    name: parsed.facility_name || parsed.facility_id,
+                    lat: parsed.latitude,
+                    lon: parsed.longitude,
+                  });
+                  if (!center) center = [parsed.latitude, parsed.longitude];
+                }
               } catch {
                 /* ignore */
               }
@@ -251,7 +268,7 @@ function IdleHero({ onPick }: { onPick: (p: string) => void }) {
       <div className="text-center">
         <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-900/60 bg-emerald-950/30 px-3 py-1 text-[10.5px] font-medium uppercase tracking-wider text-emerald-300">
           <span className="dot-pulse" />
-          Live · 8,504 facilities indexed · Karnataka pilot
+          Live · 10,000 VF facilities · all India · Trust-Scored
         </div>
         <h1 className="bg-gradient-to-br from-zinc-50 via-zinc-200 to-zinc-400 bg-clip-text text-3xl font-semibold leading-tight tracking-tight text-transparent sm:text-4xl">
           The right hospital,
