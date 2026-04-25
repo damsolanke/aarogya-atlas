@@ -138,12 +138,12 @@ async def trust_score(facility_id: str) -> dict[str, Any]:
     severity (high=20, medium=10, low=5). Floor at 0.
     """
     sql = """
-    SELECT l.name, l.raw,
+    SELECT l.name, l.raw, l.latitude, l.longitude,
            COALESCE(array_agg(DISTINCT s.name) FILTER (WHERE s.name IS NOT NULL), '{}') AS services
     FROM fhir_location l
     LEFT JOIN fhir_healthcareservice s ON s.location_id = l.id
     WHERE l.id = :id
-    GROUP BY l.id, l.name, l.raw
+    GROUP BY l.id, l.name, l.raw, l.latitude, l.longitude
     """
     async with SessionLocal() as session:
         row = (await session.execute(text(sql), {"id": facility_id})).mappings().first()
@@ -189,6 +189,8 @@ async def trust_score(facility_id: str) -> dict[str, Any]:
     return {
         "facility_id": facility_id,
         "facility_name": row["name"],
+        "latitude": row["latitude"],
+        "longitude": row["longitude"],
         "trust_score": score,
         "flag_count": len(flags),
         "flags": flags[:8],
@@ -317,7 +319,7 @@ async def validate_recommendation(facility_id: str, claimed_capability: str) -> 
     """
     capability_low = claimed_capability.lower().strip()
     sql = """
-    SELECT l.name, l.raw,
+    SELECT l.name, l.raw, l.latitude, l.longitude,
            array(SELECT name FROM fhir_healthcareservice s WHERE s.location_id = l.id) AS services
     FROM fhir_location l WHERE l.id = :id
     """
@@ -339,18 +341,23 @@ async def validate_recommendation(facility_id: str, claimed_capability: str) -> 
         " ".join(row["services"] or []),
     ]).lower()
     if capability_low in haystack:
-        # find evidence snippet
         idx = haystack.find(capability_low)
         evidence = haystack[max(0, idx - 40): idx + len(capability_low) + 40]
         return {
             "verdict": "PASS",
+            "facility_id": facility_id,
             "facility_name": row["name"],
+            "latitude": row["latitude"],
+            "longitude": row["longitude"],
             "claimed_capability": claimed_capability,
             "evidence": evidence,
         }
     return {
         "verdict": "WARN",
+        "facility_id": facility_id,
         "facility_name": row["name"],
+        "latitude": row["latitude"],
+        "longitude": row["longitude"],
         "claimed_capability": claimed_capability,
         "reason": (
             f"No direct mention of '{claimed_capability}' in the source fields for this facility. "

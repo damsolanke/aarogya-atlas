@@ -31,7 +31,9 @@ export default function HomePage() {
   const [highlight, setHighlight] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    listFacilities("Karnataka", 800)
+    // Load a stratified sample across India for the map dataviz; the agent
+    // can pull more facilities into the visible set on demand.
+    listFacilities(undefined, 1500)
       .then(setAllFacilities)
       .catch(() => {});
   }, []);
@@ -105,7 +107,7 @@ export default function HomePage() {
           {/* Top-right info chip */}
           <div className="pointer-events-none absolute right-4 top-4 z-10">
             <div className="glass rounded-lg px-3 py-1.5 text-[10.5px] uppercase tracking-wider text-zinc-400">
-              Karnataka · 8,504 facilities · OSM + ABDM-aligned
+              India · 10,000 facilities · Virtue Foundation dataset
             </div>
           </div>
         </main>
