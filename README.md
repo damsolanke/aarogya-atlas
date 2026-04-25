@@ -5,6 +5,11 @@
 Submitted to **Hack-Nation 2026 · Challenge 3 (Databricks): *Building Agentic
 Healthcare Maps for 1.4 Billion Lives***.
 
+**Live in Databricks** (workspace `dbc-12ce3b55`):
+- Unity Catalog: `workspace.aarogya.facilities` (10k rows) · `workspace.aarogya_raw` (PHI-masked) · `workspace.aarogya_curated` (NGO analytics view)
+- **Genie Space** `01f140dda3fb1760aec5551e9e0e527c` — NL→SQL over the facilities table
+- **MLflow experiment** `/Shared/aarogya-atlas` — every supervisor turn + tool call traced as a span (runs_on=device|host attribute)
+
 > *In rural India, a postal code can determine a lifespan. We turn the 10,000-record
 > Virtue Foundation dataset of Indian medical facilities into a living intelligence
 > network — with a Trust Scorer that flags contradictions in the messy source data,
