@@ -242,6 +242,46 @@ async def status_feed(location_id: str, service: str) -> dict[str, Any]:
 # Semantic search over intake notes (the "10k messy records" angle)
 # ---------------------------------------------------------------------------
 
+async def databricks_vector_search(query: str, k: int = 5) -> dict[str, Any]:
+    """Mosaic AI Vector Search query against `workspace.aarogya.facilities_idx`.
+
+    Delta Sync Index with managed `databricks-bge-large-en` embeddings.
+    This is the production-grade retrieval path; semantic_intake_search is the
+    on-device backup for PHI / offline use.
+    """
+    s = settings()
+    host = s.databricks_host
+    token = s.databricks_token
+    if not host or not token:
+        return {"error": "Databricks not configured (set DATABRICKS_HOST/TOKEN)"}
+    url = f"{host}/api/2.0/vector-search/indexes/workspace.aarogya.facilities_idx/query"
+    async with httpx.AsyncClient(timeout=20.0) as c:
+        r = await c.post(
+            url,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "query_text": query,
+                "columns": ["facility_id", "name", "address_state", "address_city", "facility_type"],
+                "num_results": k,
+            },
+        )
+        if r.status_code >= 400:
+            return {"error": f"vector-search HTTP {r.status_code}: {r.text[:200]}"}
+        j = r.json()
+    cols = [c["name"] for c in j.get("manifest", {}).get("columns", [])]
+    rows = j.get("result", {}).get("data_array", []) or []
+    hits = [dict(zip(cols, row)) for row in rows]
+    return {
+        "source": "Mosaic AI Vector Search · workspace.aarogya.facilities_idx",
+        "embedding_model": "databricks-bge-large-en",
+        "hit_count": len(hits),
+        "hits": hits,
+    }
+
+
 async def semantic_intake_search(query: str, k: int = 5) -> list[dict[str, Any]]:
     [vec] = await embed([query])
     # Format vector as Postgres array literal: '[0.1,0.2,...]'. pgvector

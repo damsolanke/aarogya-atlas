@@ -4,7 +4,14 @@ import dynamic from "next/dynamic";
 import { useEffect, useState, useCallback } from "react";
 import Header from "@/components/Header";
 import AgentChat, { type AgentResult } from "@/components/AgentChat";
-import { listFacilities, type Facility } from "@/lib/api";
+import {
+  listFacilities,
+  fetchDeserts,
+  type Facility,
+  type DesertFeature,
+} from "@/lib/api";
+import { AlertTriangle } from "lucide-react";
+import { cn } from "@/lib/cn";
 
 const MapView = dynamic(() => import("@/components/MapView"), {
   ssr: false,
@@ -30,6 +37,32 @@ export default function HomePage() {
   const [zoom, setZoom] = useState<number>(6.4);
   const [origin, setOrigin] = useState<[number, number] | undefined>();
   const [highlightRanks, setHighlightRanks] = useState<Map<string, number>>(new Map());
+  const [desertSpecialty, setDesertSpecialty] = useState<string | null>(null);
+  const [deserts, setDeserts] = useState<DesertFeature[]>([]);
+  const [desertLoading, setDesertLoading] = useState(false);
+
+  useEffect(() => {
+    if (!desertSpecialty) {
+      setDeserts([]);
+      return;
+    }
+    setDesertLoading(true);
+    fetchDeserts(desertSpecialty)
+      .then((d) => setDeserts(d))
+      .catch(() => setDeserts([]))
+      .finally(() => setDesertLoading(false));
+  }, [desertSpecialty]);
+
+  const desertPoints = deserts.map((f) => ({
+    district: f.properties.district,
+    state: f.properties.state,
+    lat: f.geometry.coordinates[1],
+    lon: f.geometry.coordinates[0],
+    total: f.properties.total_facilities,
+    coverage: f.properties.coverage,
+    severity: f.properties.severity,
+    specialty: f.properties.specialty,
+  }));
 
   useEffect(() => {
     // Load a stratified sample across India for the map dataviz; the agent
@@ -103,7 +136,13 @@ export default function HomePage() {
         </aside>
 
         <main className="relative flex-1 bg-[var(--bg-elevated)]">
-          <MapView pins={pins} center={center} zoom={zoom} origin={origin} />
+          <MapView
+            pins={pins}
+            center={center}
+            zoom={zoom}
+            origin={origin}
+            deserts={desertPoints}
+          />
 
           {/* Legend overlay */}
           <div className="pointer-events-none absolute bottom-4 left-4 flex flex-col gap-1.5">
@@ -135,6 +174,39 @@ export default function HomePage() {
           <div className="pointer-events-none absolute right-4 top-4 z-10">
             <div className="glass rounded-lg px-3 py-1.5 text-[10.5px] uppercase tracking-wider text-zinc-400">
               India · 10,000 facilities · Virtue Foundation dataset
+            </div>
+          </div>
+
+          {/* Desert overlay toggles (top-left) */}
+          <div className="absolute left-4 top-4 z-10">
+            <div className="glass rounded-lg p-2">
+              <div className="flex items-center gap-1.5 px-1 pb-1.5 text-[10px] uppercase tracking-wider text-zinc-400">
+                <AlertTriangle className="h-3 w-3 text-red-400" />
+                Medical desert overlay
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {(["dialysis", "oncology", "trauma", "icu"] as const).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() =>
+                      setDesertSpecialty(desertSpecialty === s ? null : s)
+                    }
+                    className={cn(
+                      "rounded px-2 py-0.5 text-[10.5px] transition-colors",
+                      desertSpecialty === s
+                        ? "bg-red-500/20 text-red-200 ring-1 ring-red-500/40"
+                        : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200"
+                    )}
+                  >
+                    {s}
+                  </button>
+                ))}
+                {desertSpecialty && (
+                  <span className="ml-1 text-[10px] text-zinc-500">
+                    {desertLoading ? "loading…" : `${desertPoints.length} districts`}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </main>

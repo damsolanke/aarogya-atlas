@@ -120,6 +120,23 @@ TOOL_DEFS: list[dict[str, Any]] = [
         },
     },
     {
+        "name": "databricks_vector_search",
+        "description": (
+            "Mosaic AI Vector Search query against the workspace.aarogya.facilities_idx "
+            "Delta Sync Index (managed databricks-bge-large-en embeddings over 10k VF "
+            "facility descriptions). Use for production-grade discovery; semantic_intake_search "
+            "is the on-device fallback."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string"},
+                "k": {"type": "integer", "default": 5},
+            },
+            "required": ["query"],
+        },
+    },
+    {
         "name": "estimate_journey",
         "description": (
             "Honest heuristic for one-way travel time + ₹ cost between two lat/lon "
@@ -233,6 +250,7 @@ TOOL_IMPLS = {
     "check_hours": T.check_hours,
     "status_feed": T.status_feed,
     "semantic_intake_search": T.semantic_intake_search,
+    "databricks_vector_search": T.databricks_vector_search,
     "estimate_journey": T.estimate_journey,
     "total_out_of_pocket": T.total_out_of_pocket,
     "trust_score": TR.trust_score,

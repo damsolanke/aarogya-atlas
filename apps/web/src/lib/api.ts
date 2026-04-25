@@ -70,3 +70,29 @@ export async function listFacilities(
   if (!r.ok) return [];
   return (await r.json()) as Facility[];
 }
+
+export type DesertFeature = {
+  type: "Feature";
+  geometry: { type: "Point"; coordinates: [number, number] };
+  properties: {
+    district: string;
+    state: string;
+    total_facilities: number;
+    coverage: number;
+    coverage_ratio: number;
+    severity: number; // 0..1
+    specialty: string;
+  };
+};
+
+export async function fetchDeserts(
+  specialty: string,
+  state?: string
+): Promise<DesertFeature[]> {
+  const params = new URLSearchParams({ specialty });
+  if (state) params.set("state", state);
+  const r = await fetch(`${API_URL}/api/deserts?${params}`);
+  if (!r.ok) return [];
+  const j = (await r.json()) as { features: DesertFeature[] };
+  return j.features || [];
+}
