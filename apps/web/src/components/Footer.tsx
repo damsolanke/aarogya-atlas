@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Github, ExternalLink } from "lucide-react";
+import { ExternalLink, Code2 } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -25,7 +25,7 @@ export default function Footer() {
             rel="noreferrer"
             className="inline-flex items-center gap-1 hover:text-zinc-200"
           >
-            <Github className="h-3 w-3" />
+            <Code2 className="h-3 w-3" />
             Repo
           </a>
           <span className="text-zinc-700">·</span>
