@@ -31,6 +31,11 @@
     "remark-gfm": "^4.0.1",
     "tailwind-merge": "^3.5.0"
   },
+  "pnpm": {
+    "overrides": {
+      "postcss": ">=8.4.49"
+    }
+  },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/leaflet": "^1.9.21",

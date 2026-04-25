@@ -9,6 +9,7 @@ import {
   GitCompare,
   ShieldAlert,
   Network,
+  CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 
@@ -104,6 +105,7 @@ export default function Header({
             <NavLink href="/compare" icon={GitCompare}>vs ChatGPT</NavLink>
             <NavLink href="/equity" icon={ShieldAlert}>Equity</NavLink>
             <NavLink href="/architecture" icon={Network}>Architecture</NavLink>
+            <NavLink href="/eval" icon={CheckCircle2}>Eval</NavLink>
           </nav>
 
           <div className="hidden h-5 w-px bg-zinc-800 md:block" />
