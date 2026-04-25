@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Activity, ShieldCheck, Database, Sparkles, GitCompare } from "lucide-react";
+import {
+  Activity,
+  ShieldCheck,
+  Database,
+  Sparkles,
+  GitCompare,
+  ShieldAlert,
+} from "lucide-react";
 import { cn } from "@/lib/cn";
 
 function Pill({
@@ -69,6 +76,13 @@ export default function Header({
           >
             <GitCompare className="h-3 w-3" />
             vs ChatGPT / Maps
+          </Link>
+          <Link
+            href="/equity"
+            className="inline-flex items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-900/60 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-zinc-300 transition-colors hover:border-amber-700/60 hover:bg-amber-950/30 hover:text-amber-200"
+          >
+            <ShieldAlert className="h-3 w-3" />
+            Equity audit
           </Link>
           <div className="ml-2 hidden items-center gap-1.5 text-[11px] text-zinc-500 md:flex">
             {loaded ? (

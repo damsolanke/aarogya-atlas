@@ -144,6 +144,62 @@ async def deserts(specialty: str = "dialysis", state: str | None = None):
     return {"type": "FeatureCollection", "features": features, "specialty": specialty}
 
 
+@app.get("/api/equity")
+async def equity():
+    """Return per-state coverage stats for high-acuity specialties.
+
+    Backbone of the Equity / Bias audit: shows the disparate impact of where
+    Aarogya Atlas's recommendations COULD recommend a facility, since some
+    states have orders-of-magnitude denser coverage than others.
+    """
+    sql = """
+    WITH per_state AS (
+      SELECT l.address_state AS state,
+             COUNT(*) AS facilities,
+             SUM(CASE WHEN l.raw::text ILIKE ANY(ARRAY['%dialysis%','%hemodialysis%','%renal%']) THEN 1 ELSE 0 END) AS dialysis,
+             SUM(CASE WHEN l.raw::text ILIKE ANY(ARRAY['%oncolog%','%cancer%','%chemotherapy%']) THEN 1 ELSE 0 END) AS oncology,
+             SUM(CASE WHEN l.raw::text ILIKE ANY(ARRAY['%trauma%','%emergency%','%casualty%']) THEN 1 ELSE 0 END) AS trauma,
+             SUM(CASE WHEN l.raw::text ILIKE ANY(ARRAY['%icu%','%intensive care%','%nicu%','%picu%']) THEN 1 ELSE 0 END) AS icu,
+             SUM(CASE WHEN l.raw::text ILIKE ANY(ARRAY['%cardio%','%cathlab%','%angio%']) THEN 1 ELSE 0 END) AS cardiac,
+             SUM(CASE WHEN l.raw::text ILIKE ANY(ARRAY['%neonat%','%newborn%']) THEN 1 ELSE 0 END) AS neonatal
+      FROM fhir_location l
+      WHERE l.address_state IS NOT NULL
+      GROUP BY l.address_state
+    )
+    SELECT state, facilities, dialysis, oncology, trauma, icu, cardiac, neonatal
+    FROM per_state
+    WHERE facilities >= 30
+    ORDER BY facilities DESC
+    LIMIT 25
+    """
+    async with SessionLocal() as s:
+        rows = (await s.execute(text(sql))).mappings().all()
+    out = []
+    for r in rows:
+        f = float(r["facilities"]) or 1.0
+        out.append({
+            "state": r["state"],
+            "facilities": int(r["facilities"]),
+            "specialties": {
+                "dialysis":  {"count": int(r["dialysis"]),  "pct": round(100*r["dialysis"]/f, 1)},
+                "oncology":  {"count": int(r["oncology"]),  "pct": round(100*r["oncology"]/f, 1)},
+                "trauma":    {"count": int(r["trauma"]),    "pct": round(100*r["trauma"]/f, 1)},
+                "icu":       {"count": int(r["icu"]),       "pct": round(100*r["icu"]/f, 1)},
+                "cardiac":   {"count": int(r["cardiac"]),   "pct": round(100*r["cardiac"]/f, 1)},
+                "neonatal":  {"count": int(r["neonatal"]),  "pct": round(100*r["neonatal"]/f, 1)},
+            },
+        })
+    # Disparate-impact ratio: best vs worst pct per specialty
+    di = {}
+    for sp in ("dialysis", "oncology", "trauma", "icu", "cardiac", "neonatal"):
+        pcts = [s["specialties"][sp]["pct"] for s in out if s["specialties"][sp]["pct"] > 0]
+        if not pcts:
+            continue
+        best, worst = max(pcts), min(pcts)
+        di[sp] = {"best_pct": best, "worst_pct": worst, "ratio": round(best / worst, 1) if worst else None}
+    return {"states": out, "disparate_impact": di}
+
+
 @app.get("/api/facilities")
 async def list_facilities(state: str | None = None, limit: int = 100):
     """Return facilities for the map. Optional state filter."""
