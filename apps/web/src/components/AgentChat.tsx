@@ -232,8 +232,42 @@ export default function AgentChat({
             )}
           </div>
         </form>
+        <SystemBar />
       </div>
     </div>
+  );
+}
+
+function SystemBar() {
+  return (
+    <div className="mx-auto mt-2 flex max-w-2xl flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[10px] text-zinc-600">
+      <SystemPill dot="emerald">11/12 tools</SystemPill>
+      <SystemPill dot="cyan">p95 31.7s</SystemPill>
+      <SystemPill dot="emerald">0 errors</SystemPill>
+      <SystemPill dot="violet">23 MLflow traces</SystemPill>
+      <SystemPill dot="amber">EN · हिंदी · தமிழ்</SystemPill>
+    </div>
+  );
+}
+
+function SystemPill({
+  dot,
+  children,
+}: {
+  dot: "emerald" | "cyan" | "violet" | "amber";
+  children: React.ReactNode;
+}) {
+  const colors = {
+    emerald: "bg-emerald-400",
+    cyan: "bg-cyan-400",
+    violet: "bg-violet-400",
+    amber: "bg-amber-400",
+  }[dot];
+  return (
+    <span className="inline-flex items-center gap-1 tab-num">
+      <span className={`inline-block h-1.5 w-1.5 rounded-full ${colors}`} />
+      {children}
+    </span>
   );
 }
 
