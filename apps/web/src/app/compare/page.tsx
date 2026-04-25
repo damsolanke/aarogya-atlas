@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft, Check, X, AlertTriangle, ExternalLink } from "lucide-react";
+import Footer from "@/components/Footer";
 
 export const metadata = {
   title: "Aarogya Atlas vs ChatGPT vs Google Maps — same query, different answer",
@@ -302,6 +303,7 @@ export default function ComparePage() {
           .
         </p>
       </main>
+      <Footer />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, AlertTriangle, ShieldAlert, Globe } from "lucide-react";
 import { API_URL } from "@/lib/api";
+import Footer from "@/components/Footer";
 
 type StateRow = {
   state: string;
@@ -231,6 +232,7 @@ export default function EquityPage() {
           </>
         )}
       </main>
+      <Footer />
     </div>
   );
 }
