@@ -8,6 +8,7 @@ import {
   Sparkles,
   GitCompare,
   ShieldAlert,
+  Network,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 
@@ -39,6 +40,26 @@ function Pill({
   );
 }
 
+function NavLink({
+  href,
+  icon: Icon,
+  children,
+}: {
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex items-center gap-1 rounded-md px-2 py-1 transition-colors hover:bg-zinc-900/60 hover:text-zinc-100"
+    >
+      <Icon className="h-3 w-3 opacity-70" />
+      {children}
+    </Link>
+  );
+}
+
 export default function Header({
   facilityCount,
   loaded,
@@ -66,35 +87,38 @@ export default function Header({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Pill icon={ShieldCheck} label="Zero PHI Egress" tone="mint" />
-          <Pill icon={Database} label="FHIR R4" tone="cyan" />
-          <Pill icon={Sparkles} label="Hack-Nation 2026" />
-          <Link
-            href="/compare"
-            className="inline-flex items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-900/60 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-zinc-300 transition-colors hover:border-emerald-700/60 hover:bg-emerald-950/30 hover:text-emerald-200"
-          >
-            <GitCompare className="h-3 w-3" />
-            vs ChatGPT / Maps
-          </Link>
-          <Link
-            href="/equity"
-            className="inline-flex items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-900/60 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-zinc-300 transition-colors hover:border-amber-700/60 hover:bg-amber-950/30 hover:text-amber-200"
-          >
-            <ShieldAlert className="h-3 w-3" />
-            Equity audit
-          </Link>
-          <div className="ml-2 hidden items-center gap-1.5 text-[11px] text-zinc-500 md:flex">
+        <div className="flex items-center gap-3">
+          {/* Status badges */}
+          <div className="flex items-center gap-1.5">
+            <Pill icon={ShieldCheck} label="Zero PHI Egress" tone="mint" />
+            <Pill icon={Database} label="FHIR R4" tone="cyan" />
+            <Pill icon={Sparkles} label="Hack-Nation 2026" />
+          </div>
+
+          {/* Visual divider */}
+          <div className="hidden h-5 w-px bg-zinc-800 md:block" />
+
+          {/* Nav links */}
+          <nav className="flex items-center gap-0.5 text-[11.5px] font-medium text-zinc-400">
+            <NavLink href="/" icon={Activity}>Atlas</NavLink>
+            <NavLink href="/compare" icon={GitCompare}>vs ChatGPT</NavLink>
+            <NavLink href="/equity" icon={ShieldAlert}>Equity</NavLink>
+            <NavLink href="/architecture" icon={Network}>Architecture</NavLink>
+          </nav>
+
+          <div className="hidden h-5 w-px bg-zinc-800 md:block" />
+
+          <div className="hidden items-center gap-1.5 text-[11px] text-zinc-500 md:flex">
             {loaded ? (
               <>
                 <span className="dot-pulse" />
-                <span className="tab-num">{facilityCount.toLocaleString()}</span>
-                <span>facilities indexed</span>
+                <span className="tab-num text-zinc-300">10,000</span>
+                <span>indexed</span>
               </>
             ) : (
               <>
                 <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-amber-400/80" />
-                <span>connecting to backend (localhost:8000)…</span>
+                <span>connecting…</span>
               </>
             )}
           </div>
