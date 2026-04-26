@@ -22,7 +22,7 @@
 
 [**60s video**](https://www.loom.com/share/5f67de77c1f24328b5d395275d07f249)
 
-Built by **Dam Solanke** · Lead Solutions Architect — Healthcare · Frisco, TX
+Built by **Dam Solanke** · Lead Solutions Architect — Healthcare
 · originally submitted to **Hack-Nation 5th edition**, Databricks Challenge 03.
 
 **$0-forever stack:** Vercel Hobby (web) · Hugging Face Spaces (API, Docker, free CPU Basic) · Neon (Postgres + pgvector free tier) · Groq (free tier) · Google AI Studio (free tier). No credit card on file anywhere.
@@ -82,7 +82,7 @@ Open Vercel, Linear, Anthropic side-by-side and most healthcare AI demos look id
 
 - **Display face:** Instrument Serif italic. आरोग्य wordmark in Tiro Devanagari Hindi at hero scale (hover for the breakdown — *अ + रोग → without disease*).
 - **3-color signature:** **Saffron** (#E8923D — Indian flag, healthcare-warm), **Deep Ink** (#070A12), **Healing Teal** (#14B8A6). Documented in [`docs/BRAND.md`](docs/BRAND.md).
-- **Mono Bloomberg-style tickers** instead of generic chips: *`Live │ Databricks │ 23 traces │ 11/12 tools`*.
+- **Mono Bloomberg-style tickers** instead of generic chips: *`12/12 tools │ critic-verified │ multi-turn │ MLflow traced │ EN · हिंदी · தமிழ்`*.
 - **Saffron animated route polyline** (stroke-dasharray sweep) replaces the default cyan.
 - **Drive-time isochrones** — 3 concentric saffron rings (15 / 30 / 60 min) around the top recommendation. Modeled at India city avg 22 km/h. Judges have not seen this for healthcare-recommender output.
 - **Cinematic first-fly** — first agent run of a session triggers a 2.4-second slow-zoom-from-all-India dramatic reveal (subsequent flights are 1.4s).
@@ -146,7 +146,7 @@ this in the answer card instead of pretending it has a recommendation.
 
 ## Architecture
 
-![Architecture — 4 planes, 12 tools, animated data flow](docs/screenshots/09_architecture.png)
+![Architecture — 5 planes (UI · Supervisor · 12 Tools · Critic · Data), animated data flow](docs/screenshots/09_architecture.png)
 
 Live at **`/architecture`** *(routes activate after Vercel deploy)*.
 Four planes — **UI** (Next.js + MapLibre), **Supervisor** (GPT-OSS-120B
@@ -308,19 +308,25 @@ cd ../web && pnpm install && pnpm dev
 # Open http://localhost:3000
 ```
 
-## Submission artifacts
+## What's in this repo
 
-- This repo (MIT)
-- [`docs/SUMMARY.md`](docs/SUMMARY.md) — 280-word project summary
-- [`docs/DATABRICKS_DEPLOYMENT.md`](docs/DATABRICKS_DEPLOYMENT.md) — production port mapping
-- [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md) — 60s product + 60s tech video shot list
-- [`docs/EVAL_REPORT.md`](docs/EVAL_REPORT.md) — 20-query auditable evaluation
-- Submit by **Sun Apr 26, 9 AM ET** at [`projects.hack-nation.ai`](https://projects.hack-nation.ai)
+- [`apps/web`](apps/web) — Next.js 16 frontend (deployed to Vercel)
+- [`apps/api`](apps/api) — FastAPI agent + critic + 12 tools (deployed to Hugging Face Spaces as a Docker Space)
+- [`apps/api/db/schema.sql`](apps/api/db/schema.sql) — FHIR-aligned Postgres + pgvector schema (mirrored to Neon)
+- [`apps/api/tests/test_recovery.py`](apps/api/tests/test_recovery.py) — unit tests for the Llama-Pythonic `tool_use_failed` recovery layer
+- [`docs/EVAL_REPORT.md`](docs/EVAL_REPORT.md) — 12-query auditable evaluation (frozen at the 5th-edition stack baseline)
+- [`docs/ROBUSTNESS_REPORT.md`](docs/ROBUSTNESS_REPORT.md) — DAS-style adversarial perturbation results
+- [`docs/DATABRICKS_DEPLOYMENT.md`](docs/DATABRICKS_DEPLOYMENT.md) — Mosaic AI Vector Search + MLflow tracing setup
+- [`docs/BRAND.md`](docs/BRAND.md) — 3-color signature, anti-slop typography, voice
+- [`docs/SLOP_AUDIT.md`](docs/SLOP_AUDIT.md) — anti-template manifesto, gap audit
+- [`docs/archive/5th-hackathon/`](docs/archive/5th-hackathon) — frozen pitch deck, scripts, and 5th-edition framing kept for posterity
 
 ---
 
 <div align="center">
 
-Built in 24 hours for Hack-Nation 2026 Challenge 3.
+First built in 24h for Hack-Nation 5th edition (Databricks Challenge 03);
+since rebuilt around a critic-verified Trust Score and a $0-forever stack
+suitable for permanent public hosting.
 
 </div>

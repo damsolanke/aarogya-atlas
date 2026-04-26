@@ -240,6 +240,8 @@ RULES
    State which pathway you applied.
 10. Honesty: surface data gaps; never invent payer eligibility; if trust_score flags, show them.
 11. No-location query (e.g. "trauma now" with no city) → `find_medical_deserts(specialty)` + `facility_search` at Bengaluru proxy (12.97, 77.59) + ask which city. Always cite real vf-* ids.
+12. STOP-RETRYING RULE: at most TWO `facility_search` calls per query. If the second still has no capability match, write the answer with what you have plus an honest "no facilities matching X were in the dataset within Y km — here are the closest by proximity" caveat. Never call facility_search 3+ times.
+13. CONTEXT REUSE: if a prior turn already produced a geocode result (lat/lon in conversation history), DO NOT call geocode again — reuse those coordinates directly.
 
 Time: {now_iso}
 
@@ -486,7 +488,7 @@ def _parse_tool_args(raw: Any) -> dict[str, Any]:
 
 async def stream_answer(
     history: list[dict[str, Any]] | str,
-    max_iterations: int = 14,
+    max_iterations: int = 8,
 ) -> AsyncIterator[dict[str, Any]]:
     """Yield SSE-shaped events: tool requests, tool results, final answer.
 
@@ -547,6 +549,17 @@ async def stream_answer(
                 yield ev
                 if ev.get("event") == "final":
                     final_text = ev.get("data", {}).get("text", "")
+        except RateLimitError as e:
+            wait = _extract_retry_after_seconds(e)
+            wait_msg = f" Try again in ~{int(wait)}s." if wait else " Try again in a minute."
+            body = getattr(e, "body", None) or {}
+            err = body.get("error", {}) if isinstance(body, dict) else {}
+            limit_kind = "daily" if "TPD" in str(err.get("message", "")) else "per-minute"
+            yield {"event": "error", "data": {
+                "kind": "rate_limited",
+                "text": f"Groq {limit_kind} rate limit hit on the free tier.{wait_msg} (We're already retrying transparently with backoff — this means the cooldown is longer than our retry budget.)",
+            }}
+            return
         except Exception as e:
             yield {"event": "error", "data": {
                 "kind": "agent_exception",
