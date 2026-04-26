@@ -54,6 +54,16 @@ Anything <4 is a gap to ship before submission.
 
 Median: **4.67/5** per axis · **14/15** total.
 
+## Updates since first sim (post-multimodal + counterfactual + intel sweep)
+
+| Persona axis | Pre | Post | Why |
+| --- | :-: | :-: | --- |
+| Tech Healthcare | 4/5 | **5/5** | Multimodal triage (medgemma 27B) closes the photo-intake gap red-teamed earlier; pathway routing (CEmONC, antivenom) baked into prompt |
+| Comm Healthcare | 5/5 | 5/5 | Stockout overlay + counterfactual slider visible at idle, 14 polished screenshots |
+| Innov Business | 4/5 | **5/5** | Mosaic AI Model Serving deployment-path callout + DAS robustness gap closed (100% / 100% / 0%) — never silent on uncertainty |
+
+**Updated total:** Tech 15/15 · Healthcare 15/15 · Business 14/15. Median **15/15**.
+
 ## Top 5 specific gaps to close before submission
 
 1. **Tech video not yet recorded** (-1 from Tech and Comm scores) → user must record per `docs/DEMO_SCRIPT.md`.
