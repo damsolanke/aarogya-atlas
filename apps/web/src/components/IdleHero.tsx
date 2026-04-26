@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import CountUp from "react-countup";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Star,
   ShieldCheck,
@@ -41,26 +41,31 @@ export default function IdleHero({
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         className="text-center"
       >
-        <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-emerald-900/60 bg-emerald-950/30 px-3 py-1 text-[10.5px] font-medium uppercase tracking-wider text-emerald-300">
-          <span className="dot-pulse" />
-          Live in Databricks · 23 traces · 10 of 12 tools used
+        <div className="ticker mb-3 inline-flex items-center gap-1.5">
+          <span className="inline-block h-1.5 w-1.5 rounded-full" style={{background: "var(--accent-saffron)"}} />
+          <span className="v">Live</span>
+          <span className="sep">│</span>
+          <span>Databricks</span>
+          <span className="sep">│</span>
+          <span className="v">23</span>
+          <span>traces</span>
+          <span className="sep">│</span>
+          <span className="v">11/12</span>
+          <span>tools</span>
         </div>
-        <h1 className="bg-gradient-to-br from-zinc-50 via-zinc-200 to-zinc-400 bg-clip-text text-3xl font-semibold leading-[1.05] tracking-tight text-transparent sm:text-[34px]">
-          Aarogya Atlas
+
+        {/* The Sanskrit wordmark IS the logo. Tiro Devanagari Hindi at hero scale. */}
+        <EtymologyHover />
+
+        <h1 className="display mt-2 text-[36px] leading-[1.05] text-zinc-50 sm:text-[44px]">
+          <span>Aarogya </span>
+          <span className="display-italic" style={{color: "var(--accent-saffron)"}}>Atlas</span>
         </h1>
-        <div className="mt-1 text-[11px] tracking-wide text-zinc-500">
-          <span lang="sa" className="text-base text-zinc-300">
-            आरोग्य
-          </span>{" "}
-          <span className="text-zinc-500">— Sanskrit</span>{" "}
-          <span className="text-zinc-400">
-            “the absence of disease, complete wellness”
-          </span>
-        </div>
+
         <p className="mx-auto mt-3 max-w-md text-[13px] leading-relaxed text-zinc-400">
-          Agentic facility intelligence over the Virtue Foundation&apos;s
-          10,000-facility India dataset — trust-scored, cost-aware, on-device
-          PHI, multilingual.
+          Triage a photo, score the trust, route to the closest facility that&apos;s actually
+          equipped — in 6 tool calls, in your language. Built for ASHA workers and NGO
+          planners across India.
         </p>
       </motion.div>
 
@@ -117,21 +122,25 @@ export default function IdleHero({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
-        className="overflow-hidden rounded-2xl border border-zinc-800/80 bg-[var(--bg-card)]/70 shadow-2xl shadow-black/30 backdrop-blur-sm"
+        className="overflow-hidden rounded-lg border border-zinc-800/80 bg-[var(--bg-card)]/70 shadow-xl shadow-black/30 backdrop-blur-sm"
       >
-        <div className="flex items-center gap-2 border-b border-zinc-800/80 bg-gradient-to-r from-emerald-950/20 via-transparent to-violet-950/10 px-3.5 py-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 ring-1 ring-emerald-500/40">
-            <Sparkles className="h-3.5 w-3.5 text-emerald-300" />
+        <div className="flex items-center gap-2 border-b border-zinc-800/80 px-3.5 py-2" style={{background: "linear-gradient(90deg, rgba(232,146,61,0.10), transparent)"}}>
+          <div className="flex h-6 w-6 items-center justify-center rounded-md ring-1 brand-glow" style={{background: "rgba(232,146,61,0.10)", borderColor: "rgba(232,146,61,0.4)"}}>
+            <Sparkles className="h-3.5 w-3.5" style={{color: "var(--accent-saffron)"}} />
           </div>
           <div className="leading-tight">
             <div className="text-[11px] font-semibold tracking-tight text-zinc-100">
-              Sample answer
+              Sample answer · ECG · Yeshwantpur
             </div>
-            <div className="text-[10px] text-zinc-500">
-              Click a query below to run live · this card animates in real time
+            <div className="ticker text-[10px]">
+              <span className="v">7 tools</span>
+              <span className="sep">│</span>
+              <span className="v">31s</span>
+              <span className="sep">│</span>
+              <span>VS query 340ms</span>
             </div>
           </div>
-          <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-zinc-800/60 px-2 py-0.5 text-[10px] text-zinc-400 ring-1 ring-zinc-700">
+          <span className="ml-auto rounded-md px-2 py-0.5 text-[10px] tracking-wider text-zinc-400 ring-1 ring-zinc-700/80">
             preview
           </span>
         </div>
@@ -179,12 +188,52 @@ export default function IdleHero({
         transition={{ duration: 0.5, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
       >
         <div className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
-          <span className="dot-pulse" />
-          Run a real one
+          <span className="inline-block h-1.5 w-1.5 rounded-full" style={{background: "var(--accent-saffron)"}} />
+          Triage one of these
         </div>
         <Suggestions onPick={onPick} />
       </motion.div>
     </div>
+  );
+}
+
+function EtymologyHover() {
+  const [open, setOpen] = useState(false);
+  return (
+    <button
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onClick={() => setOpen((v) => !v)}
+      className="group relative inline-flex flex-col items-center cursor-default outline-none"
+      aria-label="Sanskrit etymology of Aarogya"
+    >
+      <span
+        className="devanagari leading-none text-[42px] sm:text-[50px]"
+        style={{ color: "var(--fg)" }}
+        lang="sa"
+      >
+        आरोग्य
+      </span>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -2 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -2 }}
+            transition={{ duration: 0.18 }}
+            className="absolute top-full mt-1 ticker whitespace-nowrap"
+          >
+            <span className="devanagari text-zinc-300">अ</span>
+            <span className="text-zinc-500">+</span>
+            <span className="devanagari text-zinc-300">रोग</span>
+            <span className="sep">→</span>
+            <span className="v">without disease</span>
+            <span className="sep">·</span>
+            <span>Sanskrit</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </button>
   );
 }
 
