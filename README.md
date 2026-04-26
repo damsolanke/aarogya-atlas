@@ -50,7 +50,8 @@ Or step-by-step in [Run it](#run-it).
 | :--- | :--- |
 | **3-tier output** | ⭐ Best · 📍 Closest payer-eligible · 💡 Backup — every recommendation cites Trust + Validator + Cost |
 | **12 tools** | `geocode` · `facility_search` · `extract_capabilities_from_note` *(on-device)* · `check_hours` · `status_feed` · `semantic_intake_search` *(on-device)* · `databricks_vector_search` · `estimate_journey` · `total_out_of_pocket` · `trust_score` · `find_medical_deserts` · `validate_recommendation` |
-| **Stack** | Next.js 16 + React 19 + MapLibre · FastAPI + Anthropic SDK + Ollama · Postgres 17 + pgvector · **Databricks Unity Catalog + Genie + MLflow + Mosaic AI Vector Search** |
+| **Multimodal** | Camera-button on the chat — upload a wound, prescription, X-ray, or oxygen-cylinder gauge → on-device **medgemma 27B** triages it (severity, suspected condition, recommended specialty) in ~4s, then auto-fills a facility query. PHI never leaves the device. |
+| **Stack** | Next.js 16 + React 19 + MapLibre · FastAPI + Anthropic SDK + Ollama (Qwen 2.5 32B + bge-m3 + **medgemma 27B vision**) · Postgres 17 + pgvector · **Databricks Unity Catalog + Genie + MLflow + Mosaic AI Vector Search** |
 | **Languages** | English · हिंदी · தமிழ் (bge-m3 multilingual embeddings, on-device) |
 
 The agent above resolved an ECG query in **6 tool calls**: geocoded
