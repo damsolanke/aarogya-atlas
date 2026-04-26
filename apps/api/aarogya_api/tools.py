@@ -418,12 +418,50 @@ async def estimate_journey(
         mode = "bus + walk"
 
     travel_minutes_one_way = round((distance_km / speed_kmh) * 60)
+
+    # Multi-modal alternatives — same distance, different speeds + costs.
+    # Numbers anchored to Indian transport averages (city + intercity corridors).
+    auto_speed = 24.0 if urban else 28.0  # auto-rickshaw OR private taxi
+    bus_speed = 18.0  # KSRTC + walk to bus stop, with stops
+    # Ambulance: priority routing → ~1.4× the auto speed in city, 1.6× in rural
+    ambulance_speed = (auto_speed * 1.4) if urban else (auto_speed * 1.6)
+
+    auto_min = round((distance_km / auto_speed) * 60)
+    bus_min = round((distance_km / bus_speed) * 60)
+    ambulance_min = round((distance_km / ambulance_speed) * 60)
+
+    auto_cost = round(35 + max(0.0, distance_km - 1.9) * 15)
+    bus_cost = round(max(15, distance_km * 1.5))
+    ambulance_cost = 0  # 108 ambulance is free in most Indian states
+
     return {
         "distance_km": round(distance_km, 1),
         "mode": mode,
         "travel_time_min_one_way": travel_minutes_one_way,
         "round_trip_min": travel_minutes_one_way * 2,
         "round_trip_inr": cost_one_way_inr * 2,
+        # Phase G item 3: multi-modal comparison
+        "modes": {
+            "auto": {
+                "label": "Auto-rickshaw",
+                "minutes_one_way": auto_min,
+                "inr_one_way": auto_cost,
+                "speed_kmh": auto_speed,
+            },
+            "bus": {
+                "label": "Public bus + walk",
+                "minutes_one_way": bus_min,
+                "inr_one_way": bus_cost,
+                "speed_kmh": bus_speed,
+            },
+            "ambulance": {
+                "label": "108 ambulance (priority)",
+                "minutes_one_way": ambulance_min,
+                "inr_one_way": ambulance_cost,
+                "speed_kmh": ambulance_speed,
+                "note": "free in most states · response 5-15 min",
+            },
+        },
         "assumptions": {
             "speed_kmh": speed_kmh,
             "is_urban_corridor": urban,
