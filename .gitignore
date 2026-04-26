@@ -59,3 +59,6 @@ coverage/
 # Build artifacts
 *.zip
 submission.zip
+
+# Internal recon / screenshots not for public repo
+docs/intel/
