@@ -85,7 +85,7 @@ export default function ArchitecturePage() {
 
         {/* Animated flow diagram */}
         <div className="mt-10 overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-950/60 p-6 shadow-2xl shadow-black/40">
-          <svg viewBox="0 0 980 560" className="w-full" aria-label="Aarogya Atlas architecture">
+          <svg viewBox="0 0 1000 660" className="w-full" aria-label="Aarogya Atlas architecture">
             <defs>
               <linearGradient id="strokeGrad" x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%" stopColor="#5eead4" stopOpacity="0.9" />
@@ -103,52 +103,74 @@ export default function ArchitecturePage() {
                   <feMergeNode in="SourceGraphic" />
                 </feMerge>
               </filter>
+              <marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#5eead4" opacity="0.85" />
+              </marker>
+              <marker id="arrowhead-soft" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(94,234,212,0.7)" />
+              </marker>
             </defs>
 
-            {/* Plane 1 — UI */}
-            <Plane x={20} y={30} w={200} h={70} title="UI Plane" sub="Next.js 16 · MapLibre" />
-            {/* Plane 2 — Supervisor */}
-            <Plane x={280} y={30} w={200} h={70} title="Supervisor" sub="GPT-OSS-120B · Groq" accent />
-            {/* Plane 3 — Tools */}
-            <Plane x={540} y={30} w={200} h={70} title="12 Tools" sub="manual streaming loop" />
-            {/* Plane 4 — Critic */}
-            <Plane x={800} y={30} w={160} h={70} title="Critic" sub="Trust 0–100 · PASS/WARN/FAIL" criticAccent />
-            {/* Plane 5 — Data */}
-            <Plane x={20} y={460} w={940} h={70} title="Data Plane" sub="Postgres 17 + pgvector  ·  Databricks (UC + Genie + MLflow + Mosaic VS)  ·  Ollama" />
+            {/* Top row — 4 planes evenly spaced. Plane width 220, gap 28.
+                Total span: 220*4 + 28*3 = 964 → centered with x-offset 18. */}
+            <Plane x={18}  y={70}  w={220} h={70} title="UI Plane"   sub="Next.js 16 · MapLibre" />
+            <Plane x={266} y={70}  w={220} h={70} title="Supervisor" sub="GPT-OSS-120B · Groq" accent />
+            <Plane x={514} y={70}  w={220} h={70} title="12 Tools"   sub="manual streaming loop" />
+            <Plane x={762} y={70}  w={220} h={70} title="Critic"     sub="Trust 0–100 · PASS / WARN / FAIL" criticAccent />
 
-            {/* Flowing connectors UI → Supervisor → Tools → Critic */}
-            <path d="M 220 65 H 280" fill="none" stroke="url(#strokeGrad)" strokeWidth="2.5" className="flow-stroke" />
-            <path d="M 480 65 H 540" fill="none" stroke="url(#strokeGrad)" strokeWidth="2.5" className="flow-stroke" />
-            <path d="M 740 65 H 800" fill="none" stroke="url(#strokeGrad)" strokeWidth="2.5" className="flow-stroke" />
+            {/* Forward flow arrows between planes (y centerline of plane = 105) */}
+            <path d="M 238 105 H 264" fill="none" stroke="url(#strokeGrad)" strokeWidth="2.5" markerEnd="url(#arrowhead)" className="flow-stroke" />
+            <path d="M 486 105 H 512" fill="none" stroke="url(#strokeGrad)" strokeWidth="2.5" markerEnd="url(#arrowhead)" className="flow-stroke" />
+            <path d="M 734 105 H 760" fill="none" stroke="url(#strokeGrad)" strokeWidth="2.5" markerEnd="url(#arrowhead)" className="flow-stroke" />
 
-            {/* Critic feedback arrow back to UI (every answer is verified) */}
+            {/* Critic → UI feedback loop: route ABOVE the planes (no overlap with tools).
+                Out top of Critic, up to y=30, across to above UI, down into UI top. */}
             <path
-              d="M 880 100 V 130 H 120 V 65"
+              d="M 872 70 V 30 H 128 V 70"
               fill="none"
-              stroke="rgba(94,234,212,0.55)"
+              stroke="rgba(94,234,212,0.6)"
               strokeWidth="1.5"
-              strokeDasharray="4 4"
+              strokeDasharray="5 4"
+              markerEnd="url(#arrowhead-soft)"
             />
-            <text x={400} y={123} fill="#5eead4" fontSize="10" fontFamily="ui-sans-serif, system-ui">
-              critic verdict streamed back to UI
+            <text
+              x={500}
+              y={22}
+              textAnchor="middle"
+              fill="#5eead4"
+              fontSize="11"
+              fontFamily="ui-sans-serif, system-ui"
+              opacity="0.85"
+            >
+              critic verdict streamed back to UI on every answer
             </text>
 
-            {/* Connector Supervisor ↓ Data */}
+            {/* Supervisor → Data vertical connector (centerline of Supervisor = x 376) */}
             <path
-              d="M 380 100 V 460"
+              d="M 376 140 V 540"
               fill="none"
               stroke="url(#strokeGradV)"
               strokeWidth="2.5"
               strokeDasharray="8 8"
               className="flow-stroke"
             />
+            {/* Tools → Data vertical connector (centerline of Tools = x 624) */}
+            <path
+              d="M 624 140 V 540"
+              fill="none"
+              stroke="url(#strokeGradV)"
+              strokeWidth="2"
+              strokeDasharray="8 8"
+              opacity="0.55"
+            />
 
-            {/* Tool grid (3 cols × 4 rows) */}
+            {/* Tool grid (3 cols × 4 rows) — spaced clear of arrows above and Data plane below.
+                Cell pitch: 75px row, 290px col. Centered around x=500 (3 cols spanning 580). */}
             {TOOLS.map((t, i) => {
               const col = i % 3;
               const row = Math.floor(i / 3);
-              const x = 100 + col * 270;
-              const y = 145 + row * 70;
+              const x = 210 + col * 290;
+              const y = 200 + row * 75;
               return (
                 <ToolNode
                   key={t.name}
@@ -161,6 +183,16 @@ export default function ArchitecturePage() {
                 />
               );
             })}
+
+            {/* Bottom — Data Plane spans full width with comfortable margin */}
+            <Plane
+              x={18}
+              y={540}
+              w={964}
+              h={80}
+              title="Data Plane"
+              sub="Postgres 17 + pgvector  ·  Databricks (UC + Genie + MLflow + Mosaic VS)  ·  Ollama"
+            />
           </svg>
 
           {/* Hover detail */}
@@ -352,10 +384,10 @@ function ToolNode({
       style={{ cursor: "pointer" }}
     >
       <rect
-        x={x - 110}
-        y={y - 22}
-        width={220}
-        height={44}
+        x={x - 130}
+        y={y - 24}
+        width={260}
+        height={50}
         rx={9}
         fill={fill}
         stroke={accent}
@@ -363,10 +395,10 @@ function ToolNode({
       />
       <text
         x={x}
-        y={y - 2}
+        y={y - 4}
         textAnchor="middle"
         fill="#f4f5f7"
-        fontSize="11"
+        fontSize="11.5"
         fontWeight="600"
         fontFamily="ui-monospace, monospace"
       >
@@ -380,14 +412,14 @@ function ToolNode({
         fontSize="9.5"
         fontFamily="ui-sans-serif, system-ui"
       >
-        {tool.desc.slice(0, 36)}
-        {tool.desc.length > 36 ? "…" : ""}
+        {tool.desc.slice(0, 40)}
+        {tool.desc.length > 40 ? "…" : ""}
       </text>
       {tool.local && (
-        <circle cx={x + 95} cy={y - 12} r={3.5} fill="#22d3ee" />
+        <circle cx={x + 115} cy={y - 14} r={3.5} fill="#22d3ee" />
       )}
       {tool.databricks && (
-        <circle cx={x + 95} cy={y - 12} r={3.5} fill="#fb923c" />
+        <circle cx={x + 115} cy={y - 14} r={3.5} fill="#fb923c" />
       )}
     </g>
   );
