@@ -61,6 +61,21 @@ ran a Validator self-check, computed `₹484` total cost (treatment + auto
 explicit trust caveats and the exact words to ask the receptionist.
 *Before the journey begins.*
 
+## Bespoke, not template
+
+Open Vercel, Linear, Anthropic side-by-side and most healthcare AI demos look identical: emerald→cyan→violet headline gradient, generic Lucide icons, Tailwind defaults. We chose against that.
+
+- **Display face:** Instrument Serif italic. आरोग्य wordmark in Tiro Devanagari Hindi at hero scale (hover for the breakdown — *अ + रोग → without disease*).
+- **3-color signature:** **Saffron** (#E8923D — Indian flag, healthcare-warm), **Deep Ink** (#070A12), **Healing Teal** (#14B8A6). Documented in [`docs/BRAND.md`](docs/BRAND.md).
+- **Mono Bloomberg-style tickers** instead of generic chips: *`Live │ Databricks │ 23 traces │ 11/12 tools`*.
+- **Saffron animated route polyline** (stroke-dasharray sweep) replaces the default cyan.
+- **Drive-time isochrones** — 3 concentric saffron rings (15 / 30 / 60 min) around the top recommendation. Modeled at India city avg 22 km/h. Judges have not seen this for healthcare-recommender output.
+- **Cinematic first-fly** — first agent run of a session triggers a 2.4-second slow-zoom-from-all-India dramatic reveal (subsequent flights are 1.4s).
+- **Live "now" stamp** — every answer card editorial-stamps with *`Computed 2s ago · agent 31s · 7 tools · VS index synced live`*. Counts up in real time.
+- **prefers-reduced-motion** respected globally.
+
+Anti-slop audit + remaining gaps: [`docs/SLOP_AUDIT.md`](docs/SLOP_AUDIT.md).
+
 ## Multimodal triage on-device
 
 ![Photo upload → medgemma 27B triage in 10s → input pre-filled](docs/screenshots/13_photo_upload.png)
