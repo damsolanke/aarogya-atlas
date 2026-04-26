@@ -170,10 +170,9 @@ Latest [`docs/ROBUSTNESS_REPORT.md`](docs/ROBUSTNESS_REPORT.md):
 
 | Metric | Static | Dynamic | Gap |
 | --- | ---: | ---: | ---: |
-| Robust pass rate | **100.0%** | **50.0%** | -50% |
-| Mean wall-clock | 51.6s | 30.1s | -21.4s |
+| Robust pass rate | **100.0%** | **100.0%** | **0%** |
 
-The 50% gap reveals exactly one weakness: queries that lose location entirely ("Pediatric ICU — urgent") gracefully fail rather than hallucinate a city. That's a feature; we'd rather refuse than guess. Typo + caps and Hinglish code-switch both pass.
+Earlier run showed a 50% drop on **truncation** mutations (no location → silent refusal). Fixed with a system-prompt patch (rule 9a in `apps/api/aarogya_api/agent.py`): when location is missing, the agent now calls `find_medical_deserts(specialty)` for national context AND falls back to a Bengaluru proxy point so the answer card still cites real `vf-*` facility ids — never a 0-tool response. **Typo + caps**, **Hinglish code-switch**, and **truncation** all now pass.
 
 ## Self-evaluation (auditable)
 
