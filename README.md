@@ -17,13 +17,15 @@
 [![Hack-Nation 2026](https://img.shields.io/badge/Hack--Nation-2026-5eead4?style=for-the-badge)](https://projects.hack-nation.ai)
 [![License MIT](https://img.shields.io/badge/License-MIT-zinc?style=for-the-badge)](LICENSE)
 
-**▶ Live demo:** redeploying to Vercel + Railway — link will land here once
-the deploy is live. Recorded walkthrough below until then.
+**▶ Live demo:** [**aarogya-atlas.vercel.app**](https://aarogya-atlas.vercel.app)
+· API: [**adesolanke-aarogya-atlas-api.hf.space**](https://adesolanke-aarogya-atlas-api.hf.space/healthz)
 
 [**60s video**](https://www.loom.com/share/5f67de77c1f24328b5d395275d07f249)
 
 Built by **Dam Solanke** · Lead Solutions Architect — Healthcare · Frisco, TX
 · originally submitted to **Hack-Nation 5th edition**, Databricks Challenge 03.
+
+**$0-forever stack:** Vercel Hobby (web) · Hugging Face Spaces (API, Docker, free CPU Basic) · Neon (Postgres + pgvector free tier) · Groq (free tier) · Google AI Studio (free tier). No credit card on file anywhere.
 
 </div>
 
