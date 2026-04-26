@@ -12,7 +12,7 @@ export default function Footer() {
             <span>
               Built by{" "}
               <span className="text-zinc-200">Dam Solanke</span> · Lead Solutions
-              Architect — Healthcare · Frisco, TX
+              Architect — Healthcare
             </span>
           </div>
           <div className="text-[10.5px] text-zinc-600">

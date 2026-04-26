@@ -46,10 +46,9 @@ export default function IdleHero({
           <span className="sep">│</span>
           <span>Databricks</span>
           <span className="sep">│</span>
-          <span className="v">23</span>
-          <span>traces</span>
+          <span className="v">Critic-verified</span>
           <span className="sep">│</span>
-          <span className="v">11/12</span>
+          <span className="v">12/12</span>
           <span>tools</span>
         </div>
 
