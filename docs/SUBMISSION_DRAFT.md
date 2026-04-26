@@ -49,6 +49,7 @@ A streaming agent (Claude Opus 4.7 with adaptive thinking, manual tool-use loop,
 • Validator agent (PASS/WARN/FAIL with source-text snippet)
 • Cost ranker: total ₹ = treatment + KSRTC bus + auto-rickshaw + MGNREGA wage-loss
 • On-device PHI extraction (Qwen 2.5 32B + bge-m3 multilingual via Ollama) — patient text never leaves the device
+• On-device multimodal triage (medgemma 27B vision) — upload a wound photo, prescription, X-ray, or oxygen-cylinder gauge; ~4s structured triage with severity + recommended specialty
 • Mosaic AI Vector Search (Databricks Delta Sync Index)
 • find_medical_deserts — district-level coverage gaps with severity scoring
 • Clinical-pathway routing: obstetric_emergency → CEmONC; snakebite → polyvalent + species coverage; neonatal → SNCU/NICU; STEMI → cathlab+thrombolytics
@@ -62,7 +63,7 @@ Five public routes: /, /compare (vs ChatGPT/Maps 14/0/0), /equity (disparate-imp
 > _Placeholder: "What makes your project better or different from existing solutions?"_
 
 ```
-Three things no other Challenge-3 entry shipped: (1) On-device PHI extraction wired into the agent loop with MLflow runs_on=device tag — patient text never touches the cloud. (2) Trust Scorer with 80% bootstrap-CI + Validator self-check that catches the spec's named contradiction (advanced surgery, no anesthesia). (3) Equity counterfactual planner: "add N CEmONC beds in {district} → averted maternal deaths/yr" via gravity model + Six-Delays attribution. Plus: Mosaic AI Vector Search verified end-to-end while many other Databricks-track teams in #challenge-03-databricks remain blocked on it.
+Four things no other Challenge-3 entry shipped: (1) On-device PHI extraction AND multimodal triage (Qwen 2.5 32B + medgemma 27B vision) — wound photo, X-ray, prescription all triaged in <5s; PHI never touches the cloud. (2) Trust Scorer with 80% bootstrap-CI + Validator self-check that catches the spec's named contradiction (advanced surgery, no anesthesia). (3) Equity counterfactual planner: "add N CEmONC beds in {district} → averted maternal deaths/yr" via gravity model + Six-Delays attribution. (4) Adversarial robustness eval (DAS-style perturbation) reporting honest static-vs-dynamic accuracy gap. Plus: Mosaic AI Vector Search verified end-to-end while many other Databricks-track teams in #challenge-03-databricks remain blocked on it.
 ```
 
 ## 5. Implementation & Technology *
