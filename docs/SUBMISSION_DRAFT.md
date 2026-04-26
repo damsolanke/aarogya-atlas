@@ -156,9 +156,16 @@ agentic-AI, healthcare, multilingual, on-device-LLM, RAG, FHIR, vector-search, e
 
 **Form warning verbatim:** *"Having both videos is important — the jury needs them to fully evaluate your project. Projects without a Demo + Tech video may score lower."*
 
-## Event dropdown — what to pick
-- **Event \***: select `5th-hack-nation - Deadline: Apr 26, 9:00 AM ET`
-- **Challenge \***: select Challenge 3 (Databricks, Building Agentic Healthcare Maps for 1.4 Billion Lives) — exact label TBD when scrolled to
+## Event + Challenge + Track — exact dropdown labels
+
+- **Event \***: `5th-hack-nation - Deadline: Apr 26, 9:00 AM ET` (only option)
+- **Challenge \***: `Serving A Nation (Agentic AI & Data Engineering)` ← **THIS is Challenge 3 / Databricks. Other options seen:**
+  - Earn in the Agent Economy
+  - Generative City-Wallet
+  - Serving A Nation ← us
+  - The AI Scientist
+  - The World Bank | UNMAPPED (note: equity-counterfactual potentially applies here too — but you can only pick one)
+- **Track**: `VC Big Bets` *(more visibility/credibility for hackathon-built ventures)* OR `Company Track` *(if pitching as enterprise-ready)*. Pick `VC Big Bets` for our positioning.
 
 ## Suggested Media Gallery attachments (8 slots, in priority order)
 1. `02_query_result.png` — live agent answer card with all 3 tiers
