@@ -36,8 +36,13 @@ sys.path.insert(0, str(ROOT / "apps" / "api"))
 from aarogya_api.db import SessionLocal  # noqa: E402
 from aarogya_api.local_llm import embed  # noqa: E402
 
+import os
+
 XLSX_PATH = Path(
-    "/Users/adesolanke/Library/CloudStorage/OneDrive-Personal/Dropbox/IT TOUCH/USA/Hack-Nation/VF_Hackathon_Dataset_India_Large.xlsx"
+    os.environ.get(
+        "VF_DATASET_PATH",
+        ROOT / "data" / "raw" / "VF_Hackathon_Dataset_India_Large.xlsx",
+    )
 )
 
 console = Console()

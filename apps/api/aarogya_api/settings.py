@@ -10,7 +10,7 @@ class Settings(BaseSettings):
 
     # Postgres
     database_url: str = Field(
-        default="postgresql+asyncpg://adesolanke@localhost:5432/aarogya"
+        default="postgresql+asyncpg://postgres@localhost:5432/aarogya"
     )
 
     # Anthropic (cloud) — agent supervisor + clinical reasoning
@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     # OpenStreetMap
     overpass_url: str = "https://overpass-api.de/api/interpreter"
     nominatim_url: str = "https://nominatim.openstreetmap.org"
-    user_agent: str = "AarogyaAtlas/0.1 (HackNation 2026; contact: damolasolanke@gmail.com)"
+    user_agent: str = "AarogyaAtlas/0.1 (HackNation 2026; contact: damola@ittouch.io)"
 
     # Default geographic scope for the demo
     default_state: str = "Karnataka"
