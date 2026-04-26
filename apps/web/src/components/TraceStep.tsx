@@ -53,11 +53,11 @@ export default function TraceStep({ step }: { step: TraceEvent }) {
         </div>
         <div className="min-w-0 flex-1">
           <div className="text-[10px] font-semibold uppercase tracking-wider text-violet-300/80">
-            Reasoning · Claude Opus 4.7
+            Reasoning · GPT-OSS-120B (Groq)
           </div>
           <div className="mt-1 text-[13px] leading-relaxed text-zinc-200">
             {step.content || (
-              <span className="italic text-zinc-500">(adaptive thinking…)</span>
+              <span className="italic text-zinc-500">(thinking…)</span>
             )}
           </div>
         </div>

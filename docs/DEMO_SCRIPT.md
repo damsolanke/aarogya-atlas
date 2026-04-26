@@ -36,7 +36,7 @@ Two videos. Read each line into the camera. Stay within the time budget.
 
 ### 0:18 — 0:33 — The agent reasons (live status chip animates)
 **SAY:**
-> *"Claude Opus 4.7 with adaptive thinking coordinates twelve tools —
+> *"GPT-OSS-120B (Groq) with adaptive thinking coordinates twelve tools —
 > geocode, facility search, on-device PHI extraction, Trust Scorer,
 > Validator, total ₹ cost, journey estimate. The status chip shows the
 > live activity. PHI tools carry an on-device badge so judges can audit:
@@ -84,7 +84,7 @@ overlay. Closing shot: full India view with red halos.
 
 ### 0:00 — 0:12 — The agent loop (open `apps/api/aarogya_api/agent.py`)
 **SAY:**
-> *"Manual streaming loop using the official Anthropic SDK. No
+> *"Manual streaming loop using the official Groq SDK (OpenAI-compatible). No
 > LangGraph, no LangChain. Twelve tools, max fourteen iterations,
 > adaptive thinking with effort high. Thinking signature blocks
 > preserved across turns so the model can build on its own reasoning.

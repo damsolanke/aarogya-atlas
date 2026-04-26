@@ -24,7 +24,7 @@
 
 ## 500 chars (project summary, hackathon submission "About", Devpost short)
 
-> In rural India, a postal code can decide a lifespan. Aarogya Atlas reduces Discovery-to-Care time: a Claude Opus 4.7 agent with 12 tools (parallel fan-out) ranks facilities by Trust Score + total ₹ cost + travel time, surfaces contradictions in messy source data, validates each recommendation against source text, and publishes its own equity audit (ICU 7.7× disparate impact). On-device Qwen 2.5 32B keeps PHI local. Live in Databricks: Mosaic AI VS, Genie, UC mask UDF, MLflow per-tool spans. EN/HI/TA verified.
+> In rural India, a postal code can decide a lifespan. Aarogya Atlas reduces Discovery-to-Care time: a GPT-OSS-120B (Groq) agent with 12 tools (parallel fan-out) ranks facilities by Trust Score + total ₹ cost + travel time, surfaces contradictions in messy source data, validates each recommendation against source text, and publishes its own equity audit (ICU 7.7× disparate impact). On-device Qwen 2.5 32B keeps PHI local. Live in Databricks: Mosaic AI VS, Genie, UC mask UDF, MLflow per-tool spans. EN/HI/TA verified.
 
 (534 chars — trim or expand based on field.)
 
@@ -34,7 +34,7 @@
 >
 > In rural India, families travel hours only to learn the dialysis machine broke yesterday or the brochure's Ayushman Bharat coverage was outdated. **Aarogya Atlas reduces Discovery-to-Care time** by turning the 10,000-facility Virtue Foundation dataset into a trust-scored agentic intelligence network for ASHA workers, NGO planners, and families.
 >
-> The agent — Claude Opus 4.7 with adaptive thinking, manual streaming loop, parallel `asyncio.gather` tool fan-out (-22% wall-clock) — coordinates **12 tools**: geocode, facility_search, on-device PHI extraction (Qwen 2.5 32B), multilingual semantic search (bge-m3), Mosaic AI Vector Search, journey + cost estimators (KSRTC bus + MGNREGA wage-loss), Trust Scorer (7 contradiction rules + 80% bootstrap CI), Validator agent (PASS/WARN/FAIL with cited evidence), find_medical_deserts. Clinical-pathway routing (CEmONC vs BEmONC, antivenom species coverage by region) applied before generic search.
+> The agent — GPT-OSS-120B (Groq) with adaptive thinking, manual streaming loop, parallel `asyncio.gather` tool fan-out (-22% wall-clock) — coordinates **12 tools**: geocode, facility_search, on-device PHI extraction (Qwen 2.5 32B), multilingual semantic search (bge-m3), Mosaic AI Vector Search, journey + cost estimators (KSRTC bus + MGNREGA wage-loss), Trust Scorer (7 contradiction rules + 80% bootstrap CI), Validator agent (PASS/WARN/FAIL with cited evidence), find_medical_deserts. Clinical-pathway routing (CEmONC vs BEmONC, antivenom species coverage by region) applied before generic search.
 >
 > **Live in Databricks** (`dbc-12ce3b55`): Mosaic AI VS Delta Sync Index verified end-to-end ("cardiology Bengaluru ECG" → Bright Hospital, Aruna Diagnostics, Dr Balaji Natarajan); Unity Catalog with PHI Column-mask UDF; Genie Space NL→SQL verified ("top 5 states + cardiology breakdown" → Maharashtra 1506, UP 1058); MLflow 23 traces with `runs_on=device` tag for on-device tools.
 >
@@ -46,7 +46,7 @@
 
 ## Discord handle blurb
 
-> Working on Aarogya Atlas — Challenge 3. Mosaic AI VS + on-device PHI + 12-tool agent. Live demo: https://formal-rogers-poster-meanwhile.trycloudflare.com — would love feedback.
+> Working on Aarogya Atlas — Challenge 3. Mosaic AI VS + on-device PHI + 12-tool agent. Live demo: http://localhost:3000 — would love feedback.
 
 ## 30-second demo intro
 

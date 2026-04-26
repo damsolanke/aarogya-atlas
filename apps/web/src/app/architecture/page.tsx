@@ -75,9 +75,10 @@ export default function ArchitecturePage() {
         </div>
         <p className="mt-3 max-w-3xl text-[14px] leading-relaxed text-zinc-400">
           Four planes — UI, supervisor, twelve tools, data. The supervisor
-          (Claude Opus 4.7 with adaptive thinking) coordinates the tools in a
-          manual streaming loop. PHI tools run on-device; everything else runs
-          in Postgres or Databricks. Hover any tool to see what it does.
+          (GPT-OSS-120B via Groq, OpenAI-compatible function calling) coordinates
+          the tools in a streaming loop. Vision triage routes to Gemini Flash-Lite
+          (cloud) or on-device medgemma; PHI tools run on-device; everything else
+          runs in Postgres or Databricks. Hover any tool to see what it does.
         </p>
 
         {/* Animated flow diagram */}
@@ -105,7 +106,7 @@ export default function ArchitecturePage() {
             {/* Plane 1 — UI */}
             <Plane x={20} y={30} w={200} h={70} title="UI Plane" sub="Next.js 16 · MapLibre" />
             {/* Plane 2 — Supervisor */}
-            <Plane x={390} y={30} w={200} h={70} title="Supervisor" sub="Claude Opus 4.7 · adaptive" accent />
+            <Plane x={390} y={30} w={200} h={70} title="Supervisor" sub="GPT-OSS-120B · Groq" accent />
             {/* Plane 3 — Tools */}
             <Plane x={760} y={30} w={200} h={70} title="12 Tools" sub="manual streaming loop" />
             {/* Plane 4 — Data */}
@@ -201,10 +202,10 @@ export default function ArchitecturePage() {
             icon={Cpu}
             tone="emerald"
             items={[
-              "Official Anthropic SDK — claude-opus-4-7",
-              "Adaptive thinking with effort=high, max_iterations=14",
+              "Groq SDK — openai/gpt-oss-120b (free tier, 30 RPM / 1,000 RPD)",
+              "OpenAI-compatible function calling, max_iterations=14",
               "Manual streaming loop — no LangGraph, no LangChain",
-              "Thinking signature blocks preserved across turns",
+              "Provider-agnostic loop — swap Groq → Cerebras with one config change",
             ]}
           />
           <PlaneCard
@@ -226,7 +227,8 @@ export default function ArchitecturePage() {
             items={[
               "Postgres 17 + pgvector — local Lakebase analog",
               "Databricks Unity Catalog · Genie · MLflow · Mosaic AI VS",
-              "Ollama: Qwen 2.5 32B + bge-m3 + medgemma 27B",
+              "Cloud vision: Gemini Flash-Lite (live demo path)",
+              "On-device fallback: Ollama (Qwen 2.5 32B + bge-m3 + medgemma 27B) — hospital-VPC mode",
               "PHI mask UDF on patient_phone column",
             ]}
           />

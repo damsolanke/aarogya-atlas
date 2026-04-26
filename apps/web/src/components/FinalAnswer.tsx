@@ -22,6 +22,7 @@ import {
   Navigation,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
+import type { CriticVerdict, CriticFlag } from "@/lib/api";
 
 /* ----------------------------------------------------------------------------
    Public component
@@ -33,12 +34,14 @@ export default function FinalAnswer({
   computedAt,
   durationMs,
   toolCalls,
+  critic,
 }: {
   text: string;
   streaming: boolean;
   computedAt?: number; // epoch ms, when final landed
   durationMs?: number;
   toolCalls?: number;
+  critic?: CriticVerdict | null;
 }) {
   const parsed = useMemo(() => (streaming ? null : parseAnswer(text)), [text, streaming]);
 
@@ -49,6 +52,7 @@ export default function FinalAnswer({
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       className="overflow-hidden rounded-lg border border-zinc-800/80 bg-[var(--bg-card)]/70 shadow-xl shadow-black/30 backdrop-blur-sm"
     >
+      {critic && !streaming && <CriticBanner critic={critic} />}
       <Header streaming={streaming} stats={parsed?.summary} />
 
       <div className="space-y-2.5 p-3.5">
@@ -113,6 +117,121 @@ function NowStamp({
 }
 
 /* ----------------------------------------------------------------------------
+   Critic banner — mandatory verification on every answer.
+
+   Every supervisor answer passes through a separate critic LLM call (see
+   `apps/api/aarogya_api/agent.py::_run_critic`). The critic returns a
+   deterministic 0-100 Trust Score plus structured flags. This banner is the
+   hero metric on every recommendation card: judges and users see it before
+   they see anything else.
+---------------------------------------------------------------------------- */
+
+function CriticBanner({ critic }: { critic: CriticVerdict }) {
+  const [open, setOpen] = useState(critic.verdict !== "PASS");
+  const score = Math.max(0, Math.min(100, critic.trust_score ?? 0));
+  const tone =
+    critic.verdict === "PASS"
+      ? { ring: "ring-emerald-500/50", bg: "from-emerald-500/15 via-emerald-500/5", text: "text-emerald-200", dot: "bg-emerald-400", label: "text-emerald-300" }
+      : critic.verdict === "WARN"
+      ? { ring: "ring-amber-500/50", bg: "from-amber-500/15 via-amber-500/5", text: "text-amber-200", dot: "bg-amber-400", label: "text-amber-300" }
+      : { ring: "ring-red-500/50", bg: "from-red-500/15 via-red-500/5", text: "text-red-200", dot: "bg-red-400", label: "text-red-300" };
+
+  return (
+    <div className={cn("border-b border-zinc-800/80 bg-gradient-to-r to-transparent", tone.bg)}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors hover:bg-white/[0.02]"
+      >
+        <div className={cn("flex h-9 w-9 items-center justify-center rounded-lg ring-1", tone.ring, "bg-black/30")}>
+          <ShieldCheck className={cn("h-4 w-4", tone.text)} />
+        </div>
+        <div className="flex-1 leading-tight">
+          <div className="flex items-center gap-2">
+            <span className={cn("font-mono text-[10px] font-semibold uppercase tracking-[0.18em]", tone.label)}>
+              Critic-verified
+            </span>
+            <span className={cn("inline-flex h-1.5 w-1.5 rounded-full", tone.dot)} />
+            <span className={cn("text-[10px] font-semibold uppercase tracking-wider", tone.label)}>
+              {critic.verdict}
+            </span>
+          </div>
+          <div className="mt-0.5 flex items-baseline gap-2">
+            <span className={cn("font-mono text-[20px] font-semibold tabular-nums", tone.text)}>
+              {score}
+            </span>
+            <span className="text-[11px] text-zinc-500">/ 100 trust score</span>
+          </div>
+        </div>
+        {critic.flags && critic.flags.length > 0 && (
+          <div className="flex items-center gap-1.5">
+            <span className="rounded-full border border-zinc-700/60 bg-zinc-900/60 px-2 py-0.5 font-mono text-[10px] text-zinc-300">
+              {critic.flags.length} {critic.flags.length === 1 ? "flag" : "flags"}
+            </span>
+            <ChevronDown
+              className={cn(
+                "h-3.5 w-3.5 text-zinc-500 transition-transform",
+                open && "rotate-180"
+              )}
+            />
+          </div>
+        )}
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (critic.flags?.length || critic.summary) && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="overflow-hidden border-t border-zinc-800/60"
+          >
+            <div className="space-y-2 px-3.5 py-2.5 text-[12px]">
+              {critic.summary && (
+                <div className="text-zinc-300">{critic.summary}</div>
+              )}
+              {critic.flags?.length > 0 && (
+                <ul className="space-y-1.5">
+                  {critic.flags.map((f, i) => (
+                    <CriticFlagRow key={i} flag={f} />
+                  ))}
+                </ul>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function CriticFlagRow({ flag }: { flag: CriticFlag }) {
+  const sev =
+    flag.severity === "high"
+      ? { color: "text-red-300", border: "border-red-700/50", bg: "bg-red-950/30" }
+      : flag.severity === "med"
+      ? { color: "text-amber-300", border: "border-amber-700/50", bg: "bg-amber-950/30" }
+      : { color: "text-zinc-400", border: "border-zinc-700/50", bg: "bg-zinc-900/40" };
+  return (
+    <li className={cn("flex items-start gap-2 rounded-md border px-2 py-1.5", sev.border, sev.bg)}>
+      <AlertTriangle className={cn("mt-[1px] h-3 w-3 shrink-0", sev.color)} />
+      <div className="flex-1 leading-snug">
+        <div className={cn("font-mono text-[10px] font-semibold uppercase tracking-wider", sev.color)}>
+          {flag.severity}
+        </div>
+        <div className="text-zinc-200">{flag.issue}</div>
+        {flag.evidence && (
+          <div className="mt-0.5 italic text-zinc-500 line-clamp-2">
+            &ldquo;{flag.evidence}&rdquo;
+          </div>
+        )}
+      </div>
+    </li>
+  );
+}
+
+/* ----------------------------------------------------------------------------
    Header — model row + summary stat strip
 ---------------------------------------------------------------------------- */
 
@@ -134,7 +253,7 @@ function Header({
             Aarogya Atlas
           </div>
           <div className="text-[10px] text-zinc-500">
-            Claude Opus 4.7 · adaptive thinking
+            GPT-OSS-120B · Groq
           </div>
         </div>
         {streaming && (

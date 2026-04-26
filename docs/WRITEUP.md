@@ -21,7 +21,7 @@ I had 24 hours.
 - **Validator verdict** (PASS / WARN / FAIL with source-text snippet)
 - **Pathway routing** for clinical specifics (CEmONC vs BEmONC for obstetrics, polyvalent + species coverage for snakebite, SNCU/NICU for neonates, cathlab + thrombolytics for STEMI)
 
-It runs Claude Opus 4.7 with adaptive thinking in a manual streaming loop (no LangGraph), parallel-fans-out the tool calls via `asyncio.gather` (-22% wall-clock), and exposes the entire reasoning trace via Server-Sent Events so a judge can audit *how* it answered.
+It runs GPT-OSS-120B (Groq) with adaptive thinking in a manual streaming loop (no LangGraph), parallel-fans-out the tool calls via `asyncio.gather` (-22% wall-clock), and exposes the entire reasoning trace via Server-Sent Events so a judge can audit *how* it answered.
 
 PHI never touches the cloud. Free-text capability extraction runs on **Qwen 2.5 32B**; multilingual embeddings on **bge-m3**; and the camera-button on the chat bar runs **medgemma 27B vision** locally — drop a wound photo or X-ray, get a 4-second triage with severity and recommended specialty.
 
@@ -74,7 +74,7 @@ A **counterfactual policy slider** answers the question a state health-mission C
 
 ---
 
-**Live demo:** https://formal-rogers-poster-meanwhile.trycloudflare.com
+**Live demo:** http://localhost:3000
 **GitHub:** https://github.com/damsolanke/aarogya-atlas
 **Auditable eval:** [docs/EVAL_REPORT.md](EVAL_REPORT.md) · [docs/ROBUSTNESS_REPORT.md](ROBUSTNESS_REPORT.md)
-**Architecture:** [/architecture](https://formal-rogers-poster-meanwhile.trycloudflare.com/architecture)
+**Architecture:** [/architecture](http://localhost:3000/architecture)

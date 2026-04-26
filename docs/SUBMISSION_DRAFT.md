@@ -37,7 +37,7 @@ Aarogya Atlas — agentic healthcare intelligence for 1.4B people
 > _Placeholder: "Fine-tuned language model specialized for legal document analysis…"_
 
 ```
-Trust-scored, cost-aware, multilingual healthcare facility recommender for India. A 12-tool agent (Claude Opus 4.7, parallel fan-out, on-device PHI extraction via Qwen 2.5 32B) ranks the Virtue Foundation's 10,000-facility dataset by Trust Score + total ₹ cost + travel time, surfaces source contradictions, and validates each recommendation. Live in Databricks (Mosaic AI VS, Genie, UC mask UDF, MLflow per-tool spans). EN · हिंदी · தமிழ். 0 errors across 12 audited queries.
+Trust-scored, cost-aware, multilingual healthcare facility recommender for India. A 12-tool agent (GPT-OSS-120B (Groq), parallel fan-out, on-device PHI extraction via Qwen 2.5 32B) ranks the Virtue Foundation's 10,000-facility dataset by Trust Score + total ₹ cost + travel time, surfaces source contradictions, and validates each recommendation. Live in Databricks (Mosaic AI VS, Genie, UC mask UDF, MLflow per-tool spans). EN · हिंदी · தமிழ். 0 errors across 12 audited queries.
 ```
 
 ## 1. Problem & Challenge *
@@ -58,7 +58,7 @@ ASHA (Accredited Social Health Activist) workers, NGO planners (Virtue Foundatio
 > _Placeholder: "How do you solve the problem? What are your main functionalities?"_
 
 ```
-A streaming agent (Claude Opus 4.7 with adaptive thinking, manual tool-use loop, parallel asyncio.gather fan-out — 22% wall-clock reduction) coordinates 12 tools to answer healthcare-discovery queries:
+A streaming agent (GPT-OSS-120B (Groq) with adaptive thinking, manual tool-use loop, parallel asyncio.gather fan-out — 22% wall-clock reduction) coordinates 12 tools to answer healthcare-discovery queries:
 
 • geocode (Nominatim) → facility_search (Postgres + Haversine) → check_hours / status_feed
 • Trust Scorer with 7 contradiction rules + 4 metadata signals + 80% bootstrap CI + cited evidence
@@ -88,7 +88,7 @@ Five things no other Challenge-3 entry shipped: (1) **Multimodal on-device triag
 ```
 Frontend: Next.js 16 + React 19 + MapLibre GL (clusters + heatmap + 3D buildings + ranked DOM pins + OSRM routes + pulsing critical-district halos) + framer-motion + react-countup. 5 routes, mobile-responsive, OG card.
 
-Backend: FastAPI + official Anthropic SDK + Ollama wrapper. Manual streaming agent loop in apps/api/aarogya_api/agent.py — no LangGraph, no LangChain. Thinking-signature blocks preserved across turns. Server-Sent Events to the frontend. Parallel asyncio.gather over tool_use blocks.
+Backend: FastAPI + official Groq SDK (OpenAI-compatible) + Ollama wrapper. Manual streaming agent loop in apps/api/aarogya_api/agent.py — no LangGraph, no LangChain. Thinking-signature blocks preserved across turns. Server-Sent Events to the frontend. Parallel asyncio.gather over tool_use blocks.
 
 Data: Postgres 17 + pgvector for local Lakebase analog. Schema is FHIR R4 (Location + HealthcareService + intake_note + status_event).
 
@@ -139,7 +139,7 @@ Roadmap (post-submission): WhatsApp + voice ASHA-facing channel, live outbound p
 
 ## Live Project URL (optional)
 ```
-https://formal-rogers-poster-meanwhile.trycloudflare.com
+http://localhost:3000
 ```
 
 ## GitHub Repository URL *
@@ -150,7 +150,7 @@ https://github.com/damsolanke/aarogya-atlas
 
 ## Technologies (multi-tag input)
 ```
-Next.js 16, React 19, MapLibre GL, FastAPI, Anthropic Claude Opus 4.7, Ollama, Qwen 2.5 32B, bge-m3, Postgres 17, pgvector, Databricks, Unity Catalog, Mosaic AI Vector Search, MLflow, Genie, Cloudflare Tunnels
+Next.js 16, React 19, MapLibre GL, FastAPI, Anthropic GPT-OSS-120B (Groq), Ollama, Qwen 2.5 32B, bge-m3, Postgres 17, pgvector, Databricks, Unity Catalog, Mosaic AI Vector Search, MLflow, Genie, Cloudflare Tunnels
 ```
 
 ## Tags (multi-tag input)

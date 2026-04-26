@@ -33,7 +33,7 @@ Pre-flight checklist (do BEFORE recording):
 
 ### 0:18 — 0:34 — AGENT REASONS (16s)
 - **On screen:** LiveStatus chip cycles: Locating → Searching → Trust-scoring → Validating. Numbered map pins appear 1, 2, 3 around Bengaluru.
-- **Voice:** *"Claude Opus 4.7 with twelve tools — parallel fan-out, adaptive thinking. PHI tools run on-device, marked with the cyan badge. The agent geocodes, searches the dataset, scores trust, runs a validator self-check, and computes total rupees including bus fare and lost wages."*
+- **Voice:** *"GPT-OSS-120B (Groq) with twelve tools — parallel fan-out, adaptive thinking. PHI tools run on-device, marked with the cyan badge. The agent geocodes, searches the dataset, scores trust, runs a validator self-check, and computes total rupees including bus fare and lost wages."*
 
 ### 0:34 — 0:48 — THE ANSWER CARD (14s)
 - **On screen:** BEST MATCH card slides in. Cursor highlights the cost pill (₹484), the trust pill (65/100, CI 50-95), and the cyan "Ask the receptionist" callout.
@@ -52,7 +52,7 @@ Pre-flight checklist (do BEFORE recording):
 
 ### 0:00 — 0:10 — THE AGENT LOOP (10s)
 - **On screen:** `apps/api/aarogya_api/agent.py` — scroll past `messages.stream()`, the parallel `asyncio.gather` block (highlight the comment).
-- **Voice:** *"Manual streaming loop — official Anthropic SDK, no LangGraph. Twelve tools, max fourteen iterations. Multiple tool_use blocks per turn run in parallel via asyncio.gather — twenty-two percent wall-clock cut."*
+- **Voice:** *"Manual streaming loop — official Groq SDK (OpenAI-compatible), no LangGraph. Twelve tools, max fourteen iterations. Multiple tool_use blocks per turn run in parallel via asyncio.gather — twenty-two percent wall-clock cut."*
 
 ### 0:10 — 0:20 — TRUST + VALIDATOR (10s)
 - **On screen:** `apps/api/aarogya_api/trust.py` — show `_RULES` dict, `bootstrap_ci()`, `validate_recommendation()`.
@@ -83,7 +83,7 @@ Pre-flight checklist (do BEFORE recording):
 ## Backup demo (pre-recorded MP4)
 
 If the live demo fails on judging day, judges play the recorded MP4 instead. To record a clean run NOW:
-1. Open https://formal-rogers-poster-meanwhile.trycloudflare.com
+1. Open http://localhost:3000
 2. macOS QuickTime → New Screen Recording → drag to crop Edge window
 3. Click ECG suggestion → wait for full answer card → toggle dialysis desert overlay
 4. Stop after 75 seconds

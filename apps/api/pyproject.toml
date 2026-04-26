@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.13"
 dependencies = [
-    "anthropic>=0.97.0",
+    "groq>=0.13.0",
     "asyncpg>=0.31.0",
     "databricks-sdk>=0.105.0",
     "fastapi>=0.136.1",
