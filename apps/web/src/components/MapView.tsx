@@ -457,12 +457,18 @@ export default function MapView({
   }, [pins, mapReady]);
 
   // ---- Cinematic camera: fitBounds over highlights if many, else flyTo ----
+  // First user-driven move gets a 2.4s slow zoom from all-India down to the
+  // recommendation — Phase H signature moment. Subsequent moves are 1.4s.
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
     const ranked = pins.filter(
       (p) => p.highlight && Number.isFinite(p.lat) && Number.isFinite(p.lon)
     );
+    if (!ranked.length && (center[0] === 22.5937 && center[1] === 78.9629)) return; // skip default
+    const isFirst = !sessionStorage.getItem("aa-first-fly");
+    const flyDuration = isFirst ? 2400 : 1400;
+    if (isFirst) sessionStorage.setItem("aa-first-fly", "1");
     const move = () => {
       if (ranked.length >= 2) {
         const bounds = ranked.reduce(
@@ -477,7 +483,7 @@ export default function MapView({
           maxZoom: 14,
           pitch: 50,
           bearing: -17,
-          duration: 1800,
+          duration: flyDuration,
           essential: true,
         });
         return;
@@ -488,14 +494,15 @@ export default function MapView({
         zoom: targetZoom,
         pitch: targetZoom > 11 ? 55 : 24,
         bearing: targetZoom > 11 ? -17 : 0,
-        speed: 0.6,
+        speed: isFirst ? 0.4 : 0.7, // first flight is slower → cinematic
         curve: 1.42,
-        duration: 2000,
+        duration: flyDuration,
         easing: (t) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t),
         essential: true,
       });
     };
     if (mapReady) move();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [center, zoom, pins, mapReady]);
 
   // ---- Draw OSRM route from `origin` to top-ranked facility (rank=1) ----
@@ -530,12 +537,34 @@ export default function MapView({
           source: "route",
           layout: { "line-cap": "round", "line-join": "round" },
           paint: {
-            "line-width": 4.5,
-            "line-color": "#22d3ee",
-            "line-opacity": 0.85,
-            "line-blur": 0.5,
+            "line-width": 5,
+            "line-color": "#e8923d", // brand saffron
+            "line-opacity": 0.9,
+            "line-blur": 0.4,
+            // Reveal animation: stroke-dasharray sweep
+            "line-dasharray": [0, 4, 3] as unknown as number[],
           },
         }, LAYER_UNCLUSTERED);
+
+        // Animate the dash to "draw" the route in 800ms
+        const dashFrames = [
+          [0, 4, 3],
+          [0.5, 4, 2.5],
+          [1, 4, 2],
+          [2, 4, 1],
+          [3, 4, 0],
+        ];
+        let frame = 0;
+        const animDash = window.setInterval(() => {
+          if (!map.getLayer(LAYER_ROUTE)) return window.clearInterval(animDash);
+          if (frame >= dashFrames.length) {
+            map.setPaintProperty(LAYER_ROUTE, "line-dasharray", [1, 0] as unknown as number[]);
+            window.clearInterval(animDash);
+            return;
+          }
+          map.setPaintProperty(LAYER_ROUTE, "line-dasharray", dashFrames[frame] as unknown as number[]);
+          frame++;
+        }, 160);
       } catch {
         /* OSRM rate-limited or down — silently skip */
       }
