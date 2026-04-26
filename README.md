@@ -61,6 +61,12 @@ ran a Validator self-check, computed `₹484` total cost (treatment + auto
 explicit trust caveats and the exact words to ask the receptionist.
 *Before the journey begins.*
 
+## Multimodal triage on-device
+
+![Photo upload → medgemma 27B triage in 10s → input pre-filled](docs/screenshots/13_photo_upload.png)
+
+Click the camera button on the chat input, drop a wound photo / X-ray / prescription / oxygen-cylinder gauge / snake. **medgemma 27B (gemma3-family, 27.4B params, vision capability) runs locally on Apple Silicon** and returns structured triage — severity, suspected condition, recommended specialty, rationale — in ~4 seconds. The text input then pre-fills with a derived facility query you can edit and send. No cloud egress; your image bytes never leave the device.
+
 ## Why this beats the obvious alternatives
 
 ![Aarogya Atlas vs ChatGPT vs Google Maps — same query, 14 / 0 / 0](docs/screenshots/07_comparison.png)
