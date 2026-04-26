@@ -43,6 +43,28 @@ const LAYER_DESERT_HALO = "desert-halo";
 const LAYER_DESERT_PULSE = "desert-pulse";
 const LAYER_DESERT_DOT = "desert-dot";
 const LAYER_DESERT_LABEL = "desert-label";
+const SRC_ISOCHRONE = "isochrone";
+const LAYER_ISO_60 = "iso-60";
+const LAYER_ISO_30 = "iso-30";
+const LAYER_ISO_15 = "iso-15";
+
+/**
+ * Approximate isochrone polygon — circle of radius `km` around [lon, lat]
+ * with `n` vertices. India city avg 22 km/h, highway 60 km/h.
+ * 15 min ≈ 5.5 km · 30 min ≈ 11 km · 60 min ≈ 22 km.
+ */
+function isochroneCircle(lon: number, lat: number, km: number, n = 64): [number, number][] {
+  const earthR = 6371;
+  const out: [number, number][] = [];
+  const latRad = (lat * Math.PI) / 180;
+  for (let i = 0; i <= n; i++) {
+    const t = (i / n) * 2 * Math.PI;
+    const dlat = (km / earthR) * (180 / Math.PI) * Math.cos(t);
+    const dlon = (km / (earthR * Math.cos(latRad))) * (180 / Math.PI) * Math.sin(t);
+    out.push([lon + dlon, lat + dlat]);
+  }
+  return out;
+}
 
 export default function MapView({
   pins,
@@ -279,6 +301,45 @@ export default function MapView({
         map.getCanvas().style.cursor = "";
       });
 
+      // ---- Isochrones (drive-time rings around the top recommendation) ----
+      map.addSource(SRC_ISOCHRONE, {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
+      map.addLayer({
+        id: LAYER_ISO_60,
+        type: "fill",
+        source: SRC_ISOCHRONE,
+        filter: ["==", ["get", "minutes"], 60],
+        paint: {
+          "fill-color": "#e8923d",
+          "fill-opacity": 0.06,
+          "fill-outline-color": "#e8923d",
+        },
+      }, LAYER_UNCLUSTERED);
+      map.addLayer({
+        id: LAYER_ISO_30,
+        type: "fill",
+        source: SRC_ISOCHRONE,
+        filter: ["==", ["get", "minutes"], 30],
+        paint: {
+          "fill-color": "#e8923d",
+          "fill-opacity": 0.10,
+          "fill-outline-color": "#e8923d",
+        },
+      }, LAYER_UNCLUSTERED);
+      map.addLayer({
+        id: LAYER_ISO_15,
+        type: "fill",
+        source: SRC_ISOCHRONE,
+        filter: ["==", ["get", "minutes"], 15],
+        paint: {
+          "fill-color": "#e8923d",
+          "fill-opacity": 0.16,
+          "fill-outline-color": "#e8923d",
+        },
+      }, LAYER_UNCLUSTERED);
+
       // ---- 3D buildings (OpenFreeMap, kicks in at zoom ≥14) ----
       map.addSource("ofm", { type: "vector", url: OFM_VECTOR });
       map.addLayer({
@@ -504,6 +565,29 @@ export default function MapView({
     if (mapReady) move();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [center, zoom, pins, mapReady]);
+
+  // ---- Isochrones around top ranked facility (modeled approximation) ----
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+    const src = map.getSource(SRC_ISOCHRONE) as maplibregl.GeoJSONSource | undefined;
+    if (!src) return;
+    const top = pins.find((p) => p.highlight && (p.rank ?? 99) === 1) || pins.find((p) => p.highlight);
+    if (!top) {
+      src.setData({ type: "FeatureCollection", features: [] });
+      return;
+    }
+    // 15min @ 22km/h ≈ 5.5km city; 30min ≈ 11km; 60min ≈ 22km
+    const features: GeoJSON.Feature<GeoJSON.Polygon>[] = [60, 30, 15].map((min) => ({
+      type: "Feature",
+      properties: { minutes: min, label: `${min} min drive` },
+      geometry: {
+        type: "Polygon",
+        coordinates: [isochroneCircle(top.lon, top.lat, min * 22 / 60)],
+      },
+    }));
+    src.setData({ type: "FeatureCollection", features });
+  }, [pins, mapReady]);
 
   // ---- Draw OSRM route from `origin` to top-ranked facility (rank=1) ----
   useEffect(() => {
