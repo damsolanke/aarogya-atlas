@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowUp, Square } from "lucide-react";
+import { ArrowUp, Square, Camera, Loader2, X as XIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/cn";
-import { streamQuery, type TraceEvent } from "@/lib/api";
+import { streamQuery, triagePhoto, type TraceEvent, type TriageResult } from "@/lib/api";
 import LiveStatus from "./LiveStatus";
 import FinalAnswer from "./FinalAnswer";
 import ReasoningDrawer from "./ReasoningDrawer";
@@ -29,6 +29,9 @@ export default function AgentChat({
   const [finalText, setFinalText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [lastQuery, setLastQuery] = useState<string>("");
+  const [triage, setTriage] = useState<TriageResult | null>(null);
+  const [triageLoading, setTriageLoading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -154,6 +157,28 @@ export default function AgentChat({
     setFinalText("");
     setError(null);
     setLastQuery("");
+    setTriage(null);
+  };
+
+  const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setTriage(null);
+    setTriageLoading(true);
+    try {
+      const t = await triagePhoto(f);
+      setTriage(t);
+      // Pre-fill the input with a derived query the user can edit + send
+      const r = t?.result;
+      if (r?.recommended_specialty) {
+        setInput(
+          `${r.condition || r.observation} — need ${r.recommended_specialty} care nearby. Severity: ${r.severity}.`
+        );
+      }
+    } finally {
+      setTriageLoading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
   };
 
   const idleEmpty = status === "idle" && trace.length === 0 && !finalText;
@@ -183,6 +208,7 @@ export default function AgentChat({
       </div>
 
       <div className="border-t border-[var(--border)] bg-[var(--bg)]/80 p-3 backdrop-blur-xl">
+        <TriageCard triage={triage} onClose={() => setTriage(null)} />
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -190,6 +216,26 @@ export default function AgentChat({
           }}
           className="mx-auto flex max-w-2xl items-end gap-2"
         >
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={onFile}
+          />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={triageLoading || status === "streaming"}
+            title="Attach a photo (wound, prescription, X-ray) — runs medgemma 27B on-device"
+            className="glass mb-0.5 inline-flex h-11 w-11 items-center justify-center rounded-xl text-zinc-300 transition-colors hover:bg-zinc-800/40 hover:text-cyan-300 disabled:opacity-40"
+          >
+            {triageLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin text-cyan-300" />
+            ) : (
+              <Camera className="h-4 w-4" />
+            )}
+          </button>
           <div className="glass relative flex-1 rounded-xl">
             <textarea
               value={input}
@@ -239,6 +285,56 @@ export default function AgentChat({
         <SystemBar />
       </div>
     </div>
+  );
+}
+
+function TriageCard({
+  triage,
+  onClose,
+}: {
+  triage: TriageResult | null;
+  onClose: () => void;
+}) {
+  if (!triage?.result) return null;
+  const r = triage.result;
+  const sevColor = {
+    low: "border-emerald-700/40 bg-emerald-950/30 text-emerald-200",
+    moderate: "border-amber-700/40 bg-amber-950/30 text-amber-200",
+    high: "border-orange-700/40 bg-orange-950/30 text-orange-200",
+    critical: "border-red-700/40 bg-red-950/30 text-red-200",
+  }[r.severity] || "border-zinc-700/40 bg-zinc-900/30 text-zinc-200";
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 6 }}
+      className="mx-auto mb-2 max-w-2xl"
+    >
+      <div className={`flex items-start gap-2 rounded-xl border ${sevColor} px-3 py-2.5`}>
+        <Camera className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-80" />
+        <div className="flex-1 text-[12.5px] leading-relaxed">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[9.5px] font-semibold uppercase tracking-wider opacity-90">
+              On-device triage · medgemma 27B
+            </span>
+            <span className="text-[9.5px] opacity-60">· severity {r.severity}</span>
+          </div>
+          <div className="mt-1 font-medium text-zinc-100">
+            {r.condition || r.observation}
+          </div>
+          <div className="text-[11.5px] opacity-80">
+            Recommended specialty: <span className="font-mono">{r.recommended_specialty}</span> · {r.rationale}
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          className="text-zinc-500 transition-colors hover:text-zinc-200"
+          aria-label="Dismiss triage"
+        >
+          <XIcon className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    </motion.div>
   );
 }
 
