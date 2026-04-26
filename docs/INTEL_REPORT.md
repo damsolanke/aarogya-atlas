@@ -59,6 +59,33 @@ Need to log in to capture the form. Loom guide #1 (How to Submit) is rate-limite
 - **OpenAI / Supabase / Vercel / Lovable** (API sponsors): would only matter if we used their stack. We did NOT use OpenAI; we use Anthropic. Side-eye possible — but Anthropic is in our model card so OK.
 - **World Bank**: cross-challenge equity prize? Worth probing. Our `/equity` page positions us well if it exists.
 
+## SECOND-PASS INTEL (sweep #2 at 22:30 ET)
+
+Walked `#submissions`, `#q-and-a`, `#showcase`, and the past-winners showcase page.
+
+**Live blockers OTHER teams have right now:**
+- **Submission form broken** — Claire Xue, Li-Am, Jose Ochoa, WolfNates all report "cannot choose the event in the submit webpage". Organizers (NicoFroehlich, Linn Bieske) suggesting cache-clear / private window. Our flow already worked at 21:55 ET — we walked all 8 numbered fields. **Capture proof of working submission immediately when we paste; if it errors, file a screenshot to Discord.**
+- **Lovable down** — Hack-Nation organizer David: *"unexpected issue with lovable which can't be fixed on such short notice."* We don't depend on Lovable.
+- **Databricks reported down** by Babar Raheem Yousafzai + Thil at 8:19 PM ET. **Verified: OUR Mosaic AI VS query for "snake bite" returns 3 ranked results in under 2s.** Workspace warehouse is STOPPED but auto-resumes on Genie. We are unaffected. This is now a moat: judges who tested via competing teams may dismiss the Databricks story; we should record a video of our query working live.
+
+**Past winners patterns (4th-Hack-Nation showcase):**
+- Names are SHARP single nouns: SmartCart, WebPersona, Mura, KnowledgeDrift, Metis, AutoShop, Meridian, TrustLoop, VirtueGuard. "Aarogya Atlas" fits.
+- Bullet-list pitches with "The Moonshot:" / "The Problem:" / "Our Solution:" structure.
+- **Many winning teams wrote a LinkedIn / Medium writeup** (Hanif ullah's "How I built VirtueGuard in 24 hours"). Adds a 5/5 Comm score signal.
+- Mura was "NANDA-inspired agent coordination" — agent-to-agent themes resonate with judges.
+
+**Named competitors confirmed:**
+- RealSmile (Discord #challenge-03-databricks 8:00 PM)
+- Malaika [AI] (Discord 8:13 PM)
+- DocMorphic (asked about solo participation in #q-and-a — name suggests medical/document angle)
+
+**Past winners URL:** https://projects.hack-nation.ai/#/winners — bookmark for inspiration during pitch prep.
+
+## Strategic additions to ship if time:
+1. ✅ Multimodal photo intake via medgemma 27B vision — SHIPPED.
+2. **Capture a working submission flow screenshot immediately** before more form bugs lock us out.
+3. Optional: write a LinkedIn writeup post-submission for the past-winner Comm bump.
+
 ## Action queue (prioritized for next 4 hours)
 
 1. ✅ Intel report written (this file)
