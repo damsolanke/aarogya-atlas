@@ -5,10 +5,13 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 from sqlalchemy import text
 
 from .agent import stream_answer
@@ -16,6 +19,13 @@ from .db import SessionLocal
 from .local_llm import healthcheck as ollama_healthcheck
 
 app = FastAPI(title="Aarogya Atlas API", version="0.1.0")
+
+# Per-IP rate limit. Cheap shield against accidental floods on the public
+# Vercel deploy + a backstop for the paid Groq tier. Returns 429 with a
+# Retry-After header.
+limiter = Limiter(key_func=get_remote_address, default_limits=[])
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
@@ -43,7 +53,8 @@ class TriageReq(BaseModel):
 
 
 @app.post("/api/triage_photo")
-async def triage_photo(req: TriageReq):
+@limiter.limit("6/minute")
+async def triage_photo(request: Request, req: TriageReq):
     """On-device multimodal triage. Pass a base64-encoded image (wound,
     prescription, snake, X-ray, oxygen gauge, etc.) and get a structured
     triage with suspected condition, severity, and recommended specialty.
@@ -78,7 +89,8 @@ async def healthz() -> dict[str, Any]:
 
 
 @app.post("/api/query")
-async def query(req: QueryReq):
+@limiter.limit("10/minute")
+async def query(request: Request, req: QueryReq):
     """SSE stream of trace events + a final answer.
 
     Accepts either:

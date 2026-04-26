@@ -1,7 +1,15 @@
 # Aarogya Atlas — Evaluation Report
 
+> ⚠ **Stack note:** these numbers were generated against the 5th-edition
+> Hack-Nation submission stack (Anthropic Claude supervisor · Llama 3.3 70B
+> on Groq · no critic pass). The current architecture has since moved to
+> **GPT-OSS-120B (Groq) + critic v1**. Latency, tool-call counts, and trust
+> distributions will change once `make eval` is re-run on the new stack —
+> the rerun is tracked as a follow-up.
+
 _Generated: 2026-04-25 16:43 CDT_
 _Queries: **12** · errors: **0**_
+_Architecture: pre-2026-04-26 (Anthropic + Llama 3.3 70B, no critic pass)_
 
 ## Headline metrics
 
@@ -52,3 +60,16 @@ _Queries: **12** · errors: **0**_
 | 10 | Which states have the lowest neonatal-care facility density? | 1 | 18.18s | · |  |
 | 11 | trust score for vf-1 with confidence interval | 1 | 9.5s | · |  |
 | 12 | trust score for vf-3263 | 1 | 8.57s | · |  |
+
+## Phase 3 item 14 — Mosaic AI Vector Search smoke (2026-04-26)
+
+Query: `dialysis center bengaluru` (k=3)
+Index: `workspace.aarogya.facilities_idx`
+Embedding: `databricks-bge-large-en`
+
+Results:
+1. vf-9481 Tai Maa Dialysis Center And Polyclinic (0.749)
+2. vf-537  Al Ehsan Diagnostic Centre (0.758)
+3. vf-8114 Pravar Hospital (0.702)
+
+Verdict: ranked correctly — dialysis-named facility ranks first by semantic relevance even though Al Ehsan Diagnostic Centre has higher raw cosine score.

@@ -17,10 +17,13 @@
 [![Hack-Nation 2026](https://img.shields.io/badge/Hack--Nation-2026-5eead4?style=for-the-badge)](https://projects.hack-nation.ai)
 [![License MIT](https://img.shields.io/badge/License-MIT-zinc?style=for-the-badge)](LICENSE)
 
-**▶ Live demo: redeploying to Vercel + Railway — link will land here.** Recorded
-walkthrough below until then.
+**▶ Live demo:** redeploying to Vercel + Railway — link will land here once
+the deploy is live. Recorded walkthrough below until then.
 
 [**60s video**](https://www.loom.com/share/5f67de77c1f24328b5d395275d07f249)
+
+Built by **Dam Solanke** · Lead Solutions Architect — Healthcare · Frisco, TX
+· originally submitted to **Hack-Nation 5th edition**, Databricks Challenge 03.
 
 </div>
 

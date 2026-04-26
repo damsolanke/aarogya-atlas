@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>banner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Tiro+Devanagari+Hindi&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 2000px; height: 400px; overflow: hidden; background: #070A12; }
+  :root {
+    --saff: #E8923D;
+    --teal: #14B8A6;
+    --ink: #070A12;
+    --serif: 'Instrument Serif', serif;
+    --sans: 'Geist', sans-serif;
+    --mono: 'Geist Mono', monospace;
+    --deva: 'Tiro Devanagari Hindi', serif;
+    --zinc-100: #f4f4f5;
+    --zinc-300: #d4d4d8;
+    --zinc-400: #a1a1aa;
+    --zinc-500: #71717a;
+  }
+  .stage {
+    position: relative;
+    width: 2000px;
+    height: 400px;
+    background:
+      radial-gradient(ellipse 70% 90% at 90% 0%, rgba(232,146,61,0.16) 0%, transparent 55%),
+      radial-gradient(ellipse 40% 80% at 0% 100%, rgba(20,184,166,0.06) 0%, transparent 60%),
+      var(--ink);
+    overflow: hidden;
+    font-family: var(--sans);
+    color: var(--zinc-100);
+  }
+  /* Subtle dot grid */
+  .stage::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(255,255,255,0.035) 1px, transparent 0);
+    background-size: 28px 28px;
+    pointer-events: none;
+  }
+  /* Hairline divider */
+  .stage::after {
+    content: "";
+    position: absolute;
+    top: 80px; bottom: 80px;
+    left: 1380px;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, rgba(232,146,61,0.42), transparent);
+  }
+
+  .left {
+    position: absolute;
+    left: 80px;
+    top: 80px;
+    width: 1260px;
+  }
+  .kicker {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--saff);
+    margin-bottom: 22px;
+  }
+  .kicker .sep { color: var(--zinc-500); margin: 0 10px; }
+  .head {
+    font-family: var(--serif);
+    font-size: 60px;
+    line-height: 1.06;
+    color: var(--zinc-100);
+    letter-spacing: -0.005em;
+    max-width: 1260px;
+  }
+  .head em {
+    color: var(--saff);
+    font-style: italic;
+  }
+  .caption {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--zinc-400);
+    letter-spacing: 0.05em;
+    margin-top: 26px;
+    white-space: nowrap;
+  }
+  .caption .v { color: var(--zinc-100); }
+  .caption .sep { color: var(--zinc-500); margin: 0 10px; }
+
+  .right {
+    position: absolute;
+    left: 1430px;
+    right: 60px;
+    top: 50%;
+    transform: translateY(-50%);
+    text-align: center;
+  }
+  .glyph {
+    font-family: var(--deva);
+    font-size: 150px;
+    line-height: 1;
+    color: var(--saff);
+    letter-spacing: -0.015em;
+    text-shadow: 0 0 70px rgba(232,146,61,0.32);
+  }
+  .right-foot {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.22em;
+    color: var(--zinc-500);
+    text-transform: uppercase;
+    margin-top: 18px;
+  }
+  .right-foot .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--teal);
+    box-shadow: 0 0 10px var(--teal);
+    vertical-align: 2px;
+    margin-right: 8px;
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="left">
+      <div class="kicker">Dam Solanke <span class="sep">·</span> Dallas, TX</div>
+      <div class="head">Healthcare AI, on-device,<br><em>for emerging markets.</em></div>
+      <div class="caption">
+        <span class="v">Solutions Architect</span><span class="sep">·</span><span class="v">MS AI '27</span><span class="sep">·</span><span class="v">private pilot</span><span class="sep">·</span><span class="v">building Aarogya Atlas</span>
+      </div>
+    </div>
+    <div class="right">
+      <div class="glyph">आरोग्य</div>
+      <div class="right-foot"><span class="dot"></span>without disease</div>
+    </div>
+  </div>
+</body>
+</html>

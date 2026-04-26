@@ -5,10 +5,19 @@ export default function Footer() {
   return (
     <footer className="border-t border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl flex-col gap-3 px-6 py-4 text-[11.5px] text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
-          <span lang="sa" className="text-zinc-300">आरोग्य</span>
-          <span className="text-zinc-600">·</span>
-          <span>Built in 24h for Hack-Nation 2026 Challenge 3 (Databricks)</span>
+        <div className="flex flex-col gap-0.5">
+          <div className="flex items-center gap-2">
+            <span lang="sa" className="text-zinc-300">आरोग्य</span>
+            <span className="text-zinc-600">·</span>
+            <span>
+              Built by{" "}
+              <span className="text-zinc-200">Dam Solanke</span> · Lead Solutions
+              Architect — Healthcare · Frisco, TX
+            </span>
+          </div>
+          <div className="text-[10.5px] text-zinc-600">
+            Hack-Nation 5th edition · Databricks Challenge 03 entry
+          </div>
         </div>
         <nav className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <Link href="/compare" className="hover:text-zinc-200">vs ChatGPT</Link>
