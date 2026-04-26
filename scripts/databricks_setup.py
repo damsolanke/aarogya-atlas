@@ -29,7 +29,10 @@ WAREHOUSE_ID = "cd736c1a76fdb9bb"
 CATALOG = "workspace"
 SCHEMA = "aarogya"
 TABLE = f"{CATALOG}.{SCHEMA}.facilities"
-XLSX = "/Users/adesolanke/Library/CloudStorage/OneDrive-Personal/Dropbox/IT TOUCH/USA/Hack-Nation/VF_Hackathon_Dataset_India_Large.xlsx"
+XLSX = os.environ.get(
+    "VF_DATASET_PATH",
+    str(ROOT / "data" / "raw" / "VF_Hackathon_Dataset_India_Large.xlsx"),
+)
 
 
 def _clean(v):
