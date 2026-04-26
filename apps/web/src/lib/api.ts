@@ -50,6 +50,24 @@ export async function* streamQuery(
   }
 }
 
+export type Health = {
+  api: string;
+  facilities?: number;
+  services?: number;
+  ollama?: { ollama_up?: boolean; models?: string[] };
+  tool_cache?: { hits: number; misses: number; size: number; hit_rate: number };
+};
+
+export async function fetchHealth(): Promise<Health | null> {
+  try {
+    const r = await fetch(`${API_URL}/healthz`);
+    if (!r.ok) return null;
+    return (await r.json()) as Health;
+  } catch {
+    return null;
+  }
+}
+
 export type Facility = {
   id: string;
   name: string;

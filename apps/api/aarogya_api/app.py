@@ -31,6 +31,7 @@ class QueryReq(BaseModel):
 
 @app.get("/healthz")
 async def healthz() -> dict[str, Any]:
+    from .tools import cache_stats
     out: dict[str, Any] = {"api": "ok"}
     try:
         async with SessionLocal() as s:
@@ -44,6 +45,7 @@ async def healthz() -> dict[str, Any]:
         out["ollama"] = await ollama_healthcheck()
     except Exception as e:
         out["ollama_error"] = str(e)
+    out["tool_cache"] = cache_stats()
     return out
 
 

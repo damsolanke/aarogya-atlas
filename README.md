@@ -6,6 +6,8 @@
 
 **Agentic, trust-scored, cost-aware healthcare facility intelligence for India's 1.4B people.**
 
+*Deployment path: hospital-VPC-resident inference via Mosaic AI Model Serving — same trust boundary, no PHI egress.*
+
 [![Built on Databricks](https://img.shields.io/badge/Built_on-Databricks-FF3621?style=for-the-badge&logo=databricks&logoColor=white)](https://databricks.com)
 [![Claude Opus 4.7](https://img.shields.io/badge/Claude-Opus_4.7-D97706?style=for-the-badge)](https://www.anthropic.com/claude)
 [![FHIR R4](https://img.shields.io/badge/FHIR-R4-0066CC?style=for-the-badge)](https://hl7.org/fhir/R4/)
@@ -142,6 +144,19 @@ description.
 </td>
 </tr>
 </table>
+
+## Adversarial robustness (DAS-style)
+
+We don't just grade ourselves on the queries we wrote — we grade ourselves on perturbed versions per the DAS methodology
+([npj Digital Medicine 2026 agent benchmark](https://www.nature.com/articles/s41746-026-02443-6)).
+Latest [`docs/ROBUSTNESS_REPORT.md`](docs/ROBUSTNESS_REPORT.md):
+
+| Metric | Static | Dynamic | Gap |
+| --- | ---: | ---: | ---: |
+| Robust pass rate | **100.0%** | **50.0%** | -50% |
+| Mean wall-clock | 51.6s | 30.1s | -21.4s |
+
+The 50% gap reveals exactly one weakness: queries that lose location entirely ("Pediatric ICU — urgent") gracefully fail rather than hallucinate a city. That's a feature; we'd rather refuse than guess. Typo + caps and Hinglish code-switch both pass.
 
 ## Self-evaluation (auditable)
 

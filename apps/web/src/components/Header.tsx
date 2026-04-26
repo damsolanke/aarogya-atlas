@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import {
   Activity,
   ShieldCheck,
@@ -12,6 +13,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { fetchHealth } from "@/lib/api";
 
 function Pill({
   icon: Icon,
@@ -110,22 +112,67 @@ export default function Header({
 
           <div className="hidden h-5 w-px bg-zinc-800 md:block" />
 
-          <div className="hidden items-center gap-1.5 text-[11px] text-zinc-500 md:flex">
-            {loaded ? (
-              <>
-                <span className="dot-pulse" />
-                <span className="tab-num text-zinc-300">10,000</span>
-                <span>indexed</span>
-              </>
-            ) : (
-              <>
-                <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-amber-400/80" />
-                <span>connecting…</span>
-              </>
-            )}
-          </div>
+          <LiveOps loaded={loaded} />
         </div>
       </div>
     </header>
+  );
+}
+
+function LiveOps({ loaded }: { loaded: boolean }) {
+  const [health, setHealth] = useState<{
+    facilities?: number;
+    cacheHitRate?: number;
+    cacheSize?: number;
+  } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const tick = async () => {
+      const h = await fetchHealth();
+      if (cancelled || !h) return;
+      setHealth({
+        facilities: h.facilities,
+        cacheHitRate: h.tool_cache?.hit_rate,
+        cacheSize: h.tool_cache?.size,
+      });
+    };
+    tick();
+    const id = setInterval(tick, 30_000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, []);
+
+  return (
+    <div className="hidden items-center gap-2 text-[11px] text-zinc-500 md:flex">
+      {loaded && health?.facilities ? (
+        <>
+          <span className="dot-pulse" />
+          <span className="tab-num text-zinc-300">
+            {health.facilities.toLocaleString()}
+          </span>
+          <span>indexed</span>
+          {(health.cacheSize ?? 0) > 0 && (
+            <span className="ml-1 text-zinc-600">
+              · cache {health.cacheSize}
+              {health.cacheHitRate !== undefined &&
+                health.cacheHitRate > 0 && (
+                  <span className="ml-0.5 tab-num text-emerald-400">
+                    {" "}
+                    {Math.round(health.cacheHitRate * 100)}% hit
+                  </span>
+                )}
+            </span>
+          )}
+        </>
+      ) : (
+        <>
+          <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-amber-400/80" />
+          <span>connecting…</span>
+        </>
+      )}
+    </div>
   );
 }

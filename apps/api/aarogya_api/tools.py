@@ -3,13 +3,19 @@
 Each tool returns a small JSON-serialisable dict so the agent's reasoning
 trace stays readable. Geo proximity uses the SQL `haversine_km` helper
 (no PostGIS dep).
+
+In-memory cache (`_TOOL_CACHE`) wraps deterministic tools (geocode, trust_score,
+find_medical_deserts) for the lifetime of the process — the same query within
+the same eval run skips the network. This is cheap correctness: arguments are
+JSON-serialised and used as the key.
 """
 
 from __future__ import annotations
 
 import json
+from collections import OrderedDict
 from datetime import datetime
-from typing import Any
+from typing import Any, Awaitable, Callable
 
 import httpx
 from sqlalchemy import text
@@ -20,9 +26,54 @@ from .settings import settings
 
 
 # ---------------------------------------------------------------------------
+# In-memory LRU cache for deterministic tools
+# ---------------------------------------------------------------------------
+
+_TOOL_CACHE: OrderedDict[str, Any] = OrderedDict()
+_TOOL_CACHE_MAX = 256
+_TOOL_CACHE_HITS = {"hits": 0, "misses": 0}
+
+
+def cache_stats() -> dict[str, Any]:
+    total = _TOOL_CACHE_HITS["hits"] + _TOOL_CACHE_HITS["misses"]
+    return {
+        **_TOOL_CACHE_HITS,
+        "size": len(_TOOL_CACHE),
+        "hit_rate": round(_TOOL_CACHE_HITS["hits"] / total, 3) if total else 0.0,
+    }
+
+
+def cached(name: str):
+    """Decorator: cache the awaitable result of a deterministic async tool."""
+
+    def deco(fn: Callable[..., Awaitable[Any]]) -> Callable[..., Awaitable[Any]]:
+        async def wrapper(**kwargs: Any) -> Any:
+            try:
+                key = name + ":" + json.dumps(kwargs, sort_keys=True, default=str)
+            except Exception:
+                # Args not serialisable → bypass cache.
+                return await fn(**kwargs)
+            if key in _TOOL_CACHE:
+                _TOOL_CACHE.move_to_end(key)
+                _TOOL_CACHE_HITS["hits"] += 1
+                return _TOOL_CACHE[key]
+            result = await fn(**kwargs)
+            _TOOL_CACHE_HITS["misses"] += 1
+            _TOOL_CACHE[key] = result
+            if len(_TOOL_CACHE) > _TOOL_CACHE_MAX:
+                _TOOL_CACHE.popitem(last=False)
+            return result
+
+        return wrapper
+
+    return deco
+
+
+# ---------------------------------------------------------------------------
 # Geocoding (Nominatim, free)
 # ---------------------------------------------------------------------------
 
+@cached("geocode")
 async def geocode(query: str) -> dict[str, Any]:
     s = settings()
     headers = {"User-Agent": s.user_agent, "Accept": "application/json"}
@@ -336,6 +387,7 @@ def _is_urban(lat: float, lon: float) -> bool:
     return False
 
 
+@cached("estimate_journey")
 async def estimate_journey(
     from_lat: float,
     from_lon: float,
@@ -380,6 +432,7 @@ async def estimate_journey(
     }
 
 
+@cached("total_out_of_pocket")
 async def total_out_of_pocket(
     facility_payer_ok: bool,
     services_required: list[str],
