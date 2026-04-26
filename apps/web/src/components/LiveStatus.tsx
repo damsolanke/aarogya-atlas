@@ -17,7 +17,7 @@ import type { TraceEvent } from "@/lib/api";
 
 const TOOL_LABELS: Record<
   string,
-  { label: string; icon: React.ComponentType<{ className?: string }>; local?: boolean }
+  { label: string; icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; local?: boolean }
 > = {
   geocode:                       { label: "Locating",                icon: MapPin },
   facility_search:               { label: "Searching facilities",    icon: Search },
@@ -34,7 +34,7 @@ const TOOL_LABELS: Record<
 
 function deriveCurrentActivity(trace: TraceEvent[]): {
   label: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
   local?: boolean;
   finished: boolean;
 } | null {
@@ -64,8 +64,9 @@ export default function LiveStatus({
 
   // Last 4 tool calls scrolling — judges see the actual process.
   const recentTools = trace
-    .filter((e) => e.type === "tool_request")
-    .flatMap((e) => (e.tool_calls || []).map((tc) => tc.name))
+    .flatMap((e) =>
+      e.type === "tool_request" ? (e.tool_calls || []).map((tc) => tc.name) : []
+    )
     .slice(-4);
 
   return (

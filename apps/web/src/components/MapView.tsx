@@ -96,6 +96,8 @@ export default function MapView({
       pitch: 18,
       bearing: 0,
       attributionControl: false,
+      // @ts-expect-error - antialias is supported at runtime by maplibre but
+      // missing from the current MapOptions typings; safe to pass.
       antialias: true,
     });
 
