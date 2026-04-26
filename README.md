@@ -19,7 +19,7 @@
 [**vs ChatGPT / Maps**](https://formal-rogers-poster-meanwhile.trycloudflare.com/compare) ·
 [**Equity audit**](https://formal-rogers-poster-meanwhile.trycloudflare.com/equity) ·
 [**Architecture**](https://formal-rogers-poster-meanwhile.trycloudflare.com/architecture) ·
-[**60s video**](docs/DEMO_SCRIPT.md)
+[**60s video**](https://www.loom.com/share/5f67de77c1f24328b5d395275d07f249)
 
 </div>
 
