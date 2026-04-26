@@ -50,6 +50,40 @@ export async function* streamQuery(
   }
 }
 
+export type TriageResult = {
+  model?: string;
+  runs_on?: string;
+  result?: {
+    observation: string;
+    condition: string | null;
+    severity: "low" | "moderate" | "high" | "critical";
+    recommended_specialty: string;
+    rationale: string;
+  };
+  error?: string;
+};
+
+export async function triagePhoto(file: File): Promise<TriageResult | null> {
+  const buf = await file.arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  // base64 — chunked to avoid call-stack issues on large files
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    bin += String.fromCharCode.apply(
+      null,
+      Array.from(bytes.subarray(i, i + 0x8000))
+    );
+  }
+  const b64 = btoa(bin);
+  const r = await fetch(`${API_URL}/api/triage_photo`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ image_b64: b64 }),
+  });
+  if (!r.ok) return null;
+  return (await r.json()) as TriageResult;
+}
+
 export type Health = {
   api: string;
   facilities?: number;

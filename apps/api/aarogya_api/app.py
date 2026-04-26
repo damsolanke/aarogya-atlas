@@ -29,6 +29,26 @@ class QueryReq(BaseModel):
     query: str
 
 
+class TriageReq(BaseModel):
+    image_b64: str
+    prompt: str | None = None
+
+
+@app.post("/api/triage_photo")
+async def triage_photo(req: TriageReq):
+    """On-device multimodal triage. Pass a base64-encoded image (wound,
+    prescription, snake, X-ray, oxygen gauge, etc.) and get a structured
+    triage with suspected condition, severity, and recommended specialty.
+
+    PHI-safe: medgemma:27b runs locally; the image bytes never leave the box.
+    """
+    from .local_llm import vision_triage
+    try:
+        return await vision_triage(req.image_b64, req.prompt)
+    except Exception as e:
+        return {"error": str(e), "model": "medgemma:27b"}
+
+
 @app.get("/healthz")
 async def healthz() -> dict[str, Any]:
     from .tools import cache_stats
