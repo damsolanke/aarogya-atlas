@@ -18,7 +18,7 @@ If the form errors mid-submission (multiple teams reported issues at 7-9 PM ET o
 
 **Event:** 5th-hack-nation
 **Deadline:** Apr 26, 2026 at 9:00 AM ET (~10h from now)
-**User:** Dam Solanke · `b56ab0a3-d07e-4af7-b47e-259a73c6c45b`
+**User:** redacted
 **Important:** "You can only participate in one project per hackathon event."
 **Statuses:** Pending → Approved → Rejected
 
@@ -159,7 +159,7 @@ agentic-AI, healthcare, multilingual, on-device-LLM, RAG, FHIR, vector-search, e
 ```
 
 ## Team
-- **Damola Solanke** (`b56ab0a3-d07e-4af7-b47e-259a73c6c45b`) — solo team
+- Solo team
 
 ## File uploads — exact specs from the form
 

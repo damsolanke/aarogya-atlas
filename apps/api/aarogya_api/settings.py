@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     # OpenStreetMap
     overpass_url: str = "https://overpass-api.de/api/interpreter"
     nominatim_url: str = "https://nominatim.openstreetmap.org"
-    user_agent: str = "AarogyaAtlas/0.1 (HackNation 2026; contact: damola@ittouch.io)"
+    user_agent: str = "AarogyaAtlas/0.1 (https://github.com/damsolanke/aarogya-atlas)"
 
     # Default geographic scope for the demo
     default_state: str = "Karnataka"
