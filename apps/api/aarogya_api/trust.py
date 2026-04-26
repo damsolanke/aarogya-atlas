@@ -18,6 +18,7 @@ from typing import Any
 from sqlalchemy import text
 
 from .db import SessionLocal
+from .tools import cached  # in-memory LRU for deterministic tools
 
 
 # ---------------------------------------------------------------------------
@@ -131,6 +132,7 @@ def _kw_in_any(haystacks: list[str], needles: list[str]) -> tuple[bool, str | No
     return False, None
 
 
+@cached("trust_score")
 async def trust_score(facility_id: str) -> dict[str, Any]:
     """Compute a 0-100 trust score for a single facility, with citations.
 
@@ -255,6 +257,7 @@ HIGH_ACUITY_KEYWORDS: dict[str, list[str]] = {
 }
 
 
+@cached("find_medical_deserts")
 async def find_medical_deserts(
     specialty: str,
     state: str | None = None,
