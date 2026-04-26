@@ -76,17 +76,18 @@ export default function Header({
       <div className="flex items-center justify-between px-6 py-3.5">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400/20 via-cyan-500/20 to-violet-500/20 ring-1 ring-white/10">
-              <Activity className="h-5 w-5 text-emerald-300" strokeWidth={2.2} />
+            <div className="flex h-9 w-9 items-center justify-center rounded-md ring-1 brand-glow" style={{background: "rgba(232,146,61,0.10)", borderColor: "rgba(232,146,61,0.30)"}}>
+              <Activity className="h-5 w-5" strokeWidth={2.2} style={{color: "var(--accent-saffron)"}} />
             </div>
-            <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(94,234,212,0.9)]" />
+            <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full" style={{background: "var(--accent-saffron)", boxShadow: "0 0 8px rgba(232,146,61,0.9)"}} />
           </div>
           <div className="leading-tight">
-            <div className="text-[15px] font-semibold tracking-tight text-zinc-50">
-              Aarogya Atlas
+            <div className="display text-[18px] tracking-tight text-zinc-50">
+              <span>Aarogya </span>
+              <span className="display-italic" style={{color: "var(--accent-saffron)"}}>Atlas</span>
             </div>
             <div className="text-[11px] text-zinc-500">
-              On-device healthcare facility intelligence · India
+              <span className="devanagari">आरोग्य</span> · agentic facility triage · India
             </div>
           </div>
         </div>

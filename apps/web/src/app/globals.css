@@ -5,25 +5,30 @@
 :root {
   color-scheme: dark;
 
-  --bg:           #08090d;
-  --bg-elevated:  #0e1015;
-  --bg-card:      #11141b;
-  --border:       #1f2330;
-  --border-soft:  #181c25;
+  /* Deep ink — clinical authority */
+  --bg:           #070a12;
+  --bg-elevated:  #0e1320;
+  --bg-card:      #121828;
+  --border:       #1c2233;
+  --border-soft:  #161b29;
 
-  --fg:           #f4f5f7;
+  --fg:           #f5f5f6;
   --fg-muted:     #a8acba;
   --fg-dim:       #6b7080;
 
-  --accent:        #5eead4;   /* mint */
-  --accent-warm:   #fb923c;   /* amber */
-  --accent-cool:   #818cf8;   /* indigo */
-  --accent-cyan:   #22d3ee;   /* cyan, used for on-device markers */
-  --accent-purple: #a78bfa;   /* purple, used for cloud reasoning */
+  /* 3-color signature palette — see docs/BRAND.md */
+  --accent-saffron:#e8923d;   /* warm primary — wordmark, route polylines, brand pulse */
+  --accent-teal:   #14b8a6;   /* healing — success, validator PASS, in-stock */
+  --accent-cyan:   #22d3ee;   /* on-device LLM marker (data-plane signal, not brand) */
+  --warning:       #f59e0b;   /* trust WARN, partial coverage */
+  --danger:        #ef4444;   /* desert halos, FAIL, stockout */
+
+  /* Legacy aliases — to be migrated out */
+  --accent:        var(--accent-teal);
 
   --pulse:         radial-gradient(ellipse at center,
-                    rgba(94, 234, 212, 0.18) 0%,
-                    rgba(94, 234, 212, 0) 60%);
+                    rgba(232, 146, 61, 0.22) 0%,
+                    rgba(232, 146, 61, 0) 60%);
 }
 
 @theme inline {
@@ -34,6 +39,58 @@
                sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "JetBrains Mono",
                SFMono-Regular, Menlo, Consolas, monospace;
+  --font-display: var(--font-display), "Iowan Old Style", "Palatino",
+                  "Charter", "Georgia", serif;
+  --font-devanagari: var(--font-devanagari), "Noto Serif Devanagari",
+                     "Mangal", serif;
+}
+
+/* Display class — apply to every h1. AI-startup default sans-bold is the
+   slop we are running away from. */
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+.display-italic {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+.devanagari {
+  font-family: var(--font-devanagari);
+  font-weight: 400;
+}
+
+/* Editorial monospace ticker — Bloomberg-style stat row */
+.ticker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+.ticker .sep { color: var(--border); margin: 0 6px; }
+.ticker .v { color: var(--fg); }
+
+/* Brand glow — saffron, replacing the AI-slop emerald→cyan→violet stack */
+.brand-glow {
+  box-shadow:
+    0 0 0 1px rgba(232, 146, 61, 0.30),
+    0 8px 32px rgba(232, 146, 61, 0.18);
+}
+
+/* prefers-reduced-motion: honor the user setting on every animation */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 * {

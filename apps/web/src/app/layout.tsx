@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Instrument_Serif, Tiro_Devanagari_Hindi } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -11,6 +11,25 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
+});
+
+// Display face. Used for h1 + tier badges. Single weight is intentional —
+// we don't need a type system, we need a voice.
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  display: "swap",
+});
+
+// Devanagari face for आरोग्य and any Sanskrit / Hindi rendering. Default
+// Devanagari is generic system fallback; this is intentional.
+const tiroDevanagariHindi = Tiro_Devanagari_Hindi({
+  variable: "--font-devanagari",
+  subsets: ["devanagari"],
+  weight: "400",
   display: "swap",
 });
 
@@ -32,7 +51,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full`}
+      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} ${tiroDevanagariHindi.variable} h-full`}
     >
       <body className="min-h-full font-sans">{children}</body>
     </html>

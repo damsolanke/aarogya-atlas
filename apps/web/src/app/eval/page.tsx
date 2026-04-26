@@ -76,8 +76,8 @@ export default function EvalPage() {
       </header>
 
       <main className="mx-auto max-w-6xl px-6 py-10">
-        <h1 className="bg-gradient-to-br from-zinc-50 via-zinc-200 to-zinc-400 bg-clip-text text-3xl font-semibold tracking-tight text-transparent sm:text-4xl">
-          We score ourselves in public.
+        <h1 className="display text-[36px] leading-tight text-zinc-50 sm:text-[42px]">
+          We score ourselves <span className="display-italic" style={{color: "var(--accent-saffron)"}}>in public.</span>
         </h1>
         <p className="mt-3 max-w-3xl text-[14px] leading-relaxed text-zinc-400">
           Hackathons reward demos. We reward audits. Every metric below

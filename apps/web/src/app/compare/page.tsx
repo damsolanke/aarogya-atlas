@@ -185,8 +185,8 @@ export default function ComparePage() {
       </header>
 
       <main className="mx-auto max-w-6xl px-6 py-10">
-        <h1 className="bg-gradient-to-br from-zinc-50 via-zinc-200 to-zinc-400 bg-clip-text text-3xl font-semibold tracking-tight text-transparent sm:text-4xl">
-          Same query. Three systems. One verdict.
+        <h1 className="display text-[36px] leading-tight text-zinc-50 sm:text-[42px]">
+          Same query. Three systems. <span className="display-italic" style={{color: "var(--accent-saffron)"}}>One verdict.</span>
         </h1>
         <p className="mt-3 max-w-2xl text-[14px] leading-relaxed text-zinc-400">
           We asked Aarogya Atlas, ChatGPT (free, GPT-5), and Google Maps the

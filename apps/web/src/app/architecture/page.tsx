@@ -69,8 +69,8 @@ export default function ArchitecturePage() {
       <main className="relative z-10 mx-auto max-w-6xl px-6 py-12">
         <div className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-emerald-300" />
-          <h1 className="bg-gradient-to-br from-zinc-50 via-zinc-200 to-zinc-400 bg-clip-text text-3xl font-semibold tracking-tight text-transparent sm:text-4xl">
-            How Aarogya Atlas thinks
+          <h1 className="display text-[36px] leading-tight text-zinc-50 sm:text-[42px]">
+            How <span className="display-italic" style={{color: "var(--accent-saffron)"}}>Aarogya Atlas</span> thinks
           </h1>
         </div>
         <p className="mt-3 max-w-3xl text-[14px] leading-relaxed text-zinc-400">
