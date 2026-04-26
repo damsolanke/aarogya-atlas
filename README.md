@@ -76,6 +76,20 @@ Open Vercel, Linear, Anthropic side-by-side and most healthcare AI demos look id
 
 Anti-slop audit + remaining gaps: [`docs/SLOP_AUDIT.md`](docs/SLOP_AUDIT.md).
 
+## Multi-modal travel — auto · bus · 108 ambulance
+
+Most Indian healthcare apps show "drive 6 min". We show three:
+
+> *Travel: 🚗 6 min ₹40 (auto) · 🚌 7 min ₹15 (bus) · 🚑 4 min free (108)*
+
+The 108 ambulance row is free in most Indian states with a 5-15 min response — for urgent pathways (PPH, MI, stroke, snakebite, anaphylaxis, neonatal sepsis) the agent surfaces it prominently. Tool: `estimate_journey` returns a `modes` block with auto / bus / ambulance speed + ₹ for every facility.
+
+## ⌘K command palette
+
+![⌘K palette — grouped queries / features / nav with G+letter hotkeys](docs/screenshots/15_cmdk.png)
+
+Press `⌘K` (or `Ctrl+K`) anywhere. Raycast-style command bar with grouped sections, saffron icons, hotkey hints (G+H = Atlas, G+C = Compare, G+E = Eval). Pre-loaded query templates auto-fill the textarea AND submit.
+
 ## Multimodal triage on-device
 
 ![Photo upload → medgemma 27B triage in 10s → input pre-filled](docs/screenshots/13_photo_upload.png)
