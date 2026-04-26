@@ -1,5 +1,21 @@
 # Submission draft — paste-ready answers for projects.hack-nation.ai
 
+## ⏰ SUBMISSION CHECKLIST (do in this order, takes ~5 min)
+
+1. **Flip GitHub repo to PUBLIC** at https://github.com/damsolanke/aarogya-atlas/settings → Danger Zone → Change visibility → Public
+2. Open https://projects.hack-nation.ai/submit#/dashboard/my-projects (you're already logged in as Dam Solanke)
+3. Click **Create Submission** → Event: `5th-hack-nation` · Challenge: `Serving A Nation (Agentic AI & Data Engineering)` · Track: `VC Big Bets`
+4. Paste from the field-by-field templates below
+5. Upload Demo Video (60s MP4) and Tech Video (60s MP4)
+6. Optional: drop the 8 priority screenshots from `docs/screenshots/` into Media Gallery
+7. Tick the consent checkbox · Click Submit · Verify status changes to **Pending**
+8. Screenshot the Pending state for record
+
+If the form errors mid-submission (multiple teams reported issues at 7-9 PM ET on Apr 25), clear cache or use a private window per organizer NicoFroehlich's guidance.
+
+---
+
+
 **Event:** 5th-hack-nation
 **Deadline:** Apr 26, 2026 at 9:00 AM ET (~10h from now)
 **User:** Dam Solanke · `b56ab0a3-d07e-4af7-b47e-259a73c6c45b`
@@ -63,7 +79,7 @@ Five public routes: /, /compare (vs ChatGPT/Maps 14/0/0), /equity (disparate-imp
 > _Placeholder: "What makes your project better or different from existing solutions?"_
 
 ```
-Four things no other Challenge-3 entry shipped: (1) On-device PHI extraction AND multimodal triage (Qwen 2.5 32B + medgemma 27B vision) — wound photo, X-ray, prescription all triaged in <5s; PHI never touches the cloud. (2) Trust Scorer with 80% bootstrap-CI + Validator self-check that catches the spec's named contradiction (advanced surgery, no anesthesia). (3) Equity counterfactual planner: "add N CEmONC beds in {district} → averted maternal deaths/yr" via gravity model + Six-Delays attribution. (4) Adversarial robustness eval (DAS-style perturbation) reporting honest static-vs-dynamic accuracy gap. Plus: Mosaic AI Vector Search verified end-to-end while many other Databricks-track teams in #challenge-03-databricks remain blocked on it.
+Five things no other Challenge-3 entry shipped: (1) **Multimodal on-device triage** (medgemma 27B vision) — wound photo / X-ray / snake-bite / prescription gives a structured triage in ~4s with severity + recommended specialty + rationale; PHI never touches the cloud. (2) **Trust Scorer with 80% bootstrap CI + Validator** self-check that catches the spec's named contradiction (advanced surgery, no anesthesia). (3) **Drive-time isochrones** rendered as 3 saffron rings (15/30/60 min) around the top recommendation; multi-modal travel always shows auto / public bus / **108 ambulance** (free). (4) **Equity counterfactual planner**: "add N CEmONC beds in {district} → averted maternal deaths/yr" via gravity model + Six-Delays attribution. (5) **DAS-style adversarial robustness eval** reporting 100% static / 100% dynamic / 0% gap after the no-location fallback fix. Plus a bespoke design system (Instrument Serif + Tiro Devanagari Hindi + saffron palette + Bloomberg-style mono tickers + ⌘K command palette) that the AI-template-aesthetic majority of the field cannot match. Mosaic AI Vector Search verified end-to-end while many Databricks-track teams in #challenge-03-databricks remain blocked on it.
 ```
 
 ## 5. Implementation & Technology *
