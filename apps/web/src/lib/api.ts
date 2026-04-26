@@ -9,19 +9,39 @@ export type TraceEvent =
     }
   | { type: "tool_result"; tool: string; content: string };
 
+export type CriticFlag = {
+  severity: "high" | "med" | "low";
+  issue: string;
+  evidence: string;
+};
+
+export type CriticVerdict = {
+  trust_score: number;
+  verdict: "PASS" | "WARN" | "FAIL";
+  flags: CriticFlag[];
+  summary: string;
+};
+
 export type StreamEvent =
   | { event: "step"; data: TraceEvent }
   | { event: "final"; data: { text: string } }
+  | { event: "critic"; data: CriticVerdict }
   | { event: "error"; data: { kind: string; text: string } };
 
+export type ChatMessage = { role: "user" | "assistant"; content: string };
+
 export async function* streamQuery(
-  query: string,
+  messagesOrQuery: string | ChatMessage[],
   signal?: AbortSignal
 ): AsyncGenerator<StreamEvent> {
+  const body =
+    typeof messagesOrQuery === "string"
+      ? { query: messagesOrQuery }
+      : { messages: messagesOrQuery };
   const r = await fetch(`${API_URL}/api/query`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query }),
+    body: JSON.stringify(body),
     signal,
   });
   if (!r.ok || !r.body) {
