@@ -152,6 +152,16 @@ description.
 </tr>
 </table>
 
+## Lighthouse — 100/100 on Best Practices + SEO
+
+Latest [headless Edge mobile audit](docs/LIGHTHOUSE_REPORT.md):
+
+| Performance | Accessibility | Best Practices | SEO |
+| :-: | :-: | :-: | :-: |
+| 37 / 100 ⚠️ | **98 / 100** ✅ | **100 / 100** ✅ | **100 / 100** ✅ |
+
+FCP 1.1 s · LCP 15.7 s (MapLibre WebGL canvas). The home page is an agentic SPA with a live map, not a marketing landing — FCP-1.1s means the interactive IdleHero (stat trio + sample card + suggestions) lands fast above the fold; the map progressively reveals.
+
 ## Adversarial robustness (DAS-style)
 
 We don't just grade ourselves on the queries we wrote — we grade ourselves on perturbed versions per the DAS methodology
