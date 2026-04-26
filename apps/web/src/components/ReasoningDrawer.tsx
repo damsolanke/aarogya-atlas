@@ -2,16 +2,22 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, Brain, Wrench, CheckCircle2 } from "lucide-react";
+import { ChevronRight, Brain, Wrench, CheckCircle2, ShieldCheck, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/cn";
-import type { TraceEvent } from "@/lib/api";
+import type { TraceEvent, CriticVerdict } from "@/lib/api";
 
 const LOCAL_TOOLS = new Set([
   "extract_capabilities_from_note",
   "semantic_intake_search",
 ]);
 
-export default function ReasoningDrawer({ trace }: { trace: TraceEvent[] }) {
+export default function ReasoningDrawer({
+  trace,
+  critic,
+}: {
+  trace: TraceEvent[];
+  critic?: CriticVerdict | null;
+}) {
   const [open, setOpen] = useState(false);
   const stepCount = trace.filter(
     (e) => e.type === "tool_request" || e.type === "thought"
@@ -55,10 +61,61 @@ export default function ReasoningDrawer({ trace }: { trace: TraceEvent[] }) {
                   <Row step={step} index={i} />
                 </li>
               ))}
+              {critic && (
+                <li>
+                  <CriticRow critic={critic} />
+                </li>
+              )}
             </ol>
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+function CriticRow({ critic }: { critic: CriticVerdict }) {
+  const tone =
+    critic.verdict === "PASS"
+      ? { color: "text-emerald-300", bg: "bg-emerald-950/30", border: "border-emerald-800/40", dot: "bg-emerald-400" }
+      : critic.verdict === "WARN"
+      ? { color: "text-amber-300", bg: "bg-amber-950/30", border: "border-amber-800/40", dot: "bg-amber-400" }
+      : { color: "text-red-300", bg: "bg-red-950/30", border: "border-red-800/40", dot: "bg-red-400" };
+  return (
+    <div className={cn("mt-2 rounded-md border px-2.5 py-1.5", tone.border, tone.bg)}>
+      <div className="flex items-center gap-2 text-[11.5px]">
+        <ShieldCheck className={cn("h-3.5 w-3.5", tone.color)} />
+        <span className={cn("font-mono text-[10px] font-semibold uppercase tracking-wider", tone.color)}>
+          critic verdict
+        </span>
+        <span className={cn("inline-flex h-1.5 w-1.5 rounded-full", tone.dot)} />
+        <span className={cn("text-[10px] font-semibold uppercase tracking-wider", tone.color)}>
+          {critic.verdict}
+        </span>
+        <span className="ml-auto font-mono text-[11px] text-zinc-300 tab-num">
+          {critic.trust_score}/100
+        </span>
+      </div>
+      {critic.summary && (
+        <div className="mt-1 pl-5 text-[11.5px] leading-snug text-zinc-300">
+          {critic.summary}
+        </div>
+      )}
+      {critic.flags && critic.flags.length > 0 && (
+        <ul className="mt-1.5 space-y-0.5 pl-5">
+          {critic.flags.map((f, i) => (
+            <li key={i} className="flex items-start gap-1.5 text-[11px] text-zinc-400">
+              <AlertTriangle
+                className={cn(
+                  "mt-[2px] h-3 w-3 shrink-0",
+                  f.severity === "high" ? "text-red-400" : f.severity === "med" ? "text-amber-400" : "text-zinc-500"
+                )}
+              />
+              <span>{f.issue}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

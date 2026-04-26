@@ -25,8 +25,16 @@ app.add_middleware(
 )
 
 
+class ChatMessage(BaseModel):
+    role: str  # "user" | "assistant"
+    content: str
+
+
 class QueryReq(BaseModel):
-    query: str
+    # Legacy single-turn shape (kept for one release of backwards compat)
+    query: str | None = None
+    # Multi-turn shape: ordered list of prior turns ending in role=user
+    messages: list[ChatMessage] | None = None
 
 
 class TriageReq(BaseModel):
@@ -71,9 +79,21 @@ async def healthz() -> dict[str, Any]:
 
 @app.post("/api/query")
 async def query(req: QueryReq):
-    """SSE stream of trace events + a final answer."""
+    """SSE stream of trace events + a final answer.
+
+    Accepts either:
+      - {"query": "..."}                                    (single-turn legacy)
+      - {"messages": [{"role":"user"|"assistant", ...}]}   (multi-turn)
+    """
+    if req.messages:
+        history = [{"role": m.role, "content": m.content} for m in req.messages]
+    elif req.query:
+        history = [{"role": "user", "content": req.query}]
+    else:
+        history = []
+
     async def gen():
-        async for evt in stream_answer(req.query):
+        async for evt in stream_answer(history):
             yield f"data: {json.dumps(evt)}\n\n"
     return StreamingResponse(gen(), media_type="text/event-stream")
 
