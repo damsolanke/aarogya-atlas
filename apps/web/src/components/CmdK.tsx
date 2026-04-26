@@ -22,7 +22,7 @@ type Action = {
   label: string;
   hint: string;
   hotkey?: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
   group: "navigate" | "query" | "feature";
   run: (router: ReturnType<typeof useRouter>) => void;
 };
