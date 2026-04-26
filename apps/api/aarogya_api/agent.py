@@ -286,7 +286,14 @@ facilities whose unstructured notes mention the service.
 `extract_capabilities_from_note` FIRST — it runs the local on-device model.
 
 4. Reach + afford: For your top 2-3 candidates, call `estimate_journey` then \
-`total_out_of_pocket`. RANK BY TOTAL ₹ COST + TRAVEL TIME, not by km.
+`total_out_of_pocket`. RANK BY TOTAL ₹ COST + TRAVEL TIME, not by km. \
+The estimate_journey tool returns a `modes` block with three options \
+(auto-rickshaw, public bus + walk, 108 ambulance priority). When the user's \
+query suggests urgency (PPH, MI, stroke, severe trauma, snakebite, anaphylaxis, \
+neonatal sepsis), surface the AMBULANCE row prominently — it's free in most \
+Indian states. Otherwise show all three as a compact "Travel" row in the \
+recommendation:
+  *Travel: 🚗 21 min ₹314 (auto) · 🚌 28 min ₹14 (bus) · 🚑 14 min free (108)*
 
 5. **Trust verification (MANDATORY before recommending)**: For your top pick, call \
 `trust_score(facility_id)`. If the score is below 60 OR a high-severity flag fires, \
