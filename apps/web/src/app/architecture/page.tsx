@@ -61,7 +61,7 @@ export default function ArchitecturePage() {
             Back to Aarogya Atlas
           </Link>
           <div className="text-[10.5px] font-semibold uppercase tracking-wider text-zinc-500">
-            Architecture · 4 planes · 12 tools
+            Architecture · 5 planes · 12 tools · critic-verified
           </div>
         </div>
       </header>
@@ -74,11 +74,13 @@ export default function ArchitecturePage() {
           </h1>
         </div>
         <p className="mt-3 max-w-3xl text-[14px] leading-relaxed text-zinc-400">
-          Four planes — UI, supervisor, twelve tools, data. The supervisor
+          Five planes — UI, supervisor, twelve tools, critic, data. The supervisor
           (GPT-OSS-120B via Groq, OpenAI-compatible function calling) coordinates
-          the tools in a streaming loop. Vision triage routes to Gemini Flash-Lite
-          (cloud) or on-device medgemma; PHI tools run on-device; everything else
-          runs in Postgres or Databricks. Hover any tool to see what it does.
+          the tools in a streaming loop, and every final answer is then graded by
+          a separate critic LLM that issues a 0–100 trust score + structured flags
+          before the user sees it. Vision triage routes to Gemini Flash-Lite (cloud)
+          or on-device medgemma; PHI tools run on-device; everything else runs in
+          Postgres or Databricks. Hover any tool to see what it does.
         </p>
 
         {/* Animated flow diagram */}
@@ -106,31 +108,34 @@ export default function ArchitecturePage() {
             {/* Plane 1 — UI */}
             <Plane x={20} y={30} w={200} h={70} title="UI Plane" sub="Next.js 16 · MapLibre" />
             {/* Plane 2 — Supervisor */}
-            <Plane x={390} y={30} w={200} h={70} title="Supervisor" sub="GPT-OSS-120B · Groq" accent />
+            <Plane x={280} y={30} w={200} h={70} title="Supervisor" sub="GPT-OSS-120B · Groq" accent />
             {/* Plane 3 — Tools */}
-            <Plane x={760} y={30} w={200} h={70} title="12 Tools" sub="manual streaming loop" />
-            {/* Plane 4 — Data */}
-            <Plane x={20} y={460} w={920} h={70} title="Data Plane" sub="Postgres 17 + pgvector  ·  Databricks (UC + Genie + MLflow + Mosaic VS)  ·  Ollama" />
+            <Plane x={540} y={30} w={200} h={70} title="12 Tools" sub="manual streaming loop" />
+            {/* Plane 4 — Critic */}
+            <Plane x={800} y={30} w={160} h={70} title="Critic" sub="Trust 0–100 · PASS/WARN/FAIL" criticAccent />
+            {/* Plane 5 — Data */}
+            <Plane x={20} y={460} w={940} h={70} title="Data Plane" sub="Postgres 17 + pgvector  ·  Databricks (UC + Genie + MLflow + Mosaic VS)  ·  Ollama" />
 
-            {/* Flowing connectors UI ↔ Supervisor */}
+            {/* Flowing connectors UI → Supervisor → Tools → Critic */}
+            <path d="M 220 65 H 280" fill="none" stroke="url(#strokeGrad)" strokeWidth="2.5" className="flow-stroke" />
+            <path d="M 480 65 H 540" fill="none" stroke="url(#strokeGrad)" strokeWidth="2.5" className="flow-stroke" />
+            <path d="M 740 65 H 800" fill="none" stroke="url(#strokeGrad)" strokeWidth="2.5" className="flow-stroke" />
+
+            {/* Critic feedback arrow back to UI (every answer is verified) */}
             <path
-              d="M 220 65 H 390"
+              d="M 880 100 V 130 H 120 V 65"
               fill="none"
-              stroke="url(#strokeGrad)"
-              strokeWidth="2.5"
-              className="flow-stroke"
+              stroke="rgba(94,234,212,0.55)"
+              strokeWidth="1.5"
+              strokeDasharray="4 4"
             />
-            <path
-              d="M 590 65 H 760"
-              fill="none"
-              stroke="url(#strokeGrad)"
-              strokeWidth="2.5"
-              className="flow-stroke"
-            />
+            <text x={400} y={123} fill="#5eead4" fontSize="10" fontFamily="ui-sans-serif, system-ui">
+              critic verdict streamed back to UI
+            </text>
 
             {/* Connector Supervisor ↓ Data */}
             <path
-              d="M 490 100 V 460"
+              d="M 380 100 V 460"
               fill="none"
               stroke="url(#strokeGradV)"
               strokeWidth="2.5"
@@ -221,6 +226,18 @@ export default function ArchitecturePage() {
             ]}
           />
           <PlaneCard
+            title="Critic"
+            icon={ShieldCheck}
+            tone="emerald"
+            items={[
+              "Mandatory second-pass LLM verification on every supervisor answer",
+              "Strict rubric: -25 for unscored facility, -25 for high-stakes without validate, -20 for hallucinated capability, etc.",
+              "Returns 0-100 trust score + PASS/WARN/FAIL + structured flags",
+              "Streamed as a typed event so the banner appears as soon as it lands",
+              "Answers the brief's 'how do you account for messy data' question by surfacing every contradiction the supervisor missed",
+            ]}
+          />
+          <PlaneCard
             title="Data Plane"
             icon={Database}
             tone="amber"
@@ -247,6 +264,7 @@ function Plane({
   title,
   sub,
   accent,
+  criticAccent,
 }: {
   x: number;
   y: number;
@@ -255,9 +273,16 @@ function Plane({
   title: string;
   sub: string;
   accent?: boolean;
+  criticAccent?: boolean;
 }) {
-  const stroke = accent ? "rgba(94,234,212,0.55)" : "rgba(63,63,70,0.85)";
-  const fill = accent
+  const stroke = criticAccent
+    ? "rgba(94,234,212,0.85)"
+    : accent
+    ? "rgba(94,234,212,0.55)"
+    : "rgba(63,63,70,0.85)";
+  const fill = criticAccent
+    ? "rgba(20,184,166,0.18)"
+    : accent
     ? "url(#strokeGradV)"
     : "rgba(24,28,38,0.6)";
   return (

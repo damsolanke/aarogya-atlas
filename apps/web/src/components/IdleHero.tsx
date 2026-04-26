@@ -9,7 +9,6 @@ import {
   Wallet,
   Phone,
   Sparkles,
-  AlertTriangle,
   ArrowRight,
 } from "lucide-react";
 import Suggestions from "./Suggestions";
@@ -117,32 +116,56 @@ export default function IdleHero({
         />
       </motion.div>
 
-      {/* Sample answer card preview */}
+      {/* Sample answer preview — illustrates the critic-verified Trust Score
+          banner that fronts every recommendation. Numbers below are a static
+          example; the real answer lands once you send a query. */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
         className="overflow-hidden rounded-lg border border-zinc-800/80 bg-[var(--bg-card)]/70 shadow-xl shadow-black/30 backdrop-blur-sm"
       >
+        <div className="flex items-center gap-3 border-b border-zinc-800/80 bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-transparent px-3.5 py-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-black/30 ring-1 ring-emerald-500/50">
+            <ShieldCheck className="h-4 w-4 text-emerald-200" />
+          </div>
+          <div className="flex-1 leading-tight">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-300">
+                Critic-verified
+              </span>
+              <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-300">
+                PASS
+              </span>
+            </div>
+            <div className="mt-0.5 flex items-baseline gap-2">
+              <span className="font-mono text-[20px] font-semibold tabular-nums text-emerald-200">
+                92
+              </span>
+              <span className="text-[11px] text-zinc-500">/ 100 trust score</span>
+            </div>
+          </div>
+          <span className="rounded-md px-2 py-0.5 text-[10px] tracking-wider text-zinc-400 ring-1 ring-zinc-700/80">
+            preview
+          </span>
+        </div>
         <div className="flex items-center gap-2 border-b border-zinc-800/80 px-3.5 py-2" style={{background: "linear-gradient(90deg, rgba(232,146,61,0.10), transparent)"}}>
           <div className="flex h-6 w-6 items-center justify-center rounded-md ring-1 brand-glow" style={{background: "rgba(232,146,61,0.10)", borderColor: "rgba(232,146,61,0.4)"}}>
             <Sparkles className="h-3.5 w-3.5" style={{color: "var(--accent-saffron)"}} />
           </div>
           <div className="leading-tight">
             <div className="text-[11px] font-semibold tracking-tight text-zinc-100">
-              Sample answer · ECG · Yeshwantpur
+              Sample answer · cardiac ICU · Bengaluru
             </div>
             <div className="ticker text-[10px]">
-              <span className="v">7 tools</span>
+              <span className="v">6 tools</span>
               <span className="sep">│</span>
-              <span className="v">31s</span>
+              <span className="v">28s</span>
               <span className="sep">│</span>
-              <span>VS query 340ms</span>
+              <span>GPT-OSS-120B · Groq</span>
             </div>
           </div>
-          <span className="ml-auto rounded-md px-2 py-0.5 text-[10px] tracking-wider text-zinc-400 ring-1 ring-zinc-700/80">
-            preview
-          </span>
         </div>
         <div className="space-y-2 p-3.5">
           <div className="rounded-xl border border-emerald-800/40 bg-emerald-950/15 px-3.5 py-2.5">
@@ -154,18 +177,17 @@ export default function IdleHero({
             </div>
             <div className="flex items-baseline justify-between gap-2">
               <h3 className="text-[14px] font-semibold text-zinc-50">
-                Dr Prabhakar C Koregol Clinic
+                Manipal Hospital, Old Airport Road
               </h3>
               <span className="rounded bg-zinc-900/80 px-1.5 py-0.5 font-mono text-[10px] text-zinc-400 ring-1 ring-zinc-800">
-                vf-3263
+                vf-7821
               </span>
             </div>
             <div className="mt-0.5 text-[11.5px] text-zinc-500">Bengaluru</div>
             <div className="mt-2 flex flex-wrap gap-1">
-              <Pill icon={Wallet} value="₹484" />
-              <Pill icon={ArrowRight} value="2.7 km · 21 min" />
-              <Pill icon={ShieldCheck} value="Trust 65/100" tone="amber" />
-              <Pill icon={AlertTriangle} value="Validator: WARN" tone="amber" />
+              <Pill icon={Wallet} value="₹0 (Ayushman OK)" />
+              <Pill icon={ArrowRight} value="6.2 km · 34 min" />
+              <Pill icon={ShieldCheck} value="Trust 92/100" />
             </div>
             <div className="mt-2.5 rounded-lg border-l-2 border-cyan-500/60 bg-cyan-950/20 px-2.5 py-1.5">
               <div className="mb-0.5 flex items-center gap-1 text-[9.5px] font-semibold uppercase tracking-wider text-cyan-400/80">
@@ -173,7 +195,7 @@ export default function IdleHero({
                 Ask the receptionist
               </div>
               <div className="text-[12px] italic leading-relaxed text-zinc-200">
-                Call +91 97415 85444 — “Do you do ECG today, and are you
+                Call +91 80 2502 4444 — “Cardiac ICU bed available tonight, and
                 Ayushman Bharat empanelled?”
               </div>
             </div>

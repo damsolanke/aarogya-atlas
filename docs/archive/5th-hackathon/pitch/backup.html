@@ -1,0 +1,2422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Aarogya Atlas — From symptom, to care.</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070A12">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23070A12'/%3E%3Ctext x='16' y='22' font-family='serif' font-size='22' fill='%23E8923D' text-anchor='middle' font-style='italic'%3EA%3C/text%3E%3C/svg%3E">
+
+<!-- Open Graph + Twitter card -->
+<meta property="og:title" content="Aarogya Atlas — agentic healthcare intelligence for 1.4B people">
+<meta property="og:description" content="From symptom, to care. A 12-tool agent that ranks 10,000 Indian healthcare facilities by trust, cost, and drive time. Built solo for Hack-Nation 2026.">
+<meta property="og:image" content="https://formal-rogers-poster-meanwhile.trycloudflare.com/og.png">
+<meta property="og:url" content="https://formal-rogers-poster-meanwhile.trycloudflare.com">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Aarogya Atlas — From symptom, to care.">
+<meta name="twitter:description" content="A 12-tool agent over 10,000 Indian healthcare facilities. Trust-scored, multilingual, on-device PHI.">
+<meta name="twitter:image" content="https://formal-rogers-poster-meanwhile.trycloudflare.com/og.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Tiro+Devanagari+Hindi:ital@0;1&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&family=Inter:wght@200..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+
+<!-- maplibre-gl for the 3D India map slide -->
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+
+<style>
+  /* ============== BRAND TOKENS ============== */
+  :root {
+    --bg: #070A12;
+    --bg-elev: #0c111c;
+    --bg-glass: rgba(12, 17, 28, 0.55);
+    --paper: #f4f5f7;
+    --saffron: #E8923D;
+    --saffron-glow: rgba(232, 146, 61, 0.4);
+    --teal: #14B8A6;
+    --warn: #F59E0B;
+    --danger: #EF4444;
+    --zinc-200: #e4e4e7;
+    --zinc-300: #d4d4d8;
+    --zinc-400: #a1a1aa;
+    --zinc-500: #71717a;
+    --zinc-600: #52525b;
+    --zinc-700: #3f3f46;
+    --zinc-800: #27272a;
+    --zinc-900: #18181b;
+    --serif: "Instrument Serif", "Tiempos", Georgia, serif;
+    --sans: "Inter", "Geist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --mono: "Geist Mono", "JetBrains Mono", "SF Mono", ui-monospace, monospace;
+    --devanagari: "Tiro Devanagari Hindi", "Noto Serif Devanagari", serif;
+  }
+
+  html, body, .reveal {
+    background: var(--bg);
+    color: var(--paper);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    cursor: none;
+  }
+
+  /* ============== CUSTOM CURSOR ============== */
+  #cursor {
+    position: fixed;
+    width: 14px; height: 14px;
+    border: 1.5px solid var(--saffron);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%) scale(1);
+    transition: transform 180ms cubic-bezier(0.2, 0, 0.1, 1), background-color 180ms ease, border-color 180ms ease;
+    mix-blend-mode: difference;
+  }
+  #cursor.hover {
+    transform: translate(-50%, -50%) scale(2.4);
+    background: var(--saffron);
+    border-color: var(--saffron);
+  }
+
+  /* ============== TYPOGRAPHY ============== */
+  .reveal { font-size: 32px; }
+  .reveal .slides { text-align: left; }
+  .reveal .slides section {
+    padding: 6vh 6vw;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .reveal h1, .reveal h2, .reveal h3, .reveal h4 {
+    color: var(--paper);
+    font-family: var(--serif);
+    font-weight: 400;
+    letter-spacing: -0.025em;
+    line-height: 1.02;
+    text-transform: none;
+    margin: 0;
+  }
+  .reveal h1 { font-size: 5em; }
+  .reveal h2 { font-size: 3.4em; }
+  .reveal h3 { font-size: 2.2em; }
+
+  .reveal p, .reveal li {
+    font-size: 1.15em;
+    line-height: 1.45;
+    color: var(--zinc-300);
+    font-weight: 380;
+    font-variation-settings: "wght" 380;
+  }
+
+  .reveal em, .display-italic {
+    font-style: italic;
+    color: var(--saffron);
+  }
+  .reveal strong { color: var(--paper); font-weight: 500; }
+
+  .saffron { color: var(--saffron); }
+  .teal { color: var(--teal); }
+  .warn { color: var(--warn); }
+
+  .mono {
+    font-family: var(--mono);
+    font-feature-settings: "tnum", "ss01";
+  }
+  .small { font-size: 0.7em; color: var(--zinc-400); }
+  .tiny {
+    font-size: 0.55em;
+    color: var(--zinc-500);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-family: var(--mono);
+    font-weight: 500;
+  }
+  .devanagari { font-family: var(--devanagari); }
+
+  /* ============== HEROIC NUMBERS ============== */
+  .huge {
+    font-size: 8em;
+    line-height: 0.95;
+    font-weight: 500;
+    font-family: var(--serif);
+    letter-spacing: -0.04em;
+    color: var(--paper);
+  }
+  .mega {
+    font-size: 14em;
+    line-height: 0.85;
+    font-family: var(--devanagari);
+    color: var(--saffron);
+    text-shadow: 0 0 60px var(--saffron-glow);
+  }
+
+  .ordinal {
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--saffron);
+    font-size: 1.3em;
+    letter-spacing: -0.02em;
+  }
+
+  /* ============== STAT GRID ============== */
+  .grid { display: grid; gap: 2.5em; margin-top: 1.5em; }
+  .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+
+  .stat .num {
+    font-family: var(--serif);
+    font-size: 3.2em;
+    line-height: 0.95;
+    color: var(--paper);
+    letter-spacing: -0.03em;
+  }
+  .stat .num.saff { color: var(--saffron); }
+  .stat .num.tealn { color: var(--teal); }
+  .stat .num.var-wght {
+    font-family: "Inter", sans-serif;
+    font-variation-settings: "wght" 200;
+    font-feature-settings: "tnum";
+    letter-spacing: -0.04em;
+    transition: font-variation-settings 1.4s cubic-bezier(0.2, 0, 0.1, 1);
+  }
+  .stat .num.var-wght.fired {
+    font-variation-settings: "wght" 700;
+  }
+  .stat .lab {
+    font-family: var(--mono);
+    font-size: 0.6em;
+    color: var(--zinc-400);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 0.5em;
+  }
+
+  /* ============== TICKER ============== */
+  .ticker {
+    font-family: var(--mono);
+    font-size: 0.7em;
+    color: var(--zinc-400);
+    border-top: 1px solid var(--zinc-800);
+    border-bottom: 1px solid var(--zinc-800);
+    padding: 0.6em 0;
+    margin: 1.2em 0;
+    letter-spacing: 0.04em;
+  }
+  .ticker .v { color: var(--saffron); }
+  .ticker .sep { color: var(--zinc-700); margin: 0 0.6em; }
+
+  .url {
+    font-family: var(--mono);
+    color: var(--saffron);
+    font-size: 1.1em;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  /* ============== FOOTER ============== */
+  .footer-note {
+    position: absolute;
+    bottom: 2vh; right: 4vw;
+    font-family: var(--mono);
+    font-size: 0.4em;
+    color: var(--zinc-700);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  section.no-footer .footer-note { display: none; }
+
+  /* ============== HOOK SLIDE — 3D Three.js stage ============== */
+  .hook-stage {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 60%, #0e1525 0%, #050811 60%, #000 100%);
+    overflow: hidden;
+  }
+  #threeHookCanvas {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    display: block;
+  }
+  .hook-tagline {
+    position: absolute;
+    bottom: 12%;
+    left: 0; right: 0;
+    text-align: center;
+    font-family: var(--serif);
+    font-size: 2.6em;
+    color: var(--paper);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 1000ms cubic-bezier(0.2, 0, 0.1, 1) 1800ms,
+                transform 1000ms cubic-bezier(0.2, 0, 0.1, 1) 1800ms;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    z-index: 5;
+    pointer-events: none;
+  }
+  .hook-tagline.in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .hook-tagline em {
+    font-style: italic;
+    color: var(--saffron);
+  }
+  .hook-fallback {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--devanagari);
+    font-size: 18em;
+    color: var(--saffron);
+    text-shadow: 0 0 80px rgba(232, 146, 61, 0.3);
+    z-index: 1;
+  }
+
+  /* ============== VANTA / WEBGL BACKGROUND CANVAS ============== */
+  .bg-vanta {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  /* ============== GLASS CARD ============== */
+  .glass {
+    background: var(--bg-glass);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 1px 2px rgba(0, 0, 0, 0.4),
+      0 30px 80px rgba(0, 0, 0, 0.6);
+  }
+
+  /* ============== LIVE DEMO IFRAME FRAME ============== */
+  .demo-frame {
+    position: relative;
+    width: 100%;
+    height: 82vh;
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--bg-elev);
+    border: 1px solid rgba(232, 146, 61, 0.25);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 0 0 1px rgba(232, 146, 61, 0.12),
+      0 30px 80px rgba(0, 0, 0, 0.6),
+      0 0 80px rgba(232, 146, 61, 0.08);
+  }
+  .demo-frame iframe {
+    width: 100%; height: 100%;
+    border: 0;
+    background: var(--bg);
+  }
+  .demo-status {
+    position: absolute;
+    top: 1em; left: 1em;
+    font-family: var(--mono);
+    font-size: 0.5em;
+    color: var(--saffron);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    z-index: 10;
+    background: rgba(7, 10, 18, 0.7);
+    padding: 0.4em 0.8em;
+    border-radius: 4px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    pointer-events: none;
+  }
+  .demo-status::before {
+    content: "● ";
+    color: var(--saffron);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .demo-caption {
+    margin-top: 1em;
+    font-family: var(--mono);
+    font-size: 0.55em;
+    color: var(--zinc-400);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .demo-caption .live { color: var(--saffron); }
+
+  /* ============== ARCHITECTURE 3D STACK ============== */
+  .arch-scene {
+    perspective: 1400px;
+    perspective-origin: 50% 30%;
+    margin-top: 1em;
+  }
+  .arch-stack {
+    transform-style: preserve-3d;
+    transform: rotateX(14deg) rotateY(-4deg);
+    display: flex;
+    flex-direction: column;
+    gap: 1.1em;
+    animation: archDrift 16s ease-in-out infinite alternate;
+    max-width: 90%;
+    margin: 0 auto;
+  }
+  @keyframes archDrift {
+    0%   { transform: rotateX(14deg) rotateY(-4deg); }
+    100% { transform: rotateX(11deg) rotateY(-1deg); }
+  }
+  .arch-layer {
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-left: 3px solid var(--zinc-700);
+    border-radius: 10px;
+    padding: 1em 1.4em;
+    display: flex;
+    align-items: baseline;
+    gap: 1.5em;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 30px 60px rgba(0, 0, 0, 0.5);
+    transform-style: preserve-3d;
+    transition: transform 600ms cubic-bezier(0.2, 0, 0.1, 1);
+  }
+  .arch-layer.l-saff { border-left-color: var(--saffron); box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), inset 4px 0 18px rgba(232,146,61,0.10), 0 30px 60px rgba(0,0,0,0.5); }
+  .arch-layer.l-teal { border-left-color: var(--teal); box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), inset 4px 0 18px rgba(20,184,166,0.10), 0 30px 60px rgba(0,0,0,0.5); }
+  .arch-stack > .arch-layer:nth-of-type(1) { transform: translateZ(80px); }
+  .arch-stack > .arch-layer:nth-of-type(2) { transform: translateZ(40px); }
+  .arch-stack > .arch-layer:nth-of-type(3) { transform: translateZ(0); }
+  .arch-stack > .arch-layer:nth-of-type(4) { transform: translateZ(-40px); }
+  .arch-layer .arch-num {
+    font-family: var(--mono);
+    font-size: 0.5em;
+    color: var(--zinc-500);
+    letter-spacing: 0.18em;
+    flex-shrink: 0;
+    width: 2em;
+    align-self: center;
+  }
+  .arch-layer.l-saff .arch-num { color: var(--saffron); }
+  .arch-layer.l-teal .arch-num { color: var(--teal); }
+  .arch-layer .arch-icon {
+    flex-shrink: 0;
+    width: 56px; height: 56px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--zinc-300);
+    align-self: center;
+  }
+  .arch-layer .arch-icon svg { width: 34px; height: 34px; display: block; }
+  .arch-layer .arch-icon.arch-icon-pair {
+    width: auto;
+    padding: 0 14px;
+    gap: 12px;
+    column-gap: 12px;
+  }
+  .arch-layer .arch-icon.arch-icon-pair svg {
+    width: 28px; height: 28px;
+  }
+  .arch-layer.l-saff .arch-icon { background: rgba(232,146,61,0.10); border-color: rgba(232,146,61,0.40); color: var(--saffron); box-shadow: 0 0 18px rgba(232,146,61,0.18); }
+  .arch-layer.l-teal .arch-icon { background: rgba(20,184,166,0.10); border-color: rgba(20,184,166,0.40); color: var(--teal); box-shadow: 0 0 18px rgba(20,184,166,0.18); }
+  .arch-layer .arch-name {
+    font-family: var(--serif);
+    font-size: 1.4em;
+    color: var(--paper);
+    flex-shrink: 0;
+    width: 5em;
+    align-self: center;
+  }
+  .arch-layer.l-saff .arch-name { color: var(--saffron); }
+  .arch-layer.l-teal .arch-name { color: var(--teal); }
+  .arch-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    height: 0.4em;
+    margin: -0.4em 0;
+    pointer-events: none;
+  }
+  .af-line {
+    width: 1.2em;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  }
+  .af-line-saff { background: linear-gradient(90deg, transparent, rgba(232,146,61,0.55), transparent); box-shadow: 0 0 8px rgba(232,146,61,0.4); }
+  .af-line-teal { background: linear-gradient(90deg, transparent, rgba(20,184,166,0.55), transparent); box-shadow: 0 0 8px rgba(20,184,166,0.4); }
+  .af-arrow {
+    font-family: var(--mono);
+    font-size: 0.6em;
+    color: var(--zinc-500);
+    line-height: 1;
+  }
+  .af-arrow-saff { color: var(--saffron); text-shadow: 0 0 8px rgba(232,146,61,0.55); }
+  .af-arrow-teal { color: var(--teal); text-shadow: 0 0 8px rgba(20,184,166,0.55); }
+  .arch-layer .arch-detail {
+    font-family: var(--mono);
+    font-size: 0.55em;
+    color: var(--zinc-400);
+    letter-spacing: 0.03em;
+    line-height: 1.5;
+    overflow-wrap: break-word;
+    min-width: 0;
+  }
+  .arch-layer .arch-detail strong { color: var(--saffron); }
+
+  /* ============== MAP SLIDE — deck.gl 3D India ============== */
+  .map-frame {
+    position: relative;
+    width: 100%;
+    height: 86vh;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #050811;
+    border: 1px solid rgba(232, 146, 61, 0.2);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 30px 80px rgba(0, 0, 0, 0.6);
+  }
+  #mapCanvas {
+    position: absolute;
+    inset: 0;
+  }
+  .map-overlay {
+    position: absolute;
+    bottom: 1em; left: 1em;
+    font-family: var(--mono);
+    font-size: 0.5em;
+    color: var(--zinc-300);
+    background: rgba(7, 10, 18, 0.75);
+    padding: 0.7em 1em;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(12px);
+    z-index: 5;
+    pointer-events: none;
+    line-height: 1.6;
+  }
+  .map-overlay .saff { color: var(--saffron); }
+
+  /* ============== MOAT TRANSPORT ICONS (SVG) ============== */
+  .transport-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1.2em;
+    margin-top: 1.4em;
+    max-width: 36em;
+  }
+  .transport-card {
+    position: relative;
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 14px;
+    padding: 1.1em 1em 1em;
+    text-align: left;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 18px 40px rgba(0,0,0,0.35);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .transport-card.featured {
+    border-color: rgba(232, 146, 61, 0.55);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 0 0 1px rgba(232,146,61,0.18), 0 18px 60px rgba(232,146,61,0.18), 0 30px 80px rgba(0,0,0,0.5);
+    transform: translateY(-4px);
+  }
+  .tc-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85em; }
+  .tc-icon-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 56px; height: 56px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015));
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+    flex-shrink: 0;
+  }
+  .tc-head svg {
+    width: 36px; height: 36px;
+    color: var(--zinc-200);
+    stroke-width: 1.6;
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 6px rgba(255,255,255,0.06));
+  }
+  .transport-card.featured .tc-icon-badge {
+    background: linear-gradient(135deg, rgba(232,146,61,0.22), rgba(232,146,61,0.08));
+    border-color: rgba(232,146,61,0.55);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 0 28px rgba(232,146,61,0.28);
+  }
+  .transport-card.featured .tc-head svg {
+    color: var(--saffron);
+    filter: drop-shadow(0 0 10px rgba(232,146,61,0.7));
+  }
+  .tc-pill {
+    font-family: var(--mono);
+    font-size: 0.42em;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--saffron);
+    border: 1px solid rgba(232, 146, 61, 0.55);
+    border-radius: 999px;
+    padding: 3px 8px;
+    background: rgba(232, 146, 61, 0.08);
+  }
+  .tc-mode {
+    font-family: var(--mono);
+    font-size: 0.5em;
+    color: var(--zinc-400);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 0.25em;
+  }
+  .transport-card.featured .tc-mode { color: var(--saffron); }
+  .tc-time {
+    font-family: var(--mono);
+    font-size: 1.6em;
+    line-height: 1;
+    color: var(--zinc-200);
+    letter-spacing: -0.02em;
+    margin-bottom: 0.55em;
+  }
+  .transport-card.featured .tc-time { color: var(--saffron); text-shadow: 0 0 24px rgba(232,146,61,0.35); }
+  .tc-meta {
+    font-family: var(--mono);
+    font-size: 0.5em;
+    color: var(--zinc-500);
+    letter-spacing: 0.06em;
+    line-height: 1.7;
+  }
+  .tc-meta .v { color: var(--zinc-300); }
+  .transport-card.featured .tc-meta .v { color: var(--zinc-200); }
+
+  /* ============== CLOSER ============== */
+  .closer-stage {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse 60% 80% at 50% 50%, #0a0d18 0%, #000 70%);
+    overflow: hidden;
+    gap: 1.4em;
+  }
+  .closer-kicker {
+    position: relative;
+    z-index: 5;
+    font-family: var(--mono);
+    font-size: 0.62em;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--saffron);
+    opacity: 0.85;
+  }
+  .closer-kicker .sep { color: var(--zinc-700); margin: 0 0.7em; }
+  .closer-line {
+    font-family: var(--serif);
+    font-size: 6.5em;
+    color: var(--paper);
+    text-align: center;
+    line-height: 1.04;
+    letter-spacing: -0.03em;
+    z-index: 5;
+    position: relative;
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .closer-line.animate-in {
+    animation: closerIn 1500ms cubic-bezier(0.2, 0, 0.1, 1) both;
+  }
+  @keyframes closerIn {
+    0%   { opacity: 0; transform: translateY(8px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  .closer-line em {
+    font-style: italic;
+    color: var(--saffron);
+  }
+  .closer-author {
+    position: relative;
+    z-index: 5;
+    font-family: var(--serif);
+    font-size: 1.05em;
+    color: var(--zinc-300);
+    letter-spacing: 0.005em;
+    margin-top: 0.4em;
+    text-align: center;
+  }
+  .closer-author .name { color: var(--paper); }
+  .closer-author .role { color: var(--zinc-500); font-style: italic; }
+  .closer-foot {
+    position: absolute;
+    bottom: 4vh;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    z-index: 5;
+    font-family: var(--mono);
+    font-size: 0.5em;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    max-width: 96%;
+  }
+  .closer-foot .cf-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.55em;
+    padding: 0.55em 1em;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    color: var(--zinc-400);
+    background: rgba(255, 255, 255, 0.02);
+    white-space: nowrap;
+  }
+  .closer-foot .cf-cell .cf-lab { color: var(--zinc-600); }
+  .closer-foot .cf-cell .cf-val { color: var(--zinc-200); }
+  .closer-foot .cf-cell.cf-live { border-color: rgba(232, 146, 61, 0.40); background: rgba(232, 146, 61, 0.06); }
+  .closer-foot .cf-cell.cf-live .cf-val { color: var(--saffron); }
+  .closer-foot .cf-cell.cf-live .cf-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--saffron);
+    box-shadow: 0 0 10px var(--saffron);
+    animation: livePulse 1.6s ease-in-out infinite;
+  }
+  @keyframes livePulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.4; }
+  }
+
+  /* ============== MOAT SLIDE LAYOUT ============== */
+  .moat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8em;
+  }
+  .moat .ord {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 1.4em;
+    color: var(--saffron);
+    letter-spacing: -0.02em;
+  }
+  .moat h2 {
+    font-size: 4em;
+    line-height: 1;
+  }
+
+  /* Equity hero number */
+  .equity-hero {
+    margin-top: 1em;
+    display: flex;
+    align-items: baseline;
+    gap: 0.8em;
+  }
+  .equity-hero .add {
+    font-family: var(--mono);
+    color: var(--zinc-400);
+    font-size: 1.5em;
+  }
+  .equity-hero .num {
+    font-family: var(--serif);
+    font-size: 9em;
+    color: var(--saffron);
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+  }
+  .equity-hero .lab {
+    font-family: var(--mono);
+    font-size: 0.65em;
+    color: var(--zinc-400);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    align-self: flex-end;
+    margin-bottom: 1em;
+  }
+
+  /* ============== REVEAL OVERRIDES ============== */
+  .reveal .controls { color: var(--saffron); }
+  .reveal .progress { color: var(--saffron); height: 2px; }
+  .reveal .slide-number {
+    background: transparent;
+    color: var(--zinc-700);
+    font-family: var(--mono);
+    font-size: 0.55em;
+    letter-spacing: 0.08em;
+  }
+
+  /* ============== KEYBOARD CHEATSHEET ============== */
+  .cheat-overlay {
+    position: fixed; inset: 0;
+    background: rgba(7, 10, 18, 0.92);
+    backdrop-filter: blur(12px);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .cheat-overlay.show { display: flex; }
+  .cheat-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--zinc-800);
+    border-radius: 12px;
+    padding: 3em 4em;
+    max-width: 720px;
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
+  }
+  .cheat-card h3 {
+    font-family: var(--serif);
+    font-size: 2em;
+    color: var(--saffron);
+    margin: 0 0 1em 0;
+  }
+  .cheat-table {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.5em 1.5em;
+    font-size: 0.95em;
+    color: var(--zinc-300);
+    align-items: baseline;
+  }
+  .cheat-table kbd {
+    font-family: var(--mono);
+    font-size: 0.85em;
+    background: var(--zinc-900);
+    border: 1px solid var(--zinc-700);
+    border-radius: 4px;
+    padding: 0.15em 0.55em;
+    color: var(--saffron);
+    min-width: 1.4em;
+    text-align: center;
+    display: inline-block;
+  }
+
+  /* ============== MUTE INDICATOR ============== */
+  #muteIndicator {
+    position: fixed;
+    bottom: 1em; left: 1em;
+    z-index: 100;
+    font-family: var(--mono);
+    font-size: 0.5em;
+    color: var(--zinc-700);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: rgba(7, 10, 18, 0.6);
+    padding: 0.3em 0.6em;
+    border-radius: 4px;
+    backdrop-filter: blur(8px);
+    pointer-events: none;
+  }
+  #muteIndicator.audio { color: var(--saffron); }
+
+  /* ============== SPLASH ============== */
+  #splash {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 600ms ease 200ms;
+  }
+  #splash.hide { opacity: 0; pointer-events: none; }
+  #splash .splash-glyph {
+    font-family: var(--devanagari);
+    font-size: 6em;
+    color: var(--saffron);
+    animation: splashPulse 1.2s ease-in-out infinite;
+  }
+  @keyframes splashPulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  /* ============== PRINT ============== */
+  @media print {
+    html, body, .reveal { background: #fff !important; color: #111 !important; cursor: auto !important; }
+    .reveal .slides section { page-break-after: always; page-break-inside: avoid; }
+    .reveal h1, .reveal h2, .reveal h3 { color: #111 !important; }
+    .reveal p, .reveal li { color: #444 !important; }
+    .saffron, em { color: #c97119 !important; }
+    .teal { color: #0d8b7e !important; }
+    .arch-layer { background: #f5f5f5 !important; transform: none !important; }
+    .arch-stack { transform: none !important; animation: none !important; }
+    .controls, .progress, .slide-number, .footer-note, #cursor, #muteIndicator { display: none !important; }
+    #splash, .cheat-overlay, #threeHookCanvas, .bg-vanta { display: none !important; }
+    .hook-fallback { color: #c97119 !important; opacity: 1 !important; }
+    .demo-frame iframe, #mapCanvas { display: none; }
+    .demo-frame::after, .map-frame::after {
+      content: "Live at https://formal-rogers-poster-meanwhile.trycloudflare.com";
+      font-family: monospace; font-size: 16px; display: block;
+      padding: 4em 1em; text-align: center; color: #c97119;
+    }
+    .closer-stage { background: #fff !important; }
+    .closer-line, .closer-line em { color: #111 !important; }
+    .closer-line em { color: #c97119 !important; }
+    .closer-line { opacity: 1 !important; transform: none !important; }
+  }
+
+  /* ============== MOBILE ============== */
+  @media (max-width: 768px) {
+    .reveal { font-size: 22px; }
+    .reveal h1 { font-size: 3em; }
+    .reveal h2 { font-size: 2.4em; }
+    .mega { font-size: 8em; }
+    .huge { font-size: 5em; }
+    .grid-3, .grid-2 { grid-template-columns: 1fr; gap: 1.5em; }
+    .demo-frame, .map-frame { height: 60vh; }
+    .arch-layer { flex-direction: column; gap: 0.4em; align-items: flex-start; }
+    .arch-layer .arch-name { width: auto; }
+    .arch-stack { transform: none !important; }
+    .closer-line { font-size: 3.2em; }
+    .hook-fallback { font-size: 10em; }
+    .equity-hero .num { font-size: 5em; }
+    .transport-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    .hook-tagline { opacity: 1 !important; transform: none !important; }
+    .closer-line { opacity: 1 !important; transform: none !important; }
+    .arch-stack { animation: none !important; }
+  }
+  .proof-hero { display: flex; flex-direction: column; align-items: flex-start; gap: 0.5em; margin-top: 0.2em; }
+  .proof-hero-left { display: flex; flex-direction: column; align-items: flex-start; gap: 0.5em; min-width: 0; }
+  .proof-num { font-size: 6.5em; font-weight: 700; line-height: 0.88; letter-spacing: -0.045em; text-shadow: 0 0 90px rgba(232,146,61,0.22); }
+  .proof-cap { max-width: 28em; font-size: 0.95em; color: var(--zinc-400); line-height: 1.45; font-family: var(--mono); letter-spacing: 0.01em; }
+  .proof-cap em { color: var(--zinc-200); font-style: italic; font-family: var(--serif); font-size: 1.05em; }
+
+  /* Slide 10 head-to-head comparison */
+  .proof-compare { width: 100%; max-width: 56em; margin-top: 1.4em; display: flex; flex-direction: column; gap: 0.7em; padding: 1.1em 1.4em; background: rgba(255,255,255,0.025); border: 1px solid rgba(232,146,61,0.18); border-radius: 12px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05); }
+  .proof-compare-label { font-family: var(--mono); font-size: 0.62em; letter-spacing: 0.2em; text-transform: uppercase; color: var(--zinc-500); margin-bottom: 0.3em; }
+  .pc-row { display: grid; grid-template-columns: 9em 1fr 5em; align-items: center; gap: 1em; font-family: var(--mono); font-size: 0.95em; color: var(--zinc-400); }
+  .pc-row.pc-win { color: var(--zinc-100); }
+  .pc-name { letter-spacing: 0.02em; }
+  .pc-bar { height: 14px; background: rgba(255,255,255,0.04); border-radius: 999px; overflow: hidden; position: relative; }
+  .pc-bar > span { display: block; height: 100%; background: linear-gradient(90deg, rgba(232,146,61,0.45), rgba(232,146,61,1)); box-shadow: 0 0 22px rgba(232,146,61,0.6); border-radius: 999px; }
+  .pc-row:not(.pc-win) .pc-bar > span { background: rgba(220, 70, 70, 0.55); box-shadow: none; }
+  .pc-score { text-align: right; letter-spacing: 0.04em; color: var(--zinc-200); font-weight: 500; }
+  .pc-row.pc-win .pc-score { color: var(--saffron); text-shadow: 0 0 14px rgba(232,146,61,0.4); }
+  .pc-foot { margin-top: 0.6em; font-family: var(--mono); font-size: 0.62em; color: var(--zinc-500); letter-spacing: 0.12em; text-transform: uppercase; }
+
+  /* Slide 7 isochrone diagram */
+  .moat2-grid { display: grid; grid-template-columns: 320px 1fr; gap: 3.2em; align-items: center; margin-top: 0.4em; }
+  .iso-diagram { width: 320px; height: 320px; }
+  .iso-diagram svg { width: 100%; height: 100%; filter: drop-shadow(0 0 30px rgba(232,146,61,0.18)); }
+  .moat2-text { display: flex; flex-direction: column; }
+  @media (max-width: 900px) { .moat2-grid { grid-template-columns: 1fr; } .iso-diagram { width: 220px; height: 220px; margin: 0 auto; } }
+
+  /* Slide 12 closer glyph callback */
+  .closer-glyph {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--devanagari); font-size: 13em; line-height: 1;
+    color: rgba(232, 146, 61, 0.08);
+    pointer-events: none; user-select: none;
+    text-shadow: 0 0 180px rgba(232,146,61,0.22);
+    letter-spacing: -0.02em;
+    z-index: 0;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 768px) { .proof-num { font-size: 6em; } .proof-cap { font-size: 0.85em; } .closer-glyph { font-size: 14em; } }
+
+  /* Slide 5 — Three things upgrade */
+  .three-rule {
+    margin-top: 1.4em;
+    height: 1px;
+    width: 5em;
+    background: linear-gradient(90deg, var(--saffron), transparent);
+  }
+  .three-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2.4em;
+    margin-top: 2.4em;
+    max-width: 44em;
+    position: relative;
+  }
+  .three-grid::before {
+    content: "";
+    position: absolute;
+    top: 30px;
+    left: 8%; right: 8%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(232,146,61,0.5) 20%, rgba(232,146,61,0.5) 80%, transparent);
+    z-index: 0;
+    box-shadow: 0 0 8px rgba(232,146,61,0.3);
+  }
+  .three-card { position: relative; z-index: 1; padding-top: 0.4em; }
+  .three-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 60px; height: 60px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(232,146,61,0.10), rgba(232,146,61,0.02));
+    border: 1px solid rgba(232,146,61,0.30);
+    color: var(--saffron);
+    margin-bottom: 1.1em;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 0 30px rgba(232,146,61,0.10);
+  }
+  .three-icon svg { width: 36px; height: 36px; stroke-width: 1.6; filter: drop-shadow(0 0 12px rgba(232,146,61,0.65)); }
+  .three-num {
+    font-family: var(--serif);
+    font-size: 2.4em;
+    color: var(--saffron);
+    line-height: 1;
+    margin-bottom: 0.45em;
+    letter-spacing: -0.02em;
+  }
+  .three-lab {
+    font-family: var(--serif);
+    font-size: 1.4em;
+    color: var(--zinc-200);
+    line-height: 1.25;
+  }
+  .three-sub {
+    display: inline-block;
+    margin-top: 0.45em;
+    font-family: var(--mono);
+    font-size: 0.55em;
+    color: var(--zinc-500);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .three-foot {
+    margin-top: 2.6em;
+    max-width: 44em;
+    font-size: 0.85em;
+    color: var(--zinc-500);
+    letter-spacing: 0.02em;
+  }
+
+  /* Slide 8 — Horizontal pill ribbon ABOVE the map (full-width map below) */
+  .map-frame.map-frame-full { height: 70vh; width: 100%; max-width: 100%; box-sizing: border-box; }
+  .map-ribbon-wrap { width: 100%; max-width: 100%; margin-top: 0.8em; margin-bottom: 0.9em; box-sizing: border-box; }
+  .map-ribbon {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.55em;
+    width: 100%;
+    max-width: min(100%, 1020px);
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
+  }
+  .map-ribbon-anchor {
+    margin-top: 0.7em;
+    font-family: var(--mono);
+    font-size: 0.5em;
+    color: var(--zinc-500);
+    letter-spacing: 0.06em;
+    text-align: center;
+  }
+  .map-ribbon-anchor strong { color: var(--zinc-200); font-weight: 700; }
+
+  /* Slide 9 — Equity upgrades */
+  .ord-row { display: flex; align-items: center; gap: 1em; margin-bottom: 0.4em; }
+  .live-pill {
+    display: inline-flex; align-items: center; gap: 0.45em;
+    padding: 0.35em 0.7em;
+    background: rgba(232, 146, 61, 0.10);
+    border: 1px solid rgba(232, 146, 61, 0.45);
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 0.42em;
+    letter-spacing: 0.16em;
+    color: var(--saffron);
+    text-transform: uppercase;
+  }
+  .live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--saffron);
+    box-shadow: 0 0 8px var(--saffron);
+    animation: livePulse 1.6s ease-in-out infinite;
+  }
+  @keyframes livePulse { 0%,100% { opacity: 0.55; transform: scale(1); } 50% { opacity: 1; transform: scale(1.25); } }
+  .equity-stats {
+    margin-top: 1.2em;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.8em;
+    max-width: 32em;
+  }
+  .es-cell {
+    padding: 0.6em 0.8em;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-left: 2px solid var(--saffron);
+    border-radius: 8px;
+  }
+  .es-num {
+    display: block;
+    font-family: var(--mono);
+    font-size: 1.5em;
+    font-weight: 700;
+    color: var(--saffron);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .es-lab {
+    display: block;
+    margin-top: 0.4em;
+    font-family: var(--mono);
+    font-size: 0.5em;
+    color: var(--zinc-500);
+    letter-spacing: 0.06em;
+    line-height: 1.3;
+  }
+
+  /* Slide 10 — Proof extras stat strip */
+  .proof-extras {
+    margin-top: 1.6em;
+    padding-top: 1.6em;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.9em;
+    max-width: 56em;
+  }
+  .pe-cell {
+    padding: 0.9em 1em;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .pe-num {
+    font-size: 1.8em;
+    font-weight: 700;
+    color: var(--zinc-100);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .pe-num.saff { color: var(--saffron); text-shadow: 0 0 18px rgba(232,146,61,0.4); }
+  .pe-unit { font-size: 0.5em; font-weight: 400; color: var(--zinc-500); margin-left: 0.1em; }
+  .pe-lab {
+    margin-top: 0.5em;
+    font-family: var(--mono);
+    font-size: 0.5em;
+    color: var(--zinc-500);
+    letter-spacing: 0.06em;
+    line-height: 1.4;
+  }
+
+  /* Slide 11 — Architecture per-layer pills */
+  .arch-pill {
+    flex-shrink: 0;
+    align-self: center;
+    margin-left: auto;
+    padding: 0.35em 0.75em;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 0.45em;
+    color: var(--zinc-300);
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .arch-pill-saff {
+    background: rgba(232,146,61,0.12);
+    border-color: rgba(232,146,61,0.50);
+    color: var(--saffron);
+    box-shadow: 0 0 14px rgba(232,146,61,0.18);
+  }
+  .arch-pill-teal {
+    background: rgba(20,184,166,0.12);
+    border-color: rgba(20,184,166,0.50);
+    color: var(--teal);
+    box-shadow: 0 0 14px rgba(20,184,166,0.18);
+  }
+  .mr-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.55em 0.7em;
+    background: rgba(7, 10, 18, 0.65);
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 14px 30px rgba(0,0,0,0.35);
+    min-width: 0;
+  }
+  .mr-pill.mr-saff { border-color: rgba(232,146,61,0.45); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 0 22px rgba(232,146,61,0.18), 0 14px 30px rgba(0,0,0,0.35); }
+  .mr-pill.mr-teal { border-color: rgba(20,184,166,0.40); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 0 18px rgba(20,184,166,0.14), 0 14px 30px rgba(0,0,0,0.35); }
+  .mr-rank {
+    font-family: var(--mono);
+    font-size: 0.45em;
+    color: var(--zinc-500);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    flex: 0 0 auto;
+  }
+  .mr-pill.mr-saff .mr-rank { color: var(--saffron); }
+  .mr-pill.mr-teal .mr-rank { color: var(--teal); }
+  .mr-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.05em;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .mr-name {
+    font-family: var(--mono);
+    font-size: 0.55em;
+    color: var(--zinc-100);
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mr-meta {
+    font-family: var(--mono);
+    font-size: 0.4em;
+    color: var(--zinc-500);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mr-val {
+    font-family: var(--mono);
+    font-size: 1.05em;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    flex: 0 0 auto;
+    line-height: 1;
+  }
+  .mr-pill.mr-saff .mr-val { color: var(--saffron); text-shadow: 0 0 16px rgba(232,146,61,0.45); }
+  .mr-pill.mr-teal .mr-val { color: var(--teal); }
+  /* Legacy legend rules retained but hidden — ribbon replaces them */
+  .map-row { display: contents; }
+  .map-legend { display: none; }
+  .ml-head {
+    font-size: 0.55em;
+    color: var(--zinc-400);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.9em;
+    padding-bottom: 0.6em;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .ml-head .saff { color: var(--saffron); font-size: 1.1em; vertical-align: -1px; }
+  .ml-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.4em;
+    padding: 0.35em 0;
+    font-size: 0.5em;
+    width: 100%;
+  }
+  .ml-row .ml-rank { display: none; }
+  .ml-row .ml-name {
+    color: var(--zinc-100);
+    font-size: 1em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .ml-row .ml-meta { display: none; }
+  .ml-row .ml-val {
+    font-size: 1.1em;
+    font-weight: 700;
+    color: var(--zinc-100);
+    letter-spacing: -0.01em;
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .ml-row-saff .ml-val { color: var(--saffron); text-shadow: 0 0 12px rgba(232,146,61,0.4); }
+  .ml-row-teal .ml-val { color: var(--teal); }
+  .ml-row-saff .ml-name { color: #fff; }
+  .ml-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(232,146,61,0.25), transparent);
+    margin: 0.7em 0 0.4em;
+  }
+  .ml-foot {
+    margin-top: 1em;
+    padding-top: 0.7em;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    font-size: 0.45em;
+    color: var(--zinc-500);
+    letter-spacing: 0.08em;
+    line-height: 1.5;
+  }
+  .map-source {
+    position: absolute;
+    bottom: 0.9em; left: 1.4em;
+    padding: 0.5em 0.9em;
+    background: rgba(7, 10, 18, 0.78);
+    backdrop-filter: blur(8px) saturate(140%);
+    -webkit-backdrop-filter: blur(8px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 0.45em;
+    color: var(--zinc-400);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    z-index: 5;
+  }
+</style>
+</head>
+<body>
+
+<div id="cursor" aria-hidden="true"></div>
+<div id="splash"><div class="splash-glyph">आ</div></div>
+<div id="muteIndicator" title="Press M to toggle audio">audio · m to toggle</div>
+
+<div class="cheat-overlay" id="cheatOverlay">
+  <div class="cheat-card">
+    <h3>Keyboard cheatsheet</h3>
+    <div class="cheat-table">
+      <kbd>→</kbd><span>next slide</span>
+      <kbd>←</kbd><span>previous slide</span>
+      <kbd>S</kbd><span>open speaker view (notes + timer + next-slide preview)</span>
+      <kbd>F</kbd><span>fullscreen</span>
+      <kbd>O</kbd><span>slide overview grid</span>
+      <kbd>B</kbd><span>blackout (pull focus during Q&amp;A)</span>
+      <kbd>1</kbd><span>jump to live demo slide</span>
+      <kbd>M</kbd><span>toggle slide-advance audio</span>
+      <kbd>?</kbd><span>this cheatsheet</span>
+      <kbd>ESC</kbd><span>exit overview / cheatsheet</span>
+    </div>
+  </div>
+</div>
+
+<div class="reveal">
+  <div class="slides">
+
+    <!-- 1. HOOK — Three.js scene -->
+    <section data-state="hook" class="no-footer" id="slide-hook" data-background-color="#000">
+      <div class="hook-stage">
+        <canvas id="threeHookCanvas"></canvas>
+        <div class="hook-fallback" id="hookFallback" aria-hidden="true">आरोग्य</div>
+        <div class="hook-tagline" id="hookTagline">From <em>symptom</em>, to care.</div>
+      </div>
+      <aside class="notes">
+        OPEN: smile, count one second, then begin. The 3D आरोग्य glyph fades in over 1.5s with the camera dollying forward; particles drift around it. After ~1.8s the closer-line preview appears below. After "From symptom, to care." appears, advance to slide 2 and start the spoken pitch with: "In rural India, a postal code can decide a lifespan. A family loads onto a bus at 5 AM, travels three hours, and learns the dialysis machine broke yesterday."
+      </aside>
+    </section>
+
+    <!-- 2. PROBLEM -->
+    <section id="slide-problem" data-background-color="#070A12" data-background-image="03_desert_overlay.png" data-background-size="cover" data-background-position="center" data-background-opacity="0.22">
+      <p class="tiny saffron">The problem · India healthcare</p>
+      <h1>In rural India, <em>a postal code</em><br>can decide a lifespan.</h1>
+      <p style="margin-top: 1.5em; color: var(--zinc-200); font-size: 1.15em; max-width: 38em; text-shadow: 0 2px 18px rgba(0,0,0,0.7);">A family loads onto a bus at 5 AM, travels three hours, and learns the dialysis machine broke yesterday. Or that the clinic listing <em>Advanced Surgery</em> has no anesthesiologist on staff.</p>
+      <div class="footer-note">02 / 11</div>
+      <aside class="notes">
+        Voice it slowly. Two sentences only. Then proceed: "The Virtue Foundation publishes the most comprehensive open registry of Indian healthcare — ten thousand facilities. But it's messy, contradictory, unsearchable for a non-expert."
+      </aside>
+    </section>
+
+    <!-- 3. WHAT IT IS -->
+    <section id="slide-what" class="no-footer" data-background-color="#070A12">
+      <p class="tiny saffron" style="margin-bottom: 2.2em;">अ + रोग — without disease</p>
+      <div class="mega" style="font-size: 11em; margin-top: 0; text-shadow: 0 0 35px rgba(232,146,61,0.3);">आरोग्य</div>
+      <h2 style="margin-top: 0.4em; max-width: 18em; font-size: 2.6em;">Aarogya Atlas — <em>agentic healthcare intelligence</em><br>for 1.4 billion people.</h2>
+      <p style="margin-top: 0.8em; max-width: 36em; font-size: 1em;">A 12-tool agent that ranks 10,000 Indian facilities by Trust Score, total ₹ cost, and drive time — in your language, with the exact words to say to the receptionist.</p>
+      <div class="ticker" style="max-width: 36em;">
+        <span class="v">EN</span><span class="sep">·</span><span class="v">हिंदी</span><span class="sep">·</span><span class="v">தமிழ்</span><span class="sep">│</span><span>patient information never leaves the device</span>
+      </div>
+      <aside class="notes">
+        "Aarogya Atlas is a twelve-tool agent that ranks those ten thousand facilities by trust, by rupee cost, and by drive time — in your language, with the exact words to say to the receptionist. English. Hindi. Tamil. Patient information never leaves your device."
+      </aside>
+    </section>
+
+    <!-- 4. LIVE DEMO -->
+    <section id="slide-demo" data-background-color="#070A12">
+      <p class="tiny saffron">Live · right now</p>
+      <div class="demo-frame">
+        <div class="demo-status" id="demoStatus">Live</div>
+        <iframe id="demoFrame" src="about:blank" loading="lazy" title="Aarogya Atlas live demo"></iframe>
+      </div>
+      <div class="demo-caption">
+        <span class="live">▶ formal-rogers-poster-meanwhile.trycloudflare.com</span>
+        <span style="color: var(--zinc-700); margin: 0 0.7em;">│</span>
+        <span>cardiac care · age 67 · Bengaluru · 22-second response</span>
+      </div>
+      <div class="footer-note">04 / 11</div>
+      <aside class="notes">
+        DEMO BEAT (~60 seconds). Voiceover: "Watch. An ASHA worker types — cardiac care, age sixty-seven, Bengaluru, two hours. Twelve tools in parallel. On-device for patient data. Twenty-two seconds. Three ranked clinics, total cost in rupees, the Hindi sentence to ask the receptionist. The validator flagged this one as a WARN. We don't recommend silently."
+      </aside>
+    </section>
+
+    <!-- 5. THREE THINGS -->
+    <section id="slide-three" data-background-color="#070A12">
+      <p class="tiny saffron">The moat</p>
+      <h1 style="max-width: 14em;">Three things <em>nothing else</em><br>in this field shipped.</h1>
+      <div class="three-rule" aria-hidden="true"></div>
+      <div class="three-grid">
+        <div class="three-card">
+          <div class="three-icon">
+            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="6" y="13" width="36" height="26" rx="3"/>
+              <circle cx="24" cy="26" r="7"/>
+              <circle cx="24" cy="26" r="3" fill="currentColor" stroke="none"/>
+              <path d="M16 13l3-5h10l3 5"/>
+            </svg>
+          </div>
+          <div class="three-num">01.</div>
+          <div class="three-lab">Multimodal triage<br><span class="three-sub">on-device · medgemma 27B</span></div>
+        </div>
+        <div class="three-card">
+          <div class="three-icon">
+            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="24" cy="24" r="20" stroke-dasharray="3 4" opacity="0.55"/>
+              <circle cx="24" cy="24" r="13" stroke-dasharray="3 4" opacity="0.75"/>
+              <circle cx="24" cy="24" r="7"/>
+              <circle cx="24" cy="24" r="2.5" fill="currentColor" stroke="none"/>
+            </svg>
+          </div>
+          <div class="three-num">02.</div>
+          <div class="three-lab">Drive-time isochrones<br><span class="three-sub">15 · 30 · 60 min · multi-modal</span></div>
+        </div>
+        <div class="three-card">
+          <div class="three-icon">
+            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M24 6v36"/>
+              <path d="M14 14h20"/>
+              <path d="M9 26c0-4 2-7 5-7s5 3 5 7H9z"/>
+              <path d="M29 26c0-4 2-7 5-7s5 3 5 7H29z"/>
+              <path d="M16 42h16"/>
+            </svg>
+          </div>
+          <div class="three-num">03.</div>
+          <div class="three-lab">Equity counterfactual<br><span class="three-sub">planner · gravity + Six-Delays</span></div>
+        </div>
+      </div>
+      <p class="three-foot mono">add 10 beds → avert ~70 deaths · the kind of math the receptionist never gets to see.</p>
+      <div class="footer-note">05 / 11</div>
+      <aside class="notes">
+        "Three things nothing else in this field shipped." [PAUSE]
+      </aside>
+    </section>
+
+    <!-- 6. MOAT 1 — split-pane: text left, real product screenshot right -->
+    <section id="slide-moat-1" data-background-color="#070A12">
+      <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 4em; align-items: center; height: 100%;">
+        <div class="moat">
+          <div class="ord">One —</div>
+          <h2 style="font-size: 3.4em;">Multimodal triage<br><em>on-device.</em></h2>
+          <p style="margin-top: 0.6em;"><strong>Wound. X-ray. Prescription. Snakebite.</strong></p>
+          <p style="font-size: 1em;">medgemma 27B vision runs locally on the laptop. ~4 seconds. Structured output: severity, specialty, rationale.</p>
+          <div class="ticker glass" style="margin-top: 0.8em; padding: 0.8em 1.2em; border-radius: 10px;">
+            <span class="v">PHI never leaves the device</span>
+          </div>
+        </div>
+        <div style="position: relative;">
+          <img src="13_photo_upload.png" alt="medgemma triage card on Aarogya Atlas live product"
+               style="width: 100%; border-radius: 12px; border: 1px solid rgba(232, 146, 61, 0.3); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 30px 80px rgba(0,0,0,0.6), 0 0 60px rgba(232,146,61,0.08);">
+          <div style="position: absolute; bottom: -2em; left: 0; font-family: var(--mono); font-size: 0.5em; color: var(--zinc-500); letter-spacing: 0.08em; text-transform: uppercase;">live · medgemma 27B vision · snakebite triage card visible</div>
+        </div>
+      </div>
+      <div class="footer-note">06 / 11</div>
+      <aside class="notes">
+        Voice: "One — multimodal triage. Wound photo, X-ray, prescription — medgemma vision on-device, four seconds, structured output. Look at the card on the right — that's a real snakebite triage from the live product."
+      </aside>
+    </section>
+
+    <!-- 7. MOAT 2 — isochrones with SVG transport icons -->
+    <section id="slide-moat-2" data-background-color="#070A12">
+      <div class="moat">
+        <div class="ord">Two —</div>
+        <h2>Drive-time isochrones<br>+ <em>multi-modal travel.</em></h2>
+        <div class="moat2-grid">
+          <div class="iso-diagram">
+            <svg viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <radialGradient id="ringFill" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="rgba(232,146,61,0.18)"/>
+                  <stop offset="100%" stop-color="rgba(232,146,61,0)"/>
+                </radialGradient>
+              </defs>
+              <circle cx="160" cy="160" r="140" fill="url(#ringFill)" stroke="rgba(232,146,61,0.55)" stroke-width="1" stroke-dasharray="4 6"/>
+              <circle cx="160" cy="160" r="95" fill="url(#ringFill)" stroke="rgba(232,146,61,0.7)" stroke-width="1" stroke-dasharray="4 6"/>
+              <circle cx="160" cy="160" r="50" fill="rgba(232,146,61,0.15)" stroke="rgba(232,146,61,0.95)" stroke-width="1.2"/>
+              <circle cx="160" cy="160" r="6" fill="#E8923D"/>
+              <circle cx="160" cy="160" r="11" fill="none" stroke="#E8923D" stroke-width="1.5" opacity="0.7"/>
+              <text x="160" y="78" text-anchor="middle" font-family="Geist Mono, monospace" font-size="11" fill="#E8923D" letter-spacing="2">15 MIN</text>
+              <text x="160" y="33" text-anchor="middle" font-family="Geist Mono, monospace" font-size="11" fill="#E8923D" letter-spacing="2">30 MIN</text>
+              <text x="160" y="316" text-anchor="middle" font-family="Geist Mono, monospace" font-size="10" fill="rgba(232,146,61,0.7)" letter-spacing="2">60 MIN</text>
+              <text x="178" y="166" font-family="Geist Mono, monospace" font-size="9" fill="#a1a1aa" letter-spacing="1">facility</text>
+            </svg>
+          </div>
+          <div class="moat2-text">
+            <p style="margin-top: 0; max-width: 28em; font-size: 1.05em;">Three saffron rings around every top recommendation — <strong>15 · 30 · 60</strong> minute drive time. Each ring asks: <em>can a family in this band actually reach care?</em></p>
+        <div class="transport-grid">
+          <div class="transport-card">
+            <div class="tc-head">
+              <div class="tc-icon-badge"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 38h44v10a2 2 0 01-2 2h-4a4 4 0 11-8 0H28a4 4 0 11-8 0h-6a4 4 0 01-4-4V38z"/>
+                <path d="M14 38l4-12a4 4 0 014-3h20a4 4 0 014 3l4 12"/>
+                <circle cx="20" cy="48" r="3"/>
+                <circle cx="44" cy="48" r="3"/>
+                <line x1="32" y1="23" x2="32" y2="38" stroke-dasharray="2 2"/>
+              </svg></div>
+            </div>
+            <div class="tc-mode">Auto-rickshaw</div>
+            <div class="tc-time">9 min</div>
+            <div class="tc-meta"><span class="v">≈ ₹220</span> · 24/7 · meter</div>
+          </div>
+          <div class="transport-card">
+            <div class="tc-head">
+              <div class="tc-icon-badge"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+                <rect x="12" y="14" width="40" height="32" rx="3"/>
+                <line x1="12" y1="32" x2="52" y2="32"/>
+                <rect x="16" y="18" width="8" height="10"/>
+                <rect x="28" y="18" width="8" height="10"/>
+                <rect x="40" y="18" width="8" height="10"/>
+                <circle cx="20" cy="50" r="4"/>
+                <circle cx="44" cy="50" r="4"/>
+              </svg></div>
+            </div>
+            <div class="tc-mode">Public bus</div>
+            <div class="tc-time">14 min</div>
+            <div class="tc-meta"><span class="v">≈ ₹15</span> · 06–22 · transfer</div>
+          </div>
+          <div class="transport-card featured">
+            <div class="tc-head">
+              <div class="tc-icon-badge"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 38v-12a2 2 0 012-2h26v18H8z"/>
+                <path d="M36 24h12l8 10v4H36V24z"/>
+                <line x1="8" y1="38" x2="56" y2="38"/>
+                <circle cx="20" cy="48" r="4"/>
+                <circle cx="44" cy="48" r="4"/>
+                <line x1="22" y1="28" x2="22" y2="34"/>
+                <line x1="19" y1="31" x2="25" y2="31"/>
+              </svg></div>
+              <span class="tc-pill">Agent pick</span>
+            </div>
+            <div class="tc-mode">108 Ambulance</div>
+            <div class="tc-time">7 min</div>
+            <div class="tc-meta"><span class="v">FREE</span> · 24/7 · dial 112</div>
+          </div>
+        </div>
+        <p class="mono small" style="margin-top: 1.4em; max-width: 38em; color: var(--zinc-500);">For chest pain in Bengaluru, the agent picks the saffron card — fastest <em>and</em> free.</p>
+          </div>
+        </div>
+      </div>
+      <div class="footer-note">07 / 11</div>
+      <aside class="notes">
+        Voice: "Two — drive-time isochrones with multi-modal travel. Auto-rickshaw, public bus, or the free one-oh-eight ambulance."
+      </aside>
+    </section>
+
+    <!-- 8. INDIA MAP — deck.gl 3D scene -->
+    <section id="slide-map" data-background-color="#070A12">
+      <p class="tiny saffron">10,000 facilities · 25 states · live</p>
+      <h2 style="font-size: 2.4em; margin-bottom: 0.6em;">Where coverage <em>isn't equal.</em></h2>
+      <div class="map-ribbon-wrap">
+        <div class="map-ribbon">
+          <div class="mr-pill mr-saff">
+            <span class="mr-stack"><span class="mr-name">Patna</span><span class="mr-meta">ICU</span></span>
+            <span class="mr-val">7.7×</span>
+          </div>
+          <div class="mr-pill mr-saff">
+            <span class="mr-stack"><span class="mr-name">Bihar</span><span class="mr-meta">Dialysis</span></span>
+            <span class="mr-val">7.0×</span>
+          </div>
+          <div class="mr-pill mr-saff">
+            <span class="mr-stack"><span class="mr-name">Assam</span><span class="mr-meta">Trauma</span></span>
+            <span class="mr-val">5.6×</span>
+          </div>
+          <div class="mr-pill mr-saff">
+            <span class="mr-stack"><span class="mr-name">Jharkhand</span><span class="mr-meta">Neonatal</span></span>
+            <span class="mr-val">5.4×</span>
+          </div>
+        </div>
+        <div class="map-ribbon-anchor">also ranked: UP · Lucknow trauma <strong>4.5×</strong> &nbsp;·&nbsp; baseline: Kerala <strong>1.0×</strong> (national best)</div>
+      </div>
+      <div class="map-frame map-frame-full">
+        <div id="mapCanvas"></div>
+        <div class="map-source">column height = disparity vs national best · deck.gl · Mosaic AI VS · Virtue Foundation 10K</div>
+      </div>
+      <div class="footer-note">08 / 11</div>
+      <aside class="notes">
+        Voice while map cycles cameras: "Where coverage isn't equal. Patna's ICU disparity towers — seven-point-seven times worse than Maharashtra. The map shows every critical district as a 3D column. The arcs are the live agent recommendations from the demo above."
+      </aside>
+    </section>
+
+    <!-- 9. MOAT 3 — split-pane: equity hero + real counterfactual screenshot -->
+    <section id="slide-moat-3" data-background-color="#070A12">
+      <div style="display: grid; grid-template-columns: 1.1fr 1fr; gap: 4em; align-items: center; height: 100%;">
+        <div class="moat">
+          <div class="ord-row">
+            <div class="ord">Three —</div>
+            <span class="live-pill"><span class="live-dot"></span>POLICY-MAKER TOOL · LIVE</span>
+          </div>
+          <h2 style="font-size: 3.2em;">Equity counterfactual<br><em>planner.</em></h2>
+          <div class="equity-hero" style="margin-top: 0.8em;">
+            <span class="add">add 10 →</span>
+            <span class="num" style="font-size: 7em;">~70</span>
+            <span class="lab">maternal deaths<br>averted/year · Patna</span>
+          </div>
+          <p style="margin-top: 0.6em; font-style: italic; color: var(--saffron); font-size: 1.3em; font-family: var(--serif);">A planning tool, not a chatbot.</p>
+          <div class="equity-stats">
+            <div class="es-cell"><span class="es-num">13.5%</span><span class="es-lab">mortality drop projected</span></div>
+            <div class="es-cell"><span class="es-num">6</span><span class="es-lab">high-disparity districts ready</span></div>
+            <div class="es-cell"><span class="es-num">0</span><span class="es-lab">chatbot disclaimers</span></div>
+          </div>
+        </div>
+        <div style="position: relative;">
+          <img src="12_counterfactual.png" alt="equity counterfactual planner — Patna +10 beds → 70 averted deaths"
+               style="width: 100%; border-radius: 12px; border: 1px solid rgba(20, 184, 166, 0.3); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 30px 80px rgba(0,0,0,0.6), 0 0 60px rgba(20,184,166,0.08);">
+          <div style="position: absolute; bottom: -2em; left: 0; font-family: var(--mono); font-size: 0.5em; color: var(--zinc-500); letter-spacing: 0.08em; text-transform: uppercase;">live · gravity model + Six-Delays · WHO 2024 baseline</div>
+        </div>
+      </div>
+      <div class="footer-note">09 / 11</div>
+      <aside class="notes">
+        Voice: "Three — equity counterfactual planner. Add ten obstetric beds in Patna — avert seventy maternal deaths per year. The card on the right shows the live slider — state-mission policy makers can drag this themselves. A planning tool, not a chatbot."
+      </aside>
+    </section>
+
+    <!-- 10. PROOF — variable-font weight oscillation on numbers -->
+    <section id="slide-proof" data-background-color="#070A12">
+      <p class="tiny saffron">Every facility in India · indexed · cited · audited</p>
+      <div class="proof-hero">
+        <div class="proof-num mono saff">10,000</div>
+        <div class="proof-cap">facilities — and we ranked, cited, and audited every one of them.</div>
+      </div>
+      <div class="proof-compare">
+        <div class="proof-compare-label">14-query head-to-head</div>
+        <div class="pc-row pc-win">
+          <div class="pc-name">Aarogya Atlas</div>
+          <div class="pc-bar"><span style="width:100%"></span></div>
+          <div class="pc-score">14 / 14</div>
+        </div>
+        <div class="pc-row">
+          <div class="pc-name">ChatGPT</div>
+          <div class="pc-bar"><span style="width:0%"></span></div>
+          <div class="pc-score">0 / 14</div>
+        </div>
+        <div class="pc-row">
+          <div class="pc-name">Google Maps</div>
+          <div class="pc-bar"><span style="width:0%"></span></div>
+          <div class="pc-score">0 / 14</div>
+        </div>
+      </div>
+      <div class="proof-extras">
+        <div class="pe-cell">
+          <div class="pe-num mono saff">100<span class="pe-unit">/100</span></div>
+          <div class="pe-lab">Robustness · static + dynamic</div>
+        </div>
+        <div class="pe-cell">
+          <div class="pe-num mono">0<span class="pe-unit"> / 12</span></div>
+          <div class="pe-lab">Errors · 12-query audit · 3 langs</div>
+        </div>
+        <div class="pe-cell">
+          <div class="pe-num mono">31.7<span class="pe-unit">s</span></div>
+          <div class="pe-lab">Mean wall-clock · −22% via parallel</div>
+        </div>
+        <div class="pe-cell">
+          <div class="pe-num mono">67</div>
+          <div class="pe-lab">Commits · 24 hours · solo</div>
+        </div>
+      </div>
+      <div class="footer-note">10 / 11</div>
+      <aside class="notes">
+        Wait one beat after slide enters. Voice: "Ten thousand facilities — every one of them ranked, cited, audited. Fourteen out of fourteen queries beat ChatGPT and Google Maps — both scored zero. Sixty-seven commits in twenty-four hours. Solo."
+      </aside>
+    </section>
+
+    <!-- 11. ARCHITECTURE — restored to main flow with CSS 3D -->
+    <section id="slide-arch" data-background-color="#070A12">
+      <p class="tiny saffron">How it thinks</p>
+      <h2 style="font-size: 2.6em; margin-bottom: 0.4em;">Four planes. <em>One streaming loop.</em></h2>
+      <div class="arch-scene">
+        <div class="arch-stack">
+          <div class="arch-layer">
+            <div class="arch-num">01</div>
+            <div class="arch-icon" aria-hidden="true" title="Next.js">
+              <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M18.665 21.978C16.758 23.255 14.465 24 12 24 5.377 24 0 18.623 0 12S5.377 0 12 0s12 5.377 12 12c0 3.583-1.574 6.801-4.067 9.001L9.219 7.2H7.2v9.596h1.615V9.251l9.85 12.727Zm-3.332-8.533 1.6 2.061V7.2h-1.6v6.245Z"/></svg>
+            </div>
+            <div class="arch-name">User</div>
+            <div class="arch-detail">ASHA worker · NGO planner · family member · <strong>Next.js 16</strong> + MapLibre · five public routes · <strong>EN · हिंदी · தமிழ்</strong></div>
+            <div class="arch-pill">3 langs</div>
+          </div>
+          <div class="arch-flow"><span class="af-line"></span><span class="af-arrow">↓</span></div>
+          <div class="arch-layer l-saff">
+            <div class="arch-num">02</div>
+            <div class="arch-icon" aria-hidden="true" title="Anthropic Claude">
+              <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M17.3041 3.541h-3.6718l6.696 16.918H24Zm-10.6082 0L0 20.459h3.7442l1.3693-3.5527h7.0052l1.3693 3.5528h3.7442L10.5363 3.5409Zm-.3712 10.2232 2.2914-5.9456 2.2914 5.9456Z"/></svg>
+            </div>
+            <div class="arch-name">Agent</div>
+            <div class="arch-detail"><strong>Claude Opus 4.7</strong> · adaptive thinking · manual streaming loop · <strong>parallel asyncio.gather over 12 tools</strong> · MLflow per-tool spans</div>
+            <div class="arch-pill arch-pill-saff">−22% latency</div>
+          </div>
+          <div class="arch-flow"><span class="af-line af-line-saff"></span><span class="af-arrow af-arrow-saff">↓</span></div>
+          <div class="arch-layer l-teal">
+            <div class="arch-num">03</div>
+            <div class="arch-icon" aria-hidden="true" title="Databricks">
+              <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M.95 14.184L12 20.403l9.919-5.55v2.21L12 22.662l-10.484-5.96-.565.308v.77L12 24l11.05-6.218v-4.317l-.515-.309L12 19.118l-9.867-5.653v-2.21L12 16.805l11.05-6.218V6.32l-.515-.308L12 11.974 2.647 6.681 12 1.388l7.76 4.368.668-.411v-.566L12 0 .95 6.27v.72L12 13.207l9.919-5.55v2.26L12 15.52 1.516 9.56l-.565.308Z"/></svg>
+            </div>
+            <div class="arch-name">Databricks</div>
+            <div class="arch-detail">Unity Catalog · Genie · MLflow 3 Tracing · <strong>Mosaic AI VS · Delta Sync</strong> · bge-large-en embeddings</div>
+            <div class="arch-pill arch-pill-teal">10K rows · ONLINE</div>
+          </div>
+          <div class="arch-flow"><span class="af-line af-line-teal"></span><span class="af-arrow af-arrow-teal">↓</span></div>
+          <div class="arch-layer">
+            <div class="arch-num">04</div>
+            <div class="arch-icon arch-icon-pair" aria-hidden="true" title="Postgres + Ollama">
+              <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M23.5594 14.7228a.5269.5269 0 0 0-.0563-.1191c-.139-.2632-.4768-.3418-1.0074-.2321-1.6533.3411-2.2935.1312-2.5256-.0191 1.342-2.0482 2.445-4.522 3.0411-6.8297.2714-1.0507.7982-3.5237.1222-4.7316a1.5641 1.5641 0 0 0-.1509-.235C21.6931.9086 19.8007.0248 17.5099.0005c-1.4947-.0158-2.7705.3461-3.1161.4794a9.449 9.449 0 0 0-.5159-.0816 8.044 8.044 0 0 0-1.3114-.1278c-1.1822-.0184-2.2038.2642-3.0498.8406-.8573-.3211-4.7888-1.645-7.2219.0788C.9359 2.1526.3086 3.8733.4302 6.3043c.0409.818.5069 3.334 1.2423 5.7436.4598 1.5065.9387 2.7019 1.4334 3.582.553.9942 1.1259 1.5933 1.7143 1.7895.4474.1491 1.1327.1441 1.8581-.7279.8012-.9635 1.5903-1.8258 1.9446-2.2069.4351.2355.9064.3625 1.39.3772a.0569.0569 0 0 0 .0004.0041 11.0312 11.0312 0 0 0-.2472.3054c-.3389.4302-.4094.5197-1.5002.7443-.3102.064-1.1344.2339-1.1464.8115-.0025.1224.0329.2309.0919.3268.2269.4231.9216.6097 1.015.6331 1.3345.3335 2.5044.092 3.3714-.6787-.017 2.231.0775 4.4174.3454 5.0874.2212.5529.7618 1.9045 2.4692 1.9043.2505 0 .5263-.0291.8296-.0941 1.7819-.3821 2.5557-1.1696 2.855-2.9059.1503-.8707.4016-2.8753.5388-4.1012.0169-.0703.0357-.1207.057-.1362.0007-.0005.0697-.0471.4272.0307a.3673.3673 0 0 0 .0443.0068l.2539.0223.0149.001c.8468.0384 1.9114-.1426 2.5312-.4308.6438-.2988 1.8057-1.0323 1.5951-1.6698zM2.371 11.8765c-.7435-2.4358-1.1779-4.8851-1.2123-5.5719-.1086-2.1714.4171-3.6829 1.5623-4.4927 1.8367-1.2986 4.8398-.5408 6.108-.13-.0032.0032-.0066.0061-.0098.0094-2.0238 2.044-1.9758 5.536-1.9708 5.7495-.0002.0823.0066.1989.0162.3593.0348.5873.0996 1.6804-.0735 2.9184-.1609 1.1504.1937 2.2764.9728 3.0892.0806.0841.1648.1631.2518.2374-.3468.3714-1.1004 1.1926-1.9025 2.1576-.5677.6825-.9597.5517-1.0886.5087-.3919-.1307-.813-.5871-1.2381-1.3223-.4796-.839-.9635-2.0317-1.4155-3.5126zm6.0072 5.0871c-.1711-.0428-.3271-.1132-.4322-.1772.0889-.0394.2374-.0902.4833-.1409 1.2833-.2641 1.4815-.4506 1.9143-1.0002.0992-.126.2116-.2687.3673-.4426a.3549.3549 0 0 0 .0737-.1298c.1708-.1513.2724-.1099.4369-.0417.156.0646.3078.26.3695.4752.0291.1016.0619.2945-.0452.4444-.9043 1.2658-2.2216 1.2494-3.1676 1.0128zm2.094-3.988-.0525.141c-.133.3566-.2567.6881-.3334 1.003-.6674-.0021-1.3168-.2872-1.8105-.8024-.6279-.6551-.9131-1.5664-.7825-2.5004.1828-1.3079.1153-2.4468.079-3.0586-.005-.0857-.0095-.1607-.0122-.2199.2957-.2621 1.6659-.9962 2.6429-.7724.4459.1022.7176.4057.8305.928.5846 2.7038.0774 3.8307-.3302 4.7363-.084.1866-.1633.3629-.2311.5454zm7.3637 4.5725c-.0169.1768-.0358.376-.0618.5959l-.146.4383a.3547.3547 0 0 0-.0182.1077c-.0059.4747-.054.6489-.115.8693-.0634.2292-.1353.4891-.1794 1.0575-.11 1.4143-.8782 2.2267-2.4172 2.5565-1.5155.3251-1.7843-.4968-2.0212-1.2217a6.5824 6.5824 0 0 0-.0769-.2266c-.2154-.5858-.1911-1.4119-.1574-2.5551.0165-.5612-.0249-1.9013-.3302-2.6462.0044-.2932.0106-.5909.019-.8918a.3529.3529 0 0 0-.0153-.1126 1.4927 1.4927 0 0 0-.0439-.208c-.1226-.4283-.4213-.7866-.7797-.9351-.1424-.059-.4038-.1672-.7178-.0869.067-.276.1831-.5875.309-.9249l.0529-.142c.0595-.16.134-.3257.213-.5012.4265-.9476 1.0106-2.2453.3766-5.1772-.2374-1.0981-1.0304-1.6343-2.2324-1.5098-.7207.0746-1.3799.3654-1.7088.5321a5.6716 5.6716 0 0 0-.1958.1041c.0918-1.1064.4386-3.1741 1.7357-4.4823a4.0306 4.0306 0 0 1 .3033-.276.3532.3532 0 0 0 .1447-.0644c.7524-.5706 1.6945-.8506 2.802-.8325.4091.0067.8017.0339 1.1742.081 1.939.3544 3.2439 1.4468 4.0359 2.3827.8143.9623 1.2552 1.9315 1.4312 2.4543-1.3232-.1346-2.2234.1268-2.6797.779-.9926 1.4189.543 4.1729 1.2811 5.4964.1353.2426.2522.4522.2889.5413.2403.5825.5515.9713.7787 1.2552.0696.087.1372.1714.1885.245-.4008.1155-1.1208.3825-1.0552 1.717-.0123.1563-.0423.4469-.0834.8148-.0461.2077-.0702.4603-.0994.7662zm.8905-1.6211c-.0405-.8316.2691-.9185.5967-1.0105a2.8566 2.8566 0 0 0 .135-.0406 1.202 1.202 0 0 0 .1342.103c.5703.3765 1.5823.4213 3.0068.1344-.2016.1769-.5189.3994-.9533.6011-.4098.1903-1.0957.333-1.7473.3636-.7197.0336-1.0859-.0807-1.1721-.151zm.5695-9.2712c-.0059.3508-.0542.6692-.1054 1.0017-.055.3576-.112.7274-.1264 1.1762-.0142.4368.0404.8909.0932 1.3301.1066.887.216 1.8003-.2075 2.7014a3.5272 3.5272 0 0 1-.1876-.3856c-.0527-.1276-.1669-.3326-.3251-.6162-.6156-1.1041-2.0574-3.6896-1.3193-4.7446.3795-.5427 1.3408-.5661 2.1781-.463zm.2284 7.0137a12.3762 12.3762 0 0 0-.0853-.1074l-.0355-.0444c.7262-1.1995.5842-2.3862.4578-3.4385-.0519-.4318-.1009-.8396-.0885-1.2226.0129-.4061.0666-.7543.1185-1.0911.0639-.415.1288-.8443.1109-1.3505.0134-.0531.0188-.1158.0118-.1902-.0457-.4855-.5999-1.938-1.7294-3.253-.6076-.7073-1.4896-1.4972-2.6889-2.0395.5251-.1066 1.2328-.2035 2.0244-.1859 2.0515.0456 3.6746.8135 4.8242 2.2824a.908.908 0 0 1 .0667.1002c.7231 1.3556-.2762 6.2751-2.9867 10.5405zm-8.8166-6.1162c-.025.1794-.3089.4225-.6211.4225a.5821.5821 0 0 1-.0809-.0056c-.1873-.026-.3765-.144-.5059-.3156-.0458-.0605-.1203-.178-.1055-.2844.0055-.0401.0261-.0985.0925-.1488.1182-.0894.3518-.1226.6096-.0867.3163.0441.6426.1938.6113.4186zm7.9305-.4114c.0111.0792-.049.201-.1531.3102-.0683.0717-.212.1961-.4079.2232a.5456.5456 0 0 1-.075.0052c-.2935 0-.5414-.2344-.5607-.3717-.024-.1765.2641-.3106.5611-.352.297-.0414.6111.0088.6356.1851z"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M16.361 10.26a.894.894 0 0 0-.558.47l-.072.148.001.207c0 .193.004.217.059.353.076.193.152.312.291.448.24.238.51.3.872.205a.86.86 0 0 0 .517-.436.752.752 0 0 0 .08-.498c-.064-.453-.33-.782-.724-.897a1.06 1.06 0 0 0-.466 0zm-9.203.005c-.305.096-.533.32-.65.639a1.187 1.187 0 0 0-.06.52c.057.309.31.59.598.667.362.095.632.033.872-.205.14-.136.215-.255.291-.448.055-.136.059-.16.059-.353l.001-.207-.072-.148a.894.894 0 0 0-.565-.472 1.02 1.02 0 0 0-.474.007Zm4.184 2c-.131.071-.223.25-.195.383.031.143.157.288.353.407.105.063.112.072.117.136.004.038-.01.146-.029.243-.02.094-.036.194-.036.222.002.074.07.195.143.253.064.052.076.054.255.059.164.005.198.001.264-.03.169-.082.212-.234.15-.525-.052-.243-.042-.28.087-.355.137-.08.281-.219.324-.314a.365.365 0 0 0-.175-.48.394.394 0 0 0-.181-.033c-.126 0-.207.03-.355.124l-.085.053-.053-.032c-.219-.13-.259-.145-.391-.143a.396.396 0 0 0-.193.032zm.39-2.195c-.373.036-.475.05-.654.086-.291.06-.68.195-.951.328-.94.46-1.589 1.226-1.787 2.114-.04.176-.045.234-.045.53 0 .294.005.357.043.524.264 1.16 1.332 2.017 2.714 2.173.3.033 1.596.033 1.896 0 1.11-.125 2.064-.727 2.493-1.571.114-.226.169-.372.22-.602.039-.167.044-.23.044-.523 0-.297-.005-.355-.045-.531-.288-1.29-1.539-2.304-3.072-2.497a6.873 6.873 0 0 0-.855-.031zm.645.937a3.283 3.283 0 0 1 1.44.514c.223.148.537.458.671.662.166.251.26.508.303.82.02.143.01.251-.043.482-.08.345-.332.705-.672.957a3.115 3.115 0 0 1-.689.348c-.382.122-.632.144-1.525.138-.582-.006-.686-.01-.853-.042-.57-.107-1.022-.334-1.35-.68-.264-.28-.385-.535-.45-.946-.03-.192.025-.509.137-.776.136-.326.488-.73.836-.963.403-.269.934-.46 1.422-.512.187-.02.586-.02.773-.002zm-5.503-11a1.653 1.653 0 0 0-.683.298C5.617.74 5.173 1.666 4.985 2.819c-.07.436-.119 1.04-.119 1.503 0 .544.064 1.24.155 1.721.02.107.031.202.023.208a8.12 8.12 0 0 1-.187.152 5.324 5.324 0 0 0-.949 1.02 5.49 5.49 0 0 0-.94 2.339 6.625 6.625 0 0 0-.023 1.357c.091.78.325 1.438.727 2.04l.13.195-.037.064c-.269.452-.498 1.105-.605 1.732-.084.496-.095.629-.095 1.294 0 .67.009.803.088 1.266.095.555.288 1.143.503 1.534.071.128.243.393.264.407.007.003-.014.067-.046.141a7.405 7.405 0 0 0-.548 1.873c-.062.417-.071.552-.071.991 0 .56.031.832.148 1.279L3.42 24h1.478l-.05-.091c-.297-.552-.325-1.575-.068-2.597.117-.472.25-.819.498-1.296l.148-.29v-.177c0-.165-.003-.184-.057-.293a.915.915 0 0 0-.194-.25 1.74 1.74 0 0 1-.385-.543c-.424-.92-.506-2.286-.208-3.451.124-.486.329-.918.544-1.154a.787.787 0 0 0 .223-.531c0-.195-.07-.355-.224-.522a3.136 3.136 0 0 1-.817-1.729c-.14-.96.114-2.005.69-2.834.563-.814 1.353-1.336 2.237-1.475.199-.033.57-.028.776.01.226.04.367.028.512-.041.179-.085.268-.19.374-.431.093-.215.165-.333.36-.576.234-.29.46-.489.822-.729.413-.27.884-.467 1.352-.561.17-.035.25-.04.569-.04.319 0 .398.005.569.04a4.07 4.07 0 0 1 1.914.997c.117.109.398.457.488.602.034.057.095.177.132.267.105.241.195.346.374.43.14.068.286.082.503.045.343-.058.607-.053.943.016 1.144.23 2.14 1.173 2.581 2.437.385 1.108.276 2.267-.296 3.153-.097.15-.193.27-.333.419-.301.322-.301.722-.001 1.053.493.539.801 1.866.708 3.036-.062.772-.26 1.463-.533 1.854a2.096 2.096 0 0 1-.224.258.916.916 0 0 0-.194.25c-.054.109-.057.128-.057.293v.178l.148.29c.248.476.38.823.498 1.295.253 1.008.231 2.01-.059 2.581a.845.845 0 0 0-.044.098c0 .006.329.009.732.009h.73l.02-.074.036-.134c.019-.076.057-.3.088-.516.029-.217.029-1.016 0-1.258-.11-.875-.295-1.57-.597-2.226-.032-.074-.053-.138-.046-.141.008-.005.057-.074.108-.152.376-.569.607-1.284.724-2.228.031-.26.031-1.378 0-1.628-.083-.645-.182-1.082-.348-1.525a6.083 6.083 0 0 0-.329-.7l-.038-.064.131-.194c.402-.604.636-1.262.727-2.04a6.625 6.625 0 0 0-.024-1.358 5.512 5.512 0 0 0-.939-2.339 5.325 5.325 0 0 0-.95-1.02 8.097 8.097 0 0 1-.186-.152.692.692 0 0 1 .023-.208c.208-1.087.201-2.443-.017-3.503-.19-.924-.535-1.658-.98-2.082-.354-.338-.716-.482-1.15-.455-.996.059-1.8 1.205-2.116 3.01a6.805 6.805 0 0 0-.097.726c0 .036-.007.066-.015.066a.96.96 0 0 1-.149-.078A4.857 4.857 0 0 0 12 3.03c-.832 0-1.687.243-2.456.698a.958.958 0 0 1-.148.078c-.008 0-.015-.03-.015-.066a6.71 6.71 0 0 0-.097-.725C8.997 1.392 8.337.319 7.46.048a2.096 2.096 0 0 0-.585-.041Zm.293 1.402c.248.197.523.759.682 1.388.03.113.06.244.069.292.007.047.026.152.041.233.067.365.098.76.102 1.24l.002.475-.12.175-.118.178h-.278c-.324 0-.646.041-.954.124l-.238.06c-.033.007-.038-.003-.057-.144a8.438 8.438 0 0 1 .016-2.323c.124-.788.413-1.501.696-1.711.067-.05.079-.049.157.013zm9.825-.012c.17.126.358.46.498.888.28.854.36 2.028.212 3.145-.019.14-.024.151-.057.144l-.238-.06a3.693 3.693 0 0 0-.954-.124h-.278l-.119-.178-.119-.175.002-.474c.004-.669.066-1.19.214-1.772.157-.623.434-1.185.68-1.382.078-.062.09-.063.159-.012z"/></svg>
+            </div>
+            <div class="arch-name">Data</div>
+            <div class="arch-detail"><strong>Postgres 17</strong> + pgvector · FHIR R4 schema · <strong>Ollama</strong> · Qwen 2.5 32B · bge-m3 · medgemma 27B vision</div>
+            <div class="arch-pill">0 PHI egress</div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-note">11 / 11</div>
+      <aside class="notes">
+        Voice: "Four planes. One streaming loop. The user types. The agent fans out twelve tools in parallel. Databricks holds the catalog and the vector index. Ollama keeps PHI on-device. No LangGraph. No LangChain. Just Anthropic SDK and asyncio."
+      </aside>
+    </section>
+
+    <!-- 12. CLOSER -->
+    <section id="slide-closer" class="no-footer" data-background-color="#000">
+      <div class="closer-stage">
+        <div class="closer-glyph" aria-hidden="true">आरोग्य</div>
+        <div class="closer-kicker">Aarogya Atlas <span class="sep">·</span> Hack-Nation 2026 <span class="sep">·</span> Challenge 3 — Databricks</div>
+        <div class="closer-line" id="closerLine">From <em>symptom</em>,<br>to care.</div>
+        <div class="closer-author">
+          <span class="name">Dam Solanke</span> <span class="role">— Lead Solutions Architect, Healthcare · MS AI '27</span>
+        </div>
+        <div class="closer-foot">
+          <div class="cf-cell cf-live">
+            <span class="cf-dot"></span>
+            <span class="cf-lab">Live</span>
+            <span class="cf-val">formal-rogers-poster-meanwhile.trycloudflare.com</span>
+          </div>
+          <div class="cf-cell">
+            <span class="cf-lab">Repo</span>
+            <span class="cf-val">github.com/damsolanke/aarogya-atlas</span>
+          </div>
+        </div>
+      </div>
+      <aside class="notes">
+        Say the line. Then SILENCE for 5 full seconds. Look at the camera. Smile slightly. Then: "Happy to take questions." Don't fill the silence.
+      </aside>
+    </section>
+
+  </div>
+</div>
+
+<!-- ============== Three.js scene for hook (module loader) ============== -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "troika-three-text": "https://cdn.jsdelivr.net/npm/troika-three-text@0.49.1/dist/troika-three-text.esm.js"
+  }
+}
+</script>
+
+<script type="module">
+  import * as THREE from 'three';
+  import { Text } from 'troika-three-text';
+
+  let renderer, scene, camera, hookText, particleSystem, mapStarted = false;
+  const canvas = document.getElementById('threeHookCanvas');
+  const fallback = document.getElementById('hookFallback');
+
+  function initHook() {
+    if (!canvas) return;
+    try {
+      const w = canvas.clientWidth || window.innerWidth;
+      const h = canvas.clientHeight || window.innerHeight;
+      renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(w, h, false);
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(35, w / h, 0.1, 100);
+      camera.position.set(0, 0, 14);
+
+      // Lights — warm key from upper-right, cool fill from lower-left
+      const ambient = new THREE.AmbientLight(0x202838, 0.5);
+      scene.add(ambient);
+      const key = new THREE.DirectionalLight(0xffb866, 1.4);
+      key.position.set(4, 5, 6);
+      scene.add(key);
+      const fill = new THREE.DirectionalLight(0x4a5a8a, 0.4);
+      fill.position.set(-3, -2, 4);
+      scene.add(fill);
+
+      // आरोग्य as troika SDF text — flat in 3D space, lit by env
+      hookText = new Text();
+      hookText.text = 'आरोग्य';
+      hookText.font = 'https://fonts.gstatic.com/s/tirodevanagarihindi/v8/55xyezNtIMs6Vt0_Bz4Z9zwM7eu1JubKVIE.woff2';
+      hookText.fontSize = 4.5;
+      hookText.anchorX = 'center';
+      hookText.anchorY = 'middle';
+      hookText.color = 0xE8923D;
+      hookText.outlineWidth = 0.04;
+      hookText.outlineColor = 0xff9544;
+      hookText.outlineBlur = 0.5;
+      hookText.outlineOpacity = 0.8;
+      hookText.material = new THREE.MeshStandardMaterial({
+        color: 0xE8923D,
+        emissive: 0x6b3a14,
+        emissiveIntensity: 0.6,
+        roughness: 0.4,
+        metalness: 0.05,
+        transparent: true,
+        opacity: 0,
+      });
+      hookText.position.y = 0.7;
+      hookText.sync(() => {
+        scene.add(hookText);
+        // Fade in over 1500ms
+        const start = performance.now();
+        function fadeIn(now) {
+          const t = Math.min(1, (now - start) / 1500);
+          hookText.material.opacity = t;
+          if (t < 1) requestAnimationFrame(fadeIn);
+        }
+        requestAnimationFrame(fadeIn);
+        // Hide CSS fallback
+        if (fallback) fallback.style.display = 'none';
+        // Reveal tagline
+        const tag = document.getElementById('hookTagline');
+        if (tag) setTimeout(() => tag.classList.add('in'), 200);
+      });
+
+      // Particle field — 280 dust motes lit warm by key
+      const particleCount = 280;
+      const positions = new Float32Array(particleCount * 3);
+      const colors = new Float32Array(particleCount * 3);
+      for (let i = 0; i < particleCount; i++) {
+        positions[i * 3 + 0] = (Math.random() - 0.5) * 14;
+        positions[i * 3 + 1] = (Math.random() - 0.5) * 8;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 10 - 2;
+        const c = 0.6 + Math.random() * 0.4;
+        colors[i * 3 + 0] = c;
+        colors[i * 3 + 1] = c * 0.7;
+        colors[i * 3 + 2] = c * 0.4;
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      const mat = new THREE.PointsMaterial({
+        size: 0.045,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.55,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        sizeAttenuation: true,
+      });
+      particleSystem = new THREE.Points(geo, mat);
+      scene.add(particleSystem);
+
+      // Resize
+      window.addEventListener('resize', () => {
+        const w2 = canvas.clientWidth, h2 = canvas.clientHeight;
+        renderer.setSize(w2, h2, false);
+        camera.aspect = w2 / h2;
+        camera.updateProjectionMatrix();
+      });
+
+      // Animation
+      const t0 = performance.now();
+      function animate(now) {
+        requestAnimationFrame(animate);
+        const t = (now - t0) / 1000;
+        if (hookText) {
+          hookText.rotation.y = Math.sin(t * 0.3) * 0.05;
+          hookText.position.y = Math.sin(t * 0.4) * 0.08;
+        }
+        if (particleSystem) {
+          particleSystem.rotation.y = t * 0.02;
+          const pos = particleSystem.geometry.attributes.position;
+          for (let i = 0; i < pos.count; i++) {
+            pos.array[i * 3 + 1] += Math.sin(t * 0.5 + i) * 0.0008;
+          }
+          pos.needsUpdate = true;
+        }
+        // Camera dolly forward over first 2s
+        const dolly = Math.min(1, t / 2);
+        camera.position.z = 14 - dolly * 2.2;
+        renderer.render(scene, camera);
+      }
+      requestAnimationFrame(animate);
+      return true;
+    } catch (e) {
+      console.warn('3D hook failed, using CSS fallback', e);
+      if (fallback) fallback.style.display = 'flex';
+      const tag = document.getElementById('hookTagline');
+      if (tag) setTimeout(() => tag.classList.add('in'), 1200);
+      return false;
+    }
+  }
+
+  // Init when slide-hook becomes current OR on initial load if hash points there
+  function maybeInitHook() {
+    const cur = (window.Reveal && Reveal.getCurrentSlide) ? Reveal.getCurrentSlide() : null;
+    if (cur && cur.id === 'slide-hook' && !window.__hookInited) {
+      window.__hookInited = true;
+      initHook();
+    }
+  }
+
+  window.__maybeInitHook = maybeInitHook;
+  window.__hookFallback = () => {
+    if (fallback) fallback.style.display = 'flex';
+    const tag = document.getElementById('hookTagline');
+    if (tag) setTimeout(() => tag.classList.add('in'), 800);
+  };
+</script>
+
+<!-- ============== Reveal core ============== -->
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+
+<!-- ============== deck.gl + maplibre-gl for India map ============== -->
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/deck.gl@9.0.38/dist.min.js"></script>
+
+<script>
+  // ============== REVEAL INIT ==============
+  Reveal.initialize({
+    hash: true,
+    slideNumber: 'c/t',
+    showNotes: false,
+    transition: 'fade',
+    transitionSpeed: 'fast',
+    backgroundTransition: 'fade',
+    controls: true,
+    progress: true,
+    keyboard: true,
+    overview: true,
+    history: false,
+    width: 1920,
+    height: 1080,
+    margin: 0,
+    minScale: 0.2,
+    maxScale: 2.0,
+    plugins: [RevealNotes],
+    pdfMaxPagesPerSlide: 1,
+  });
+
+  // ============== HOOK INIT TRIGGER ==============
+  Reveal.on('ready', () => {
+    if (window.__maybeInitHook) window.__maybeInitHook();
+    // Fallback after 4s if Three.js never loaded
+    setTimeout(() => {
+      if (!window.__hookInited && window.__hookFallback) {
+        window.__hookInited = true;
+        window.__hookFallback();
+      }
+    }, 4000);
+  });
+  Reveal.on('slidechanged', (event) => {
+    if (event.currentSlide && event.currentSlide.id === 'slide-hook' && window.__maybeInitHook) {
+      window.__maybeInitHook();
+    }
+  });
+
+  // ============== CLOSER FADE-IN (also fires on direct deep-link landing) ==============
+  function playCloserIn() {
+    const cl = document.getElementById('closerLine');
+    if (!cl) return;
+    cl.classList.remove('animate-in');
+    void cl.offsetWidth;
+    cl.classList.add('animate-in');
+  }
+  Reveal.on('slidechanged', (event) => {
+    if (event.currentSlide && event.currentSlide.id === 'slide-closer') playCloserIn();
+  });
+  Reveal.on('ready', (event) => {
+    if (event.currentSlide && event.currentSlide.id === 'slide-closer') playCloserIn();
+  });
+  // Hook tagline also gets a fallback fade-in even if Three.js doesn't load
+  Reveal.on('ready', (event) => {
+    if (event.currentSlide && event.currentSlide.id === 'slide-hook') {
+      const tag = document.getElementById('hookTagline');
+      if (tag) tag.classList.add('in');
+    }
+  });
+
+  // ============== NUMBER COUNTUP + VARIABLE-FONT WEIGHT BREATHE ==============
+  function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
+  function countUp(el, duration = 1200) {
+    const target = parseFloat(el.dataset.target);
+    const decimals = parseInt(el.dataset.decimals || '0', 10);
+    const suffix = el.dataset.suffix || '';
+    if (isNaN(target)) return;
+    if (el.dataset.animating === '1') return;
+    el.dataset.animating = '1';
+    el.classList.remove('fired');
+    const start = performance.now();
+    function tick(now) {
+      const t = Math.min(1, (now - start) / duration);
+      const e = easeOutQuart(t);
+      const v = target * e;
+      el.textContent = v.toLocaleString(undefined, {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      }) + suffix;
+      if (t < 1) requestAnimationFrame(tick);
+      else {
+        el.textContent = target.toLocaleString(undefined, {
+          minimumFractionDigits: decimals,
+          maximumFractionDigits: decimals,
+        }) + suffix;
+        el.dataset.animating = '0';
+      }
+    }
+    requestAnimationFrame(tick);
+    requestAnimationFrame(() => el.classList.add('fired'));
+  }
+  // ?static=1 forces all elements to final state immediately (screenshots/PDF)
+  // ?animate=1 forces animations even on initial load (default: animate)
+  const STATIC_MODE = new URLSearchParams(location.search).get('static') === '1';
+  if (STATIC_MODE) {
+    const styleNode = document.createElement('style');
+    styleNode.textContent = `
+      .hook-tagline { opacity: 1 !important; transform: none !important; transition: none !important; }
+      .closer-line { opacity: 1 !important; transform: none !important; animation: none !important; }
+      .hook-fallback { opacity: 1 !important; }
+      .arch-stack { animation: none !important; }
+    `;
+    document.head.appendChild(styleNode);
+  }
+
+  // Lock countup elements to their FINAL value as the default text content,
+  // so any browser landing directly on the proof slide via deep-link sees correct numbers
+  // even before/instead of the animation. Animation overlays the count-up only when fired.
+  function lockCountupFinal(el) {
+    const target = parseFloat(el.dataset.target);
+    const decimals = parseInt(el.dataset.decimals || '0', 10);
+    const suffix = el.dataset.suffix || '';
+    if (!isNaN(target)) {
+      el.textContent = target.toLocaleString(undefined, {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      }) + suffix;
+    }
+  }
+  // Pre-lock all countup elements to final value at script init (defensive)
+  document.querySelectorAll('[data-target]').forEach(lockCountupFinal);
+
+  function runCountupsOnSlide(slideEl) {
+    if (!slideEl) return;
+    slideEl.querySelectorAll('[data-target]').forEach((el) => {
+      if (STATIC_MODE) {
+        lockCountupFinal(el);
+        el.classList.add('fired');
+      } else {
+        countUp(el);
+      }
+    });
+  }
+  // Numbers always show their final value. Variable-font weight is CSS-only.
+  // (We tried animated countup but Reveal sometimes mid-renders it on deep-link landings.)
+  Reveal.on('ready', () => {
+    document.querySelectorAll('[data-target]').forEach((el) => {
+      lockCountupFinal(el);
+      el.classList.add('fired');
+    });
+  });
+  Reveal.on('slidechanged', () => {
+    document.querySelectorAll('[data-target]').forEach((el) => {
+      lockCountupFinal(el);
+      el.classList.add('fired');
+    });
+  });
+
+  // ============== LIVE DEMO IFRAME ==============
+  const TUNNEL_URL = 'https://formal-rogers-poster-meanwhile.trycloudflare.com/';
+  const LOOM_EMBED = 'https://www.loom.com/embed/5f67de77c1f24328b5d395275d07f249?autoplay=1&hideEmbedTopBar=true';
+  const demoFrame = document.getElementById('demoFrame');
+  const demoStatus = document.getElementById('demoStatus');
+  function loadDemoIframe() {
+    if (!demoFrame) return;
+    if (navigator.onLine === false) {
+      demoFrame.src = LOOM_EMBED;
+      if (demoStatus) demoStatus.textContent = 'Recorded fallback';
+      return;
+    }
+    demoFrame.src = TUNNEL_URL;
+    fetch(TUNNEL_URL, { method: 'HEAD', mode: 'no-cors', cache: 'no-store' })
+      .catch(() => {
+        demoFrame.src = LOOM_EMBED;
+        if (demoStatus) demoStatus.textContent = 'Recorded fallback';
+      });
+  }
+  // Pre-warm the iframe at deck-load (not just on slidechanged) — fixes deep-link landing
+  Reveal.on('ready', () => {
+    if (demoFrame && demoFrame.src === 'about:blank') loadDemoIframe();
+  });
+  Reveal.on('slidechanged', (event) => {
+    if (event.currentSlide && event.currentSlide.id === 'slide-demo' && demoFrame.src === 'about:blank') {
+      loadDemoIframe();
+    }
+  });
+
+  // ============== DECK.GL INDIA 3D MAP ==============
+  // Major Indian state capitals + critical districts with disparity ratios
+  const INDIA_DISTRICTS = [
+    { name: 'Patna',         lat: 25.5941, lng: 85.1376, disp: 7.7, label: 'ICU 7.7×' },
+    { name: 'Bihar (avg)',   lat: 26.0,    lng: 86.0,    disp: 7.0, label: 'Dialysis 7.0×' },
+    { name: 'Jharkhand',     lat: 23.6,    lng: 85.3,    disp: 5.4, label: 'Neonatal 5.4×' },
+    { name: 'UP (Lucknow)',  lat: 26.8467, lng: 80.9462, disp: 4.5, label: 'Trauma 4.5×' },
+    { name: 'Chhattisgarh',  lat: 21.2787, lng: 81.8661, disp: 4.4, label: 'Oncology 4.4×' },
+    { name: 'Odisha',        lat: 20.9517, lng: 85.0985, disp: 3.6, label: 'Cardiac 3.6×' },
+    { name: 'MP (Bhopal)',   lat: 23.2599, lng: 77.4126, disp: 3.2, label: 'ICU 3.2×' },
+    { name: 'Rajasthan',     lat: 26.9124, lng: 75.7873, disp: 2.8, label: 'Dialysis 2.8×' },
+    { name: 'Maharashtra',   lat: 19.0760, lng: 72.8777, disp: 1.5, label: 'Best ICU' },
+    { name: 'Karnataka',     lat: 12.9716, lng: 77.5946, disp: 1.2, label: 'Bengaluru' },
+    { name: 'Tamil Nadu',    lat: 13.0827, lng: 80.2707, disp: 1.3, label: 'Chennai' },
+    { name: 'Kerala',        lat: 10.8505, lng: 76.2711, disp: 1.0, label: 'Best in India' },
+    { name: 'Gujarat',       lat: 23.0225, lng: 72.5714, disp: 1.7, label: 'Ahmedabad' },
+    { name: 'Telangana',     lat: 17.3850, lng: 78.4867, disp: 1.6, label: 'Hyderabad' },
+    { name: 'West Bengal',   lat: 22.5726, lng: 88.3639, disp: 2.4, label: 'Kolkata' },
+    { name: 'Punjab',        lat: 30.7333, lng: 76.7794, disp: 1.5, label: 'Chandigarh' },
+    { name: 'Assam',         lat: 26.1445, lng: 91.7362, disp: 5.6, label: 'Trauma 5.6×' },
+  ];
+
+  // Top-3 facility recommendation arcs from Bengaluru
+  const ARCS = [
+    { from: [77.5946, 12.9716], to: [77.5800, 12.9500], score: 89 }, // Yeshwantpur clinic
+    { from: [77.5946, 12.9716], to: [77.6100, 12.9700], score: 76 },
+    { from: [77.5946, 12.9716], to: [77.5650, 13.0100], score: 68 },
+  ];
+  const STATES = [
+    { name: 'Maharashtra',  lng: 75.7139, lat: 19.7515 },
+    { name: 'Karnataka',    lng: 75.7139, lat: 15.3173 },
+    { name: 'Tamil Nadu',   lng: 78.6569, lat: 11.1271 },
+    { name: 'Kerala',       lng: 76.2711, lat: 10.4505 },
+    { name: 'Andhra Pradesh', lng: 79.7400, lat: 15.4129 },
+    { name: 'Telangana',    lng: 79.0193, lat: 18.1124 },
+    { name: 'Odisha',       lng: 85.0985, lat: 20.4517 },
+    { name: 'Gujarat',      lng: 71.1924, lat: 22.7587 },
+    { name: 'Rajasthan',    lng: 74.2179, lat: 27.0238 },
+    { name: 'Madhya Pradesh', lng: 78.6569, lat: 22.9734 },
+    { name: 'Uttar Pradesh', lng: 80.9462, lat: 27.5 },
+    { name: 'Bihar',        lng: 85.6, lat: 25.7 },
+    { name: 'West Bengal',  lng: 87.8550, lat: 23.4 },
+    { name: 'Chhattisgarh', lng: 81.8661, lat: 21.5787 },
+    { name: 'Jharkhand',    lng: 85.4, lat: 23.5 },
+    { name: 'Punjab',       lng: 75.3412, lat: 31.1471 },
+    { name: 'Haryana',      lng: 76.0856, lat: 29.0588 },
+    { name: 'Assam',        lng: 92.5, lat: 26.5 },
+  ];
+  const CITIES = [
+    { name: 'Delhi',     lng: 77.1025, lat: 28.7041 },
+    { name: 'Mumbai',    lng: 72.8777, lat: 19.0760 },
+    { name: 'Bengaluru', lng: 77.5946, lat: 12.9716 },
+    { name: 'Chennai',   lng: 80.2707, lat: 13.0827 },
+    { name: 'Kolkata',   lng: 88.3639, lat: 22.5726 },
+    { name: 'Hyderabad', lng: 78.4867, lat: 17.3850 },
+  ];
+
+  let deckInstance = null;
+  let mapInstance = null;
+  let cameraTimer = null;
+  const CAMERAS = [
+    { center: [79.0, 21.5], zoom: 4.3, pitch: 40, bearing: 0 },      // wide India — full country in frame
+    { center: [85.0, 25.5], zoom: 5.4, pitch: 55, bearing: 20 },     // Patna closeup
+    { center: [78.0, 17.0], zoom: 4.8, pitch: 45, bearing: -15 },    // South India
+  ];
+  let cameraIdx = 0;
+
+  function initMap() {
+    const container = document.getElementById('mapCanvas');
+    if (!container || !window.maplibregl || !window.deck) {
+      console.warn('Map deps missing', { maplibre: !!window.maplibregl, deck: !!window.deck });
+      if (container) {
+        container.innerHTML = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:monospace;color:#71717a;font-size:14px;">3D map loading…</div>';
+      }
+      return;
+    }
+    if (mapInstance) return;
+    try {
+      // India-focused choropleth basemap (Gapminder/IIB best-practice pattern for disparity)
+      mapInstance = new maplibregl.Map({
+        container,
+        style: {
+          version: 8,
+          glyphs: 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf',
+          sources: {
+            'india-outline': {
+              type: 'geojson',
+              data: 'https://raw.githubusercontent.com/datameet/maps/master/Country/india-composite.geojson'
+            },
+            'india-states': {
+              type: 'geojson',
+              data: 'https://raw.githubusercontent.com/datta07/INDIAN-SHAPEFILES/master/INDIA/INDIA_STATES.geojson'
+            }
+          },
+          layers: [
+            { id: 'bg', type: 'background', paint: { 'background-color': '#050811' } },
+            // State fills — slightly varied so states are distinguishable
+            { id: 'states-fill', type: 'fill', source: 'india-states',
+              paint: { 'fill-color': '#0e1828', 'fill-opacity': 0.95 } },
+            // State boundary lines — visible saffron at low opacity
+            { id: 'states-line', type: 'line', source: 'india-states',
+              paint: { 'line-color': '#E8923D', 'line-width': 0.6, 'line-opacity': 0.4 } },
+            // India outer stroke — saffron glow + crisp
+            { id: 'india-stroke-glow', type: 'line', source: 'india-outline',
+              paint: { 'line-color': '#E8923D', 'line-width': 6, 'line-opacity': 0.22, 'line-blur': 8 } },
+            { id: 'india-stroke', type: 'line', source: 'india-outline',
+              paint: { 'line-color': '#E8923D', 'line-width': 1.8, 'line-opacity': 0.9 } }
+          ]
+        },
+        center: CAMERAS[0].center,
+        zoom: CAMERAS[0].zoom,
+        pitch: CAMERAS[0].pitch,
+        bearing: CAMERAS[0].bearing,
+        interactive: false,
+        attributionControl: false,
+      });
+
+      mapInstance.on('load', () => {
+        const { ScatterplotLayer, ColumnLayer, ArcLayer, TextLayer } = deck;
+
+        deckInstance = new deck.MapboxOverlay({
+          interleaved: true,
+          layers: [
+            new ScatterplotLayer({
+              id: 'india-glow',
+              data: INDIA_DISTRICTS,
+              getPosition: d => [d.lng, d.lat],
+              getRadius: d => 15000 + d.disp * 8000,
+              getFillColor: d => d.disp > 4 ? [232, 146, 61, 60] : [20, 184, 166, 30],
+              radiusUnits: 'meters',
+              pickable: false,
+            }),
+            new ColumnLayer({
+              id: 'district-columns',
+              data: INDIA_DISTRICTS.filter(d => d.disp >= 2.4),
+              getPosition: d => [d.lng, d.lat],
+              getElevation: d => d.disp * 95000,
+              getFillColor: d => d.disp > 4 ? [255, 165, 80, 245] : [56, 224, 220, 240],
+              radius: 30000,
+              elevationScale: 1,
+              extruded: true,
+              pickable: false,
+              material: { ambient: 0.55, diffuse: 0.9, shininess: 48, specularColor: [255, 220, 160] },
+            }),
+            new ArcLayer({
+              id: 'recommendation-arcs',
+              data: ARCS,
+              getSourcePosition: d => d.from,
+              getTargetPosition: d => d.to,
+              getSourceColor: [255, 165, 80, 240],
+              getTargetColor: [56, 224, 220, 240],
+              getHeight: 2.5,
+              getWidth: 4,
+              greatCircle: false,
+            }),
+            // District labels removed — replaced with side legend panel for clarity
+            new TextLayer({
+              id: 'state-labels',
+              data: STATES,
+              getPosition: d => [d.lng, d.lat],
+              getText: d => d.name.toUpperCase(),
+              getColor: [180, 180, 195, 160],
+              getSize: 10,
+              fontFamily: 'Geist Mono, monospace',
+              fontWeight: 400,
+              getTextAnchor: 'middle',
+              getAlignmentBaseline: 'center',
+              characterSet: 'auto',
+              background: false,
+              billboard: false,
+            }),
+            new ScatterplotLayer({
+              id: 'city-pins',
+              data: CITIES,
+              getPosition: d => [d.lng, d.lat],
+              getRadius: 14000,
+              getFillColor: [255, 255, 255, 240],
+              getLineColor: [232, 146, 61, 255],
+              lineWidthMinPixels: 2,
+              stroked: true,
+              radiusUnits: 'meters',
+              pickable: false,
+            }),
+            new TextLayer({
+              id: 'city-labels',
+              data: CITIES,
+              getPosition: d => [d.lng, d.lat],
+              getText: d => d.name.toUpperCase(),
+              getColor: [255, 255, 255, 245],
+              getSize: 14,
+              fontFamily: 'Geist Mono, monospace',
+              fontWeight: 700,
+              getTextAnchor: 'middle',
+              getAlignmentBaseline: 'top',
+              getPixelOffset: [0, 14],
+              characterSet: 'auto',
+              background: true,
+              getBackgroundColor: [7, 10, 18, 220],
+              backgroundPadding: [6, 3, 6, 3],
+              getBorderColor: [255, 255, 255, 60],
+              getBorderWidth: 0.8,
+              billboard: false,
+            }),
+          ],
+        });
+        mapInstance.addControl(deckInstance);
+
+        // Auto-cycle cameras every 4s
+        cameraIdx = 0;
+        cameraTimer = setInterval(() => {
+          cameraIdx = (cameraIdx + 1) % CAMERAS.length;
+          const cam = CAMERAS[cameraIdx];
+          mapInstance.flyTo({
+            center: cam.center,
+            zoom: cam.zoom,
+            pitch: cam.pitch,
+            bearing: cam.bearing,
+            duration: 3500,
+            essential: true,
+          });
+        }, 4500);
+      });
+    } catch (e) {
+      console.error('Map init failed', e);
+      if (container) {
+        container.innerHTML = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:monospace;color:#a1a1aa;font-size:14px;">3D India map · 17 districts indexed · Patna 7.7× ICU disparity</div>';
+      }
+    }
+  }
+  function teardownMap() {
+    if (cameraTimer) { clearInterval(cameraTimer); cameraTimer = null; }
+  }
+  Reveal.on('slidechanged', (event) => {
+    if (event.currentSlide && event.currentSlide.id === 'slide-map') {
+      initMap();
+    } else {
+      teardownMap();
+    }
+  });
+  setTimeout(() => {
+    const cur = Reveal.getCurrentSlide();
+    if (cur && cur.id === 'slide-map') initMap();
+  }, 300);
+
+  // ============== CUSTOM CURSOR ==============
+  const cursor = document.getElementById('cursor');
+  if (cursor) {
+    let cx = 0, cy = 0, tx = 0, ty = 0;
+    document.addEventListener('mousemove', (e) => { tx = e.clientX; ty = e.clientY; });
+    function tickCursor() {
+      cx += (tx - cx) * 0.18;
+      cy += (ty - cy) * 0.18;
+      cursor.style.transform = `translate(${cx}px, ${cy}px) translate(-50%, -50%) ${cursor.classList.contains('hover') ? 'scale(2.4)' : 'scale(1)'}`;
+      requestAnimationFrame(tickCursor);
+    }
+    requestAnimationFrame(tickCursor);
+    document.addEventListener('mouseover', (e) => {
+      const tgt = e.target;
+      if (tgt && (tgt.matches?.('a, button, kbd, [role="button"], iframe, input, textarea'))) {
+        cursor.classList.add('hover');
+      }
+    });
+    document.addEventListener('mouseout', () => cursor.classList.remove('hover'));
+  }
+
+  // ============== SLIDE-ADVANCE SOUND (Web Audio) ==============
+  let audioCtx = null;
+  let audioMuted = true; // default muted
+  const muteIndicator = document.getElementById('muteIndicator');
+  function ensureAudio() {
+    if (!audioCtx) {
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch (e) { return null; }
+    }
+    return audioCtx;
+  }
+  function playPing() {
+    if (audioMuted) return;
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 880;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    const now = ctx.currentTime;
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.04, now + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
+    osc.start(now);
+    osc.stop(now + 0.3);
+  }
+  function updateMuteIndicator() {
+    if (!muteIndicator) return;
+    if (audioMuted) {
+      muteIndicator.textContent = 'audio · m to enable';
+      muteIndicator.classList.remove('audio');
+    } else {
+      muteIndicator.textContent = '◆ audio on · m to mute';
+      muteIndicator.classList.add('audio');
+    }
+  }
+  Reveal.on('slidechanged', playPing);
+  updateMuteIndicator();
+
+  // ============== CUSTOM HOTKEYS ==============
+  document.addEventListener('keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const tgt = e.target;
+    if (tgt && (tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA' || tgt.isContentEditable)) return;
+    if (e.key === '?' || (e.key === '/' && e.shiftKey)) {
+      e.preventDefault();
+      document.getElementById('cheatOverlay').classList.toggle('show');
+    } else if (e.key === '1') {
+      const slides = Array.from(document.querySelectorAll('.reveal .slides > section'));
+      const idx = slides.findIndex(s => s.id === 'slide-demo');
+      if (idx >= 0) Reveal.slide(idx);
+    } else if (e.key === 'm' || e.key === 'M') {
+      audioMuted = !audioMuted;
+      if (!audioMuted) ensureAudio();
+      updateMuteIndicator();
+    } else if (e.key === 'Escape') {
+      document.getElementById('cheatOverlay').classList.remove('show');
+    }
+  });
+
+  // ============== SPLASH HIDE ==============
+  function hideSplash() {
+    const s = document.getElementById('splash');
+    if (s) s.classList.add('hide');
+    setTimeout(() => { if (s) s.remove(); }, 900);
+  }
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(hideSplash);
+    setTimeout(hideSplash, 1500);
+  } else {
+    setTimeout(hideSplash, 1200);
+  }
+</script>
+</body>
+</html>

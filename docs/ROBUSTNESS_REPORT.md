@@ -1,7 +1,13 @@
 # Aarogya Atlas — Adversarial Robustness Eval
 
+> ⚠ **Stack note:** generated against the 5th-edition stack
+> (Anthropic Claude supervisor · Llama 3.3 70B on Groq · no critic pass).
+> Current architecture is **GPT-OSS-120B (Groq) + critic v1**; pass rates
+> will be re-measured on the new stack.
+
 _Generated: 2026-04-25 22:46 CDT_  
-_Base queries: **3** · mutations: **6**_
+_Base queries: **3** · mutations: **6**_  
+_Architecture: pre-2026-04-26 (Anthropic + Llama 3.3 70B, no critic pass)_
 
 **DAS-style adversarial perturbation** (typos, Hinglish code-switch, truncation, ambiguity).
 Reports static accuracy vs dynamic-robust accuracy, plus the *Benchmarking Gap*.
