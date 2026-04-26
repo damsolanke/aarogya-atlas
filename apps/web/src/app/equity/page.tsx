@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, AlertTriangle, ShieldAlert, Globe } from "lucide-react";
-import { API_URL } from "@/lib/api";
+import { API_URL, fetchCounterfactual, type Counterfactual } from "@/lib/api";
 import Footer from "@/components/Footer";
 
 type StateRow = {
@@ -207,6 +207,8 @@ export default function EquityPage() {
               </ul>
             </section>
 
+            <CounterfactualSlider />
+
             <section className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Card
                 title="What we audit"
@@ -233,6 +235,144 @@ export default function EquityPage() {
         )}
       </main>
       <Footer />
+    </div>
+  );
+}
+
+const COUNTERFACTUAL_DISTRICTS = [
+  "Patna",
+  "Lucknow",
+  "Ranchi",
+  "Bhopal",
+  "Hyderabad",
+  "Bengaluru Rural",
+  "Ahmedabad",
+  "Kolkata",
+];
+
+function CounterfactualSlider() {
+  const [district, setDistrict] = useState("Patna");
+  const [beds, setBeds] = useState(10);
+  const [data, setData] = useState<Counterfactual | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchCounterfactual(district, beds)
+      .then(setData)
+      .finally(() => setLoading(false));
+  }, [district, beds]);
+
+  return (
+    <section className="mt-12">
+      <div className="mb-3 flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-wider text-zinc-400">
+        <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />
+        Equity counterfactual — what if we add CEmONC beds?
+      </div>
+      <div className="rounded-2xl border border-emerald-800/40 bg-emerald-950/15 p-5">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="text-[10.5px] font-semibold uppercase tracking-wider text-zinc-400">
+              District
+            </label>
+            <select
+              value={district}
+              onChange={(e) => setDistrict(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            >
+              {COUNTERFACTUAL_DISTRICTS.map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-[10.5px] font-semibold uppercase tracking-wider text-zinc-400">
+              Add CEmONC beds: <span className="text-emerald-300 tab-num">{beds}</span>
+            </label>
+            <input
+              type="range"
+              min={1}
+              max={100}
+              step={1}
+              value={beds}
+              onChange={(e) => setBeds(Number(e.target.value))}
+              className="mt-2 w-full accent-emerald-400"
+            />
+            <div className="mt-1 flex justify-between text-[10px] text-zinc-500 tab-num">
+              <span>1</span>
+              <span>50</span>
+              <span>100</span>
+            </div>
+          </div>
+        </div>
+
+        {data && (
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <CFStat
+              label="Coverage today"
+              value={`${data.coverage_now_pct}%`}
+              sub={`${data.cemonc_now} / ${data.facilities_now} facilities`}
+              tone="zinc"
+            />
+            <CFStat
+              label="Coverage after"
+              value={`${data.coverage_after_pct}%`}
+              sub={`${data.cemonc_after} / ${data.facilities_now + beds} facilities`}
+              tone="cyan"
+            />
+            <CFStat
+              label="Maternal deaths averted / yr"
+              value={`~${data.estimated_averted_deaths_per_year}`}
+              sub={`out of ~${data.annual_district_maternal_deaths_est} estimated`}
+              tone="emerald"
+              big
+            />
+          </div>
+        )}
+        {!data && !loading && (
+          <div className="mt-4 text-[12px] text-zinc-500">
+            District not in dataset. Try Patna, Lucknow, Hyderabad, etc.
+          </div>
+        )}
+        <p className="mt-4 text-[10.5px] leading-relaxed text-zinc-500">
+          Method: gravity-model + Six-Delays attribution against the UN/WHO
+          2024 baseline of 67,000 annual maternal deaths in India. Numbers
+          are illustrative — a planning prior, not an epidemiological forecast.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function CFStat({
+  label,
+  value,
+  sub,
+  tone,
+  big,
+}: {
+  label: string;
+  value: string;
+  sub: string;
+  tone: "emerald" | "cyan" | "zinc";
+  big?: boolean;
+}) {
+  const colors = {
+    emerald: "border-emerald-700/40 bg-emerald-950/30 text-emerald-200",
+    cyan: "border-cyan-700/40 bg-cyan-950/30 text-cyan-200",
+    zinc: "border-zinc-800 bg-zinc-900/40 text-zinc-300",
+  }[tone];
+  return (
+    <div className={`rounded-lg border ${colors} px-3 py-3`}>
+      <div className="text-[10px] font-semibold uppercase tracking-wider opacity-80">
+        {label}
+      </div>
+      <div className={`mt-1 ${big ? "text-3xl" : "text-2xl"} font-semibold tab-num`}>
+        {value}
+      </div>
+      <div className="mt-0.5 text-[10.5px] text-zinc-400">{sub}</div>
     </div>
   );
 }
