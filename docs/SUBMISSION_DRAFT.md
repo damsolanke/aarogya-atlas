@@ -145,11 +145,30 @@ agentic-AI, healthcare, multilingual, on-device-LLM, RAG, FHIR, vector-search, e
 ## Team
 - **Damola Solanke** (`b56ab0a3-d07e-4af7-b47e-259a73c6c45b`) — solo team
 
-## File uploads
-- Team Picture: optional → SKIP (solo)
-- **Video 1 (mp4) — Product demo (≤ 60s)** — record per [docs/STORYBOARD.md](STORYBOARD.md) Video 1
-- **Video 2 (mp4) — Tech video (≤ 60s)** — record per [docs/STORYBOARD.md](STORYBOARD.md) Video 2
-- Media-upload (image/mp4/pdf/zip): optional → could attach docs/screenshots/02_query_result.png
+## File uploads — exact specs from the form
+
+| Slot | Constraint | Required? | Our action |
+| --- | --- | --- | --- |
+| Team Picture | Image, ≤ 200 MB, 16:9 recommended | optional | Skip (solo team) — or attach `docs/screenshots/01_hero_idle.png` cropped to 16:9 |
+| **Demo Video** | MP4, **max 60 sec** — "UI/UX showcase: focus on user experience and product flow" | strongly recommended (yellow warning if missing) | Record per `docs/STORYBOARD.md` Video 1 |
+| **Tech Video** | MP4, **max 60 sec** — "Technical explanation: cover your stack, architecture, and implementation" | strongly recommended | Record per `docs/STORYBOARD.md` Video 2 |
+| Media Gallery | Images, MP4, PDF, ZIP. **8 slots available** | optional | Use all 8 — attach all 13 screenshots in priority order |
+
+**Form warning verbatim:** *"Having both videos is important — the jury needs them to fully evaluate your project. Projects without a Demo + Tech video may score lower."*
+
+## Event dropdown — what to pick
+- **Event \***: select `5th-hack-nation - Deadline: Apr 26, 9:00 AM ET`
+- **Challenge \***: select Challenge 3 (Databricks, Building Agentic Healthcare Maps for 1.4 Billion Lives) — exact label TBD when scrolled to
+
+## Suggested Media Gallery attachments (8 slots, in priority order)
+1. `02_query_result.png` — live agent answer card with all 3 tiers
+2. `13_photo_upload.png` — multimodal medgemma triage card
+3. `07_comparison.png` — vs ChatGPT vs Maps 14/0/0
+4. `08_equity_audit.png` — disparate-impact ratios
+5. `09_architecture.png` — bespoke SVG with 12 hoverable tools
+6. `12_counterfactual.png` — equity counterfactual slider
+7. `04_mlflow_traces.png` — 23 Databricks traces
+8. `06_unity_catalog_mask.png` — UC PHI mask UDF
 
 ## Submission checklist (do in order, ~5 min total once videos are recorded)
 
