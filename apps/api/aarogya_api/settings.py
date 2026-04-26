@@ -13,11 +13,24 @@ class Settings(BaseSettings):
         default="postgresql+asyncpg://postgres@localhost:5432/aarogya"
     )
 
-    # Anthropic (cloud) — agent supervisor + clinical reasoning
-    anthropic_api_key: str | None = None
-    supervisor_model: str = "claude-opus-4-7"
+    # Groq (cloud) — OpenAI-compatible LLM, supervisor reasoning + tool calling.
+    # GPT-OSS-120B is OpenAI's open-weight MoE (120B total / 5.1B active),
+    # purpose-built for agentic workflows. Groq's official replacement for
+    # Llama 4 Maverick + Kimi K2 (both deprecated in favor of this).
+    # - 131k context, lowest TTFT on Groq (0.58s)
+    # - Reasoning model — extended thinking for multi-step tool orchestration
+    # - Reliable OpenAI-style tool_calls (Llama 4 family emits broken `<function=...>` tags)
+    groq_api_key: str | None = None
+    groq_model: str = "openai/gpt-oss-120b"
+    groq_base_url: str = "https://api.groq.com/openai/v1"
 
-    # Ollama (local) — PHI-safe inference
+    # Google Gemini — multimodal (vision triage) + embeddings (cloud query path).
+    # Free tier: 15 RPM / 1,000 RPD on gemini-2.5-flash-lite.
+    google_api_key: str | None = None
+    gemini_vision_model: str = "gemini-2.5-flash-lite"
+    gemini_embed_model: str = "text-embedding-004"
+
+    # Ollama (local) — PHI-safe enterprise-deployment mode (hospital VPC)
     ollama_base_url: str = "http://localhost:11434"
     local_chat_model: str = "qwen2.5:32b-instruct-q4_K_M"
     local_embed_model: str = "bge-m3"

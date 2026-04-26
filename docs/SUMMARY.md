@@ -20,7 +20,7 @@ result as red severity halos at district centroids on the map.
 
 **On-device PHI**: free-text extraction (Qwen 2.5 32B) and multilingual
 embeddings (bge-m3, Hindi/Tamil/English) run on Apple Silicon via Ollama. The
-supervisor uses Claude Opus 4.7 with adaptive thinking; the agent ranks
+supervisor uses GPT-OSS-120B (Groq) with adaptive thinking; the agent ranks
 facilities by **total ₹ cost + travel time** (MGNREGA wage-loss + KSRTC bus fare
 heuristics), in three tiers — *Best · Closest payer-eligible · Backup*.
 

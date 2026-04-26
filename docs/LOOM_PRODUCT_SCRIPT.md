@@ -10,8 +10,8 @@ Recorded with the Loom DESKTOP app on macOS, menu-bar capture. Cmd+Shift+L to st
 - macOS: Control Center → Focus → Do Not Disturb (1 hour)
 - Loom desktop preferences: 1080p, screen + cam, mic = AirPods or built-in (whichever sounds clearer in the AirPods test below)
 - Webcam bubble: bottom-right, small size — minimal screen-real-estate
-- Chrome: ONE clean window, https://formal-rogers-poster-meanwhile.trycloudflare.com loaded, zoom 100%, bookmarks bar HIDDEN, no other tabs visible to camera
-- Two more tabs (offscreen, ready for the equity beat): https://formal-rogers-poster-meanwhile.trycloudflare.com/equity loaded, https://formal-rogers-poster-meanwhile.trycloudflare.com/architecture loaded
+- Chrome: ONE clean window, http://localhost:3000 loaded, zoom 100%, bookmarks bar HIDDEN, no other tabs visible to camera
+- Two more tabs (offscreen, ready for the equity beat): http://localhost:3000/equity loaded, http://localhost:3000/architecture loaded
 - **Pre-warm cache (CRITICAL for timing)**: Run the query `Cardiac care, age 67, Bengaluru, two hours.` ONCE end-to-end (let it complete fully, ~60-70s on cold start). Then close the answer (refresh home). The next run hits `@cached` decorators on geocode, trust_score, find_medical_deserts, estimate_journey, total_out_of_pocket — total streaming time drops to ~25-35s
 - Display: 1920x1080 external monitor preferred; otherwise native retina, Chrome at default zoom
 - AirPods test: read the first voiceover line into Loom's mic preview, listen to playback. Repeat with built-in mic. Pick clearer

@@ -21,7 +21,7 @@ import httpx
 from sqlalchemy import text
 
 from .db import SessionLocal
-from .local_llm import chat as local_chat, embed
+from .local_llm import chat as llm_chat, embed, _ollama_reachable
 from .settings import settings
 
 
@@ -220,8 +220,11 @@ CAPABILITY_SCHEMA = {
 
 
 async def extract_capabilities(intake_text: str) -> dict[str, Any]:
-    """Local-LLM extraction of capabilities from a single intake note. Zero PHI egress."""
-    raw = await local_chat(
+    """Structured capability extraction. Routes to on-device Ollama in the
+    enterprise PHI-safe mode (when GROQ_API_KEY is unset); otherwise routes
+    to Groq GPT-OSS-120B in the cloud-demo mode. The dispatcher lives in
+    local_llm.chat()."""
+    raw = await llm_chat(
         system=CAPABILITY_EXTRACT_SYSTEM,
         user=f"Intake note:\n---\n{intake_text}\n---\n\nReturn JSON only.",
         json_schema=CAPABILITY_SCHEMA,
@@ -336,6 +339,17 @@ async def databricks_vector_search(query: str, k: int = 5) -> dict[str, Any]:
 
 
 async def semantic_intake_search(query: str, k: int = 5) -> list[dict[str, Any]]:
+    # Persisted intake-note embeddings are 1024-dim bge-m3 vectors. Cloud-only
+    # demos without Ollama can't produce a matching query vector, so we surface
+    # a clear error and suggest the agent use databricks_vector_search instead.
+    if not await _ollama_reachable():
+        return [{
+            "error": (
+                "semantic_intake_search requires on-device Ollama (bge-m3 embeddings); "
+                "Ollama is not reachable. Use databricks_vector_search or facility_search instead."
+            ),
+            "fallback_suggested": "databricks_vector_search",
+        }]
     [vec] = await embed([query])
     # Format vector as Postgres array literal: '[0.1,0.2,...]'. pgvector
     # accepts this string form directly via the explicit ::vector cast.

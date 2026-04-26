@@ -53,9 +53,10 @@ def _init() -> None:
 
         mlflow.set_tracking_uri("databricks")
         mlflow.set_registry_uri("databricks-uc")
-        # Auto-trace every Anthropic SDK call (model, tokens, tool calls).
+        # Auto-trace every OpenAI-compatible call (Groq is OpenAI-compatible,
+        # so this captures supervisor LLM calls including tool requests/results).
         try:
-            mlflow.anthropic.autolog()
+            mlflow.openai.autolog()
         except Exception:
             pass
         try:

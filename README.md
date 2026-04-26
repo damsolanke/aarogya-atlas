@@ -4,21 +4,22 @@
 
 ### आरोग्य · *the absence of disease, complete wellness*
 
-**Agentic, trust-scored, cost-aware healthcare facility intelligence for India's 1.4B people.**
+**Agentic Healthcare Maps for India's 1.4 Billion — with a mandatory critic-verified Trust Score on every answer.**
 
-*Deployment path: hospital-VPC-resident inference via Mosaic AI Model Serving — same trust boundary, no PHI egress.*
+*Every recommendation runs through a separate validator LLM that scores trust 0–100 and surfaces specific contradictions before the answer ever reaches the user. The brief asked: "Real-world data is messy — how would you take this into account when framing conclusions?" The critic is our answer.*
 
-[![Built on Databricks](https://img.shields.io/badge/Built_on-Databricks-FF3621?style=for-the-badge&logo=databricks&logoColor=white)](https://databricks.com)
-[![Claude Opus 4.7](https://img.shields.io/badge/Claude-Opus_4.7-D97706?style=for-the-badge)](https://www.anthropic.com/claude)
+[![Critic-verified](https://img.shields.io/badge/Trust-Critic--verified-E8923D?style=for-the-badge&logo=shield&logoColor=white)](#mandatory-critic-pass-the-trust-score-on-every-answer)
+[![GPT-OSS-120B via Groq](https://img.shields.io/badge/Supervisor-GPT--OSS--120B_·_Groq-00b894?style=for-the-badge)](https://console.groq.com)
+[![Gemini Flash-Lite vision](https://img.shields.io/badge/Vision-Gemini_Flash--Lite-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://aistudio.google.com)
+[![MLflow on Databricks](https://img.shields.io/badge/Tracing-MLflow_·_Databricks-FF3621?style=for-the-badge&logo=databricks&logoColor=white)](https://databricks.com)
 [![FHIR R4](https://img.shields.io/badge/FHIR-R4-0066CC?style=for-the-badge)](https://hl7.org/fhir/R4/)
-[![On-device PHI](https://img.shields.io/badge/On--device-PHI-22d3ee?style=for-the-badge&logo=apple&logoColor=white)](#on-device-phi-scope-honest-about-limits)
+[![On-device PHI mode](https://img.shields.io/badge/On--device-PHI_mode-22d3ee?style=for-the-badge&logo=apple&logoColor=white)](#two-deployment-modes--honest-about-which-one-youre-running)
 [![Hack-Nation 2026](https://img.shields.io/badge/Hack--Nation-2026-5eead4?style=for-the-badge)](https://projects.hack-nation.ai)
 [![License MIT](https://img.shields.io/badge/License-MIT-zinc?style=for-the-badge)](LICENSE)
 
-**▶ [Live demo — click to try](https://formal-rogers-poster-meanwhile.trycloudflare.com)** ·
-[**vs ChatGPT / Maps**](https://formal-rogers-poster-meanwhile.trycloudflare.com/compare) ·
-[**Equity audit**](https://formal-rogers-poster-meanwhile.trycloudflare.com/equity) ·
-[**Architecture**](https://formal-rogers-poster-meanwhile.trycloudflare.com/architecture) ·
+**▶ Live demo: redeploying to Vercel + Railway — link will land here.** Recorded
+walkthrough below until then.
+
 [**60s video**](https://www.loom.com/share/5f67de77c1f24328b5d395275d07f249)
 
 </div>
@@ -44,14 +45,23 @@ make dev    # backend on :8000  ·  frontend on :3000
 
 Or step-by-step in [Run it](#run-it).
 
+## Mandatory critic pass — the Trust Score on every answer
+
+Every supervisor answer goes through a **separate critic LLM call** before it ever reaches the user. The critic scores the answer 0–100 against a strict rubric (was `trust_score` called? was a high-stakes service recommended without `validate_recommendation`? does every claim have backing evidence in the tool results?) and returns structured flags. The number lands as a hero badge at the top of every recommendation card — judges and users see it before they see anything else.
+
+**Why this exists:** The Hack-Nation Challenge 03 brief asked, *"Real-world data is messy — how would you take this into account when framing conclusions?"* The critic answers it directly. Trust isn't a tool the agent might or might not call — it's a guaranteed second pass.
+
+The critic shape — 0–100, PASS/WARN/FAIL verdict, severity-tagged flags with quoted evidence — drives the saffron/amber/red banner color and the auto-expanded flag list when a WARN or FAIL fires. See [`apps/api/aarogya_api/agent.py::_run_critic`](apps/api/aarogya_api/agent.py).
+
 ## What you get
 
 | | |
 | :--- | :--- |
-| **3-tier output** | ⭐ Best · 📍 Closest payer-eligible · 💡 Backup — every recommendation cites Trust + Validator + Cost |
-| **12 tools** | `geocode` · `facility_search` · `extract_capabilities_from_note` *(on-device)* · `check_hours` · `status_feed` · `semantic_intake_search` *(on-device)* · `databricks_vector_search` · `estimate_journey` · `total_out_of_pocket` · `trust_score` · `find_medical_deserts` · `validate_recommendation` |
-| **Multimodal** | Camera-button on the chat — upload a wound, prescription, X-ray, or oxygen-cylinder gauge → on-device **medgemma 27B** triages it (severity, suspected condition, recommended specialty) in ~4s, then auto-fills a facility query. PHI never leaves the device. |
-| **Stack** | Next.js 16 + React 19 + MapLibre · FastAPI + Anthropic SDK + Ollama (Qwen 2.5 32B + bge-m3 + **medgemma 27B vision**) · Postgres 17 + pgvector · **Databricks Unity Catalog + Genie + MLflow + Mosaic AI Vector Search** |
+| **Trust Score (hero metric)** | 0–100 + verdict (PASS/WARN/FAIL) + severity-tagged flags. Computed by a separate critic LLM call on **every** answer. Surfaced as the top-of-card banner. |
+| **3-tier recommendation** | ⭐ Best · 📍 Closest payer-eligible · 💡 Backup — each row cites Trust + Validator + Cost |
+| **12-tool agent loop** | `geocode` · `facility_search` · `extract_capabilities_from_note` · `check_hours` · `status_feed` · `semantic_intake_search` *(on-device)* · `databricks_vector_search` · `estimate_journey` · `total_out_of_pocket` · `trust_score` · `find_medical_deserts` · `validate_recommendation` |
+| **Multimodal** | Camera button — upload a wound, prescription, X-ray, or oxygen-cylinder gauge. Live demo routes to **Gemini Flash-Lite** (cloud, free tier); the same code path falls back to on-device **medgemma 27B** when Ollama is reachable (hospital-VPC enterprise mode). |
+| **Stack** | Next.js 16 + React 19 + MapLibre · FastAPI + **Groq SDK (GPT-OSS-120B)** + **Gemini Flash-Lite** · optional Ollama (Qwen 2.5 32B + bge-m3 + medgemma 27B) for on-device PHI mode · Postgres 17 + pgvector · **Databricks Unity Catalog + Genie + MLflow + Mosaic AI Vector Search** |
 | **Languages** | English · हिंदी · தமிழ் (bge-m3 multilingual embeddings, on-device) |
 
 The agent above resolved an ECG query in **6 tool calls**: geocoded
@@ -100,7 +110,7 @@ Click the camera button on the chat input, drop a wound photo / X-ray / prescrip
 
 ![Aarogya Atlas vs ChatGPT vs Google Maps — same query, 14 / 0 / 0](docs/screenshots/07_comparison.png)
 
-Live at **[`/compare`](https://formal-rogers-poster-meanwhile.trycloudflare.com/compare)**. Same Indian
+Live at **`/compare`** *(routes activate after Vercel deploy)*. Same Indian
 healthcare-discovery query — *"I need an ECG within 15km of
 Yeshwantpur, accepts Ayushman Bharat"* — through three systems, scored
 on 14 healthcare-specific capabilities the spec asks for:
@@ -117,7 +127,7 @@ none of which the alternatives address.
 
 ![Equity audit — disparate impact ratio across 25 Indian states](docs/screenshots/08_equity_audit.png)
 
-Live at **[`/equity`](https://formal-rogers-poster-meanwhile.trycloudflare.com/equity)**. Per-state
+Live at **`/equity`** *(routes activate after Vercel deploy)*. Per-state
 coverage of the six high-acuity specialties. **Disparate-impact ratio
 across the VF dataset:**
 
@@ -133,13 +143,13 @@ this in the answer card instead of pretending it has a recommendation.
 
 ![Architecture — 4 planes, 12 tools, animated data flow](docs/screenshots/09_architecture.png)
 
-Live at **[`/architecture`](https://formal-rogers-poster-meanwhile.trycloudflare.com/architecture)**.
-Four planes — **UI** (Next.js + MapLibre), **Supervisor** (Claude
-Opus 4.7 with adaptive thinking, manual streaming loop, no LangGraph),
-**12 Tools** (3 cloud, 2 on-device, 7 local DB), **Data Plane**
-(Postgres + pgvector mirroring Databricks Lakebase / UC / Genie / MLflow
-/ Mosaic VS / Ollama). Hover any tool node in the UI for a one-line
-description.
+Live at **`/architecture`** *(routes activate after Vercel deploy)*.
+Four planes — **UI** (Next.js + MapLibre), **Supervisor** (GPT-OSS-120B
+Versatile via Groq, OpenAI-compatible function calling, manual streaming
+loop, no LangGraph), **12 Tools** (3 cloud, 2 on-device for enterprise
+mode, 7 local DB), **Data Plane** (Postgres + pgvector mirroring
+Databricks Lakebase / UC / Genie / MLflow / Mosaic VS / Ollama). Hover
+any tool node in the UI for a one-line description.
 
 ## Live in our Databricks workspace
 
@@ -228,9 +238,10 @@ Discovery & Verification 35% · IDP 30% · Social Impact 25% · UX/Transparency 
 
 | Spec ask | Implementation | Where |
 | --- | --- | --- |
+| **Trust Scorer** *(spec example: "claims surgery, no anesthesia")* | 7 contradiction rules + 4 metadata signals → 0–100 + cited evidence + **80% bootstrap CI** | tool: `trust_score` |
+| **Mandatory critic pass** *(answers the brief's "real-world data is messy" question)* | Separate critic LLM call on every supervisor answer → deterministic 0–100 score + PASS/WARN/FAIL verdict + severity-tagged flags. Hero badge in UI. | `_run_critic` in `agent.py` |
 | Massive Unstructured Extraction | bge-m3 over VF unstructured fields | tool: `semantic_intake_search` |
 | Multi-Attribute Reasoning | 12 tools, manual streaming loop | `apps/api/aarogya_api/agent.py` |
-| **Trust Scorer** *(spec example: "claims surgery, no anesthesia")* | 7 contradiction rules + 4 metadata signals → 0–100 + cited evidence + **80% bootstrap CI** | tool: `trust_score` |
 | **Self-Correction Loop** *(Validator Agent)* | Re-checks recommendations against source text | tool: `validate_recommendation` |
 | **Dynamic Crisis Mapping** | District coverage gaps + map overlay | tool: `find_medical_deserts` |
 | Confidence intervals on Trust | `trust_score_ci_80=[low, high]` based on completeness + flag-severity bootstrap | `apps/api/aarogya_api/trust.py` |
@@ -241,21 +252,31 @@ Discovery & Verification 35% · IDP 30% · Social Impact 25% · UX/Transparency 
 | Multilingual / Hindi / Tamil | bge-m3 embeddings + agent system prompt | tool: `semantic_intake_search` |
 | **Total ₹ + travel time** *(not km only)* | KSRTC bus + MGNREGA wage + auto-rickshaw heuristics | tool: `total_out_of_pocket` |
 | **On-device PHI** | Free-text + embeddings via Ollama on M-series | `apps/api/aarogya_api/local_llm.py` |
-| Chain-of-Thought transparency | Adaptive-thinking summaries in collapsed reasoning trace | UI: `ReasoningDrawer` |
+| Chain-of-Thought transparency | Per-turn tool-call traces in collapsed reasoning drawer | UI: `ReasoningDrawer` |
 
-## On-device PHI scope (honest about limits)
+## Two deployment modes — honest about which one you're running
 
-**On-device today:**
-- Free-text extraction from intake notes (`extract_capabilities_from_note` → Qwen 2.5 32B)
-- Multilingual embeddings (`semantic_intake_search` → bge-m3)
+The same agent loop runs in two modes; the dispatcher in `local_llm.chat()`
+and `local_llm.vision_triage()` picks based on which env vars are set.
 
-**Not on-device today:**
-- The user's natural-language query → Anthropic Claude Opus 4.7
+**Public live demo (default — what's deployed at the Vercel URL):**
+- Supervisor: GPT-OSS-120B via **Groq** (Mixture-of-Experts, purpose-built for agentic tool use) (free tier, 30 RPM / 1,000 RPD)
+- Vision triage: **Gemini Flash-Lite** (free tier, 15 RPM / 1,000 RPD)
+- Capability extraction: Groq GPT-OSS-120B in JSON mode
+- `semantic_intake_search` returns a clear "use cloud vector search instead"
+  message — the persisted bge-m3 embeddings are 1024-dim and can't be queried
+  with a different model in the same vector space.
 
-For an enterprise / hospital-VPC deployment, the supervisor moves to
-**Mosaic AI Model Serving** with the same OSS weights — same trust
-boundary, no PHI egress. See
-[`docs/DATABRICKS_DEPLOYMENT.md`](docs/DATABRICKS_DEPLOYMENT.md).
+**Enterprise / hospital-VPC mode (PHI-safe, on-device):**
+- Supervisor + extraction: on-device Qwen 2.5 32B via Ollama
+- Vision triage: on-device medgemma 27B via Ollama
+- Embeddings: bge-m3 via Ollama
+- Activation: unset `GROQ_API_KEY` and `GOOGLE_API_KEY`; `OLLAMA_BASE_URL`
+  must point to a running Ollama daemon. PHI never leaves the box.
+
+For full hospital-VPC production, swap the local Ollama for **Mosaic AI
+Model Serving** with the same OSS weights — same trust boundary, no PHI
+egress. See [`docs/DATABRICKS_DEPLOYMENT.md`](docs/DATABRICKS_DEPLOYMENT.md).
 
 ## Run it
 
@@ -271,14 +292,15 @@ psql -d aarogya -f apps/api/db/schema.sql
 # Ingest 10k facilities (~10–15 min for embeddings)
 python scripts/ingest_vf.py
 
-# Backend
-cd apps/api && uv sync && cp .env.example .env  # set ANTHROPIC_API_KEY + DATABRICKS_*
+# Backend — set GROQ_API_KEY + GOOGLE_API_KEY (free) + optional DATABRICKS_*
+cd apps/api && uv sync && cp .env.example .env
+$EDITOR .env  # paste your Groq + Google AI Studio keys
 uv run uvicorn aarogya_api.app:app --reload
 
 # Frontend
 cd ../web && pnpm install && pnpm dev
 
-# Open https://formal-rogers-poster-meanwhile.trycloudflare.com
+# Open http://localhost:3000
 ```
 
 ## Submission artifacts
