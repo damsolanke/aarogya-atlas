@@ -269,8 +269,8 @@ export default function AgentChat({
               }}
               placeholder={
                 status === "streaming"
-                  ? "Agent is thinking…"
-                  : "Ask in English, हिंदी, or தமிழ்"
+                  ? "Reasoning…"
+                  : "Find me cardiac ICU within 40 km · हिंदी · தமிழ் · or press ⌘K"
               }
               rows={1}
               className="w-full resize-none bg-transparent px-4 py-3 pr-14 text-[14px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none"
