@@ -7,10 +7,12 @@ import AgentChat, { type AgentResult } from "@/components/AgentChat";
 import {
   listFacilities,
   fetchDeserts,
+  fetchStockout,
   type Facility,
   type DesertFeature,
+  type StockoutPayload,
 } from "@/lib/api";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Package } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const MapView = dynamic(() => import("@/components/MapView"), {
@@ -41,6 +43,16 @@ export default function HomePage() {
   const [desertSpecialty, setDesertSpecialty] = useState<string | null>(null);
   const [deserts, setDeserts] = useState<DesertFeature[]>([]);
   const [desertLoading, setDesertLoading] = useState(false);
+  const [stockoutCommodity, setStockoutCommodity] = useState<string | null>(null);
+  const [stockout, setStockout] = useState<StockoutPayload | null>(null);
+
+  useEffect(() => {
+    if (!stockoutCommodity) {
+      setStockout(null);
+      return;
+    }
+    fetchStockout(stockoutCommodity).then(setStockout).catch(() => setStockout(null));
+  }, [stockoutCommodity]);
 
   useEffect(() => {
     if (!desertSpecialty) {
@@ -187,6 +199,22 @@ export default function HomePage() {
             </div>
           </div>
 
+          {/* Stockout chip (when active) */}
+          {stockout && (
+            <div className="pointer-events-none absolute right-4 bottom-20 z-10">
+              <div className="glass rounded-lg px-3 py-2 text-[11px]">
+                <div className="flex items-center gap-1.5 text-amber-300">
+                  <Package className="h-3 w-3" />
+                  <span className="font-semibold uppercase tracking-wider">{stockout.label}</span>
+                </div>
+                <div className="mt-1 text-zinc-300">
+                  <span className="tab-num font-semibold text-amber-200">{stockout.stockout_pct}%</span> stockout · <span className="tab-num">{stockout.in_stock_count}/{stockout.facilities_polled}</span> in stock
+                </div>
+                <div className="mt-0.5 text-[10px] text-zinc-500">last verified ≤72h ago · synthetic for demo</div>
+              </div>
+            </div>
+          )}
+
           {/* Desert overlay toggles (top-left) */}
           <div className="absolute left-4 top-4 z-10">
             <div className="glass rounded-lg p-2">
@@ -214,6 +242,35 @@ export default function HomePage() {
                 {desertSpecialty && (
                   <span className="ml-1 text-[10px] text-zinc-500">
                     {desertLoading ? "loading…" : `${desertPoints.length} districts`}
+                  </span>
+                )}
+              </div>
+
+              {/* Stockout / commodity layer */}
+              <div className="mt-2 flex items-center gap-1.5 px-1 pb-1.5 text-[10px] uppercase tracking-wider text-zinc-400 border-t border-zinc-800/60 pt-2">
+                <Package className="h-3 w-3 text-amber-400" />
+                Stockout layer
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {(["antivenom", "oxytocin", "magsulf", "oxygen", "blood"] as const).map((c) => (
+                  <button
+                    key={c}
+                    onClick={() =>
+                      setStockoutCommodity(stockoutCommodity === c ? null : c)
+                    }
+                    className={cn(
+                      "rounded px-2 py-0.5 text-[10.5px] transition-colors",
+                      stockoutCommodity === c
+                        ? "bg-amber-500/20 text-amber-200 ring-1 ring-amber-500/40"
+                        : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200"
+                    )}
+                  >
+                    {c}
+                  </button>
+                ))}
+                {stockout && (
+                  <span className="ml-1 text-[10px] text-zinc-500">
+                    {stockout.in_stock_count}/{stockout.facilities_polled} in stock
                   </span>
                 )}
               </div>
