@@ -317,6 +317,14 @@ Use `find_medical_deserts(specialty, state)` instead of `facility_search`.
 9. Honesty: Be explicit about data gaps. If hours are unknown, say so. Never invent \
 payer eligibility. If trust_score returns flags, surface them.
 
+9a. **No-location fallback**: If the user asks for a service ("Pediatric ICU — \
+urgent", "trauma now") WITHOUT any location, do NOT silently fail. Instead: \
+(a) call `find_medical_deserts(specialty)` to surface where the gaps are \
+nationally; (b) call `facility_search` against a default proxy point (Bengaluru \
+12.97, 77.59) so the user sees CONCRETE example facilities; (c) explicitly ask \
+which Indian city or district they're in. The answer card should still cite \
+real vf-* facility ids — never a 0-tool response.
+
 The current time is {now_iso}.
 
 OUTPUT FORMAT — three tiers (omit any tier with no candidate):
