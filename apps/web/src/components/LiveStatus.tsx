@@ -59,11 +59,14 @@ export default function LiveStatus({
   trace: TraceEvent[];
   status: "idle" | "streaming" | "done" | "error";
 }) {
-  const stepCount = trace.filter(
-    (e) => e.type === "tool_request" || e.type === "thought"
-  ).length;
   const toolStepCount = trace.filter((e) => e.type === "tool_request").length;
   const activity = status === "streaming" ? deriveCurrentActivity(trace) : null;
+
+  // Last 4 tool calls scrolling — judges see the actual process.
+  const recentTools = trace
+    .filter((e) => e.type === "tool_request")
+    .flatMap((e) => (e.tool_calls || []).map((tc) => tc.name))
+    .slice(-4);
 
   return (
     <AnimatePresence mode="wait">
@@ -73,27 +76,39 @@ export default function LiveStatus({
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -6 }}
-          className="flex items-center gap-2 rounded-full border border-cyan-900/60 bg-cyan-950/30 px-3 py-1.5"
+          className="space-y-1.5"
         >
-          {activity ? (
-            <>
-              <activity.icon className="h-3.5 w-3.5 text-cyan-300" />
-              <span className="text-[12px] text-zinc-100">{activity.label}</span>
-              {activity.local && (
-                <span className="rounded border border-cyan-700/60 bg-cyan-950/60 px-1.5 py-px text-[9px] font-semibold uppercase tracking-wider text-cyan-300">
-                  on-device
+          <div className="flex items-center gap-2 rounded-md border px-3 py-1.5" style={{borderColor: "rgba(232,146,61,0.30)", background: "rgba(232,146,61,0.06)"}}>
+            {activity ? (
+              <>
+                <activity.icon className="h-3.5 w-3.5" style={{color: "var(--accent-saffron)"}} />
+                <span className="text-[12px] text-zinc-100">{activity.label}</span>
+                {activity.local && (
+                  <span className="rounded border border-cyan-700/60 bg-cyan-950/60 px-1.5 py-px text-[9px] font-semibold uppercase tracking-wider text-cyan-300">
+                    on-device
+                  </span>
+                )}
+              </>
+            ) : (
+              <>
+                <span className="dot-pulse" />
+                <span className="text-[12px] text-zinc-300">Reasoning</span>
+              </>
+            )}
+            <span className="ml-1 text-[10px] tab-num text-zinc-500">
+              · {toolStepCount} {toolStepCount === 1 ? "tool" : "tools"} so far
+            </span>
+          </div>
+          {recentTools.length > 0 && (
+            <div className="ticker px-1 overflow-hidden whitespace-nowrap">
+              {recentTools.map((name, i) => (
+                <span key={i}>
+                  <span className={i === recentTools.length - 1 ? "v" : ""}>{name}</span>
+                  {i < recentTools.length - 1 && <span className="sep">→</span>}
                 </span>
-              )}
-            </>
-          ) : (
-            <>
-              <span className="dot-pulse" />
-              <span className="text-[12px] text-zinc-300">Thinking</span>
-            </>
+              ))}
+            </div>
           )}
-          <span className="ml-1 text-[10px] tab-num text-zinc-500">
-            · step {stepCount}
-          </span>
         </motion.div>
       )}
       {status === "done" && toolStepCount > 0 && (
@@ -101,9 +116,9 @@ export default function LiveStatus({
           key="done"
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-2 rounded-full border border-emerald-900/60 bg-emerald-950/30 px-3 py-1.5"
+          className="flex items-center gap-2 rounded-md border px-3 py-1.5" style={{borderColor: "rgba(20,184,166,0.30)", background: "rgba(20,184,166,0.06)"}}
         >
-          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-300" />
+          <CheckCircle2 className="h-3.5 w-3.5" style={{color: "var(--accent-teal)"}} />
           <span className="text-[12px] text-zinc-100">
             Resolved in {toolStepCount} tool {toolStepCount === 1 ? "call" : "calls"}
           </span>

@@ -210,8 +210,15 @@ export default function AgentChat({
               />
             )}
             {error && (
-              <div className="rounded-xl border border-amber-900/60 bg-amber-950/30 px-4 py-3 text-[13px] text-amber-200">
-                {error}
+              <div className="rounded-md border px-4 py-3 text-[13px]" style={{borderColor: "rgba(245,158,11,0.40)", background: "rgba(245,158,11,0.06)", color: "rgb(252, 211, 77)"}}>
+                <div className="ticker mb-1 text-[10px]">
+                  <span>error</span><span className="sep">·</span><span>{Date().toString().split(" ").slice(1, 4).join(" ")}</span>
+                </div>
+                <div className="text-zinc-100">{error}</div>
+                <div className="mt-1.5 ticker text-[10.5px]">
+                  <span>Likely cause: backend cold start or API rate limit.</span>{" "}
+                  <span className="v">Wait 5s · retry the same query · or click a suggestion.</span>
+                </div>
               </div>
             )}
             {trace.length > 0 && status !== "streaming" && (
