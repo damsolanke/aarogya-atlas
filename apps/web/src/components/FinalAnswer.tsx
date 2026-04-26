@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,9 +30,15 @@ import { cn } from "@/lib/cn";
 export default function FinalAnswer({
   text,
   streaming,
+  computedAt,
+  durationMs,
+  toolCalls,
 }: {
   text: string;
   streaming: boolean;
+  computedAt?: number; // epoch ms, when final landed
+  durationMs?: number;
+  toolCalls?: number;
 }) {
   const parsed = useMemo(() => (streaming ? null : parseAnswer(text)), [text, streaming]);
 
@@ -41,7 +47,7 @@ export default function FinalAnswer({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-      className="overflow-hidden rounded-2xl border border-zinc-800/80 bg-[var(--bg-card)]/70 shadow-2xl shadow-black/30 backdrop-blur-sm"
+      className="overflow-hidden rounded-lg border border-zinc-800/80 bg-[var(--bg-card)]/70 shadow-xl shadow-black/30 backdrop-blur-sm"
     >
       <Header streaming={streaming} stats={parsed?.summary} />
 
@@ -54,12 +60,55 @@ export default function FinalAnswer({
               <SectionRenderer key={i} section={s} />
             ))}
             {parsed.sections.length > 0 && (
-              <ActionBar text={text} primaryFacility={parsed.primaryFacility} />
+              <>
+                <ActionBar text={text} primaryFacility={parsed.primaryFacility} />
+                {!streaming && computedAt && (
+                  <NowStamp computedAt={computedAt} durationMs={durationMs} toolCalls={toolCalls} />
+                )}
+              </>
             )}
           </>
         )}
       </div>
     </motion.div>
+  );
+}
+
+/* Live "now" stamp — editorial transparency */
+function NowStamp({
+  computedAt,
+  durationMs,
+  toolCalls,
+}: {
+  computedAt: number;
+  durationMs?: number;
+  toolCalls?: number;
+}) {
+  const [, force] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => force((n) => n + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const ago = Math.max(0, Math.floor((Date.now() - computedAt) / 1000));
+  const agoLabel = ago < 60 ? `${ago}s ago` : `${Math.floor(ago / 60)}m ago`;
+  return (
+    <div className="ticker mt-1 flex flex-wrap items-center justify-center gap-x-2">
+      <span className="v">Computed {agoLabel}</span>
+      {durationMs !== undefined && (
+        <>
+          <span className="sep">│</span>
+          <span>agent {(durationMs / 1000).toFixed(1)}s</span>
+        </>
+      )}
+      {toolCalls !== undefined && (
+        <>
+          <span className="sep">│</span>
+          <span className="v">{toolCalls} tools</span>
+        </>
+      )}
+      <span className="sep">│</span>
+      <span>VS index synced live</span>
+    </div>
   );
 }
 

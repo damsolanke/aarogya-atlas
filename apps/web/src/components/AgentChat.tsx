@@ -31,6 +31,9 @@ export default function AgentChat({
   const [lastQuery, setLastQuery] = useState<string>("");
   const [triage, setTriage] = useState<TriageResult | null>(null);
   const [triageLoading, setTriageLoading] = useState(false);
+  const [computedAt, setComputedAt] = useState<number | undefined>(undefined);
+  const [agentDurationMs, setAgentDurationMs] = useState<number | undefined>(undefined);
+  const startMsRef = useRef<number>(0);
   const fileRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -59,6 +62,9 @@ export default function AgentChat({
       setError(null);
       setLastQuery(query);
       setInput("");
+      setComputedAt(undefined);
+      setAgentDurationMs(undefined);
+      startMsRef.current = Date.now();
 
       const collectedMap = new Map<string, AgentResult["facilities"][number]>();
       let center: AgentResult["centerLatLon"] | undefined;
@@ -127,6 +133,8 @@ export default function AgentChat({
           } else if (evt.event === "final") {
             setFinalText(evt.data.text);
             setStatus("done");
+            setComputedAt(Date.now());
+            setAgentDurationMs(Date.now() - startMsRef.current);
           } else if (evt.event === "error") {
             setError(evt.data.text);
             setStatus("error");
@@ -193,7 +201,13 @@ export default function AgentChat({
             <UserBubble query={lastQuery} onClear={reset} />
             <LiveStatus trace={trace} status={status} />
             {(status === "streaming" || finalText) && (
-              <FinalAnswer text={finalText} streaming={status === "streaming"} />
+              <FinalAnswer
+                text={finalText}
+                streaming={status === "streaming"}
+                computedAt={computedAt}
+                durationMs={agentDurationMs}
+                toolCalls={trace.filter((e) => e.type === "tool_request").length}
+              />
             )}
             {error && (
               <div className="rounded-xl border border-amber-900/60 bg-amber-950/30 px-4 py-3 text-[13px] text-amber-200">
