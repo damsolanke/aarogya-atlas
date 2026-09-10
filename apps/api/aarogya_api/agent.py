@@ -21,10 +21,11 @@ import re
 import uuid
 from datetime import datetime
 from types import SimpleNamespace
-from typing import Any, AsyncIterator
+from typing import Any, AsyncIterator, Literal
 
 from groq import AsyncGroq, BadRequestError, APIStatusError, RateLimitError
 from jsonschema import Draft202012Validator
+from pydantic import BaseModel, Field
 
 from . import tools as T
 from . import trust as TR
@@ -408,6 +409,75 @@ def _compress_tool_trace(messages: list[dict[str, Any]], max_chars: int = 6000) 
     return blob
 
 
+class CriticFlag(BaseModel):
+    severity: Literal["high", "med", "low"] = "low"
+    issue: str = ""
+    evidence: str = ""
+
+
+class CriticVerdict(BaseModel):
+    """Shape of the `critic` SSE event on /api/query.
+
+    `status == "ok"`: `trust_score` (0-100) and `verdict` are set.
+    `status == "unavailable"`: the critic call failed or returned something
+    unparseable. `trust_score` and `verdict` are None — there is no score,
+    and the UI must say so rather than show a neutral number.
+    """
+
+    status: Literal["ok", "unavailable"]
+    trust_score: int | None = Field(default=None, ge=0, le=100)
+    verdict: Literal["PASS", "WARN", "FAIL"] | None = None
+    flags: list[CriticFlag] = Field(default_factory=list)
+    summary: str = ""
+    # Exception class name only — never exception text (it may carry URLs/keys).
+    reason: str | None = None
+
+
+CRITIC_UNAVAILABLE_SUMMARY = (
+    "Critic verification could not complete — this answer has NOT been critic-verified."
+)
+
+
+def _critic_unavailable(reason: str) -> dict[str, Any]:
+    return CriticVerdict(
+        status="unavailable",
+        summary=CRITIC_UNAVAILABLE_SUMMARY,
+        reason=reason,
+    ).model_dump()
+
+
+def _normalise_critic_verdict(raw: Any) -> dict[str, Any]:
+    """Coerce the model's JSON into a `CriticVerdict(status="ok")`.
+    Raises ValueError when the payload is not a JSON object."""
+    if not isinstance(raw, dict):
+        raise ValueError(f"critic returned {type(raw).__name__}, expected object")
+    score = raw.get("trust_score")
+    if not isinstance(score, (int, float)) or isinstance(score, bool):
+        raise ValueError("critic returned no numeric trust_score")
+    score = max(0, min(100, int(score)))
+    verdict = raw.get("verdict")
+    if verdict not in ("PASS", "WARN", "FAIL"):
+        verdict = "PASS" if score >= 75 else ("WARN" if score >= 50 else "FAIL")
+    flags: list[CriticFlag] = []
+    for f in raw.get("flags") or []:
+        if not isinstance(f, dict):
+            continue
+        sev = f.get("severity")
+        flags.append(CriticFlag(
+            severity=sev if sev in ("high", "med", "low") else "low",
+            issue=str(f.get("issue") or ""),
+            evidence=str(f.get("evidence") or ""),
+        ))
+    summary = raw.get("summary")
+    return CriticVerdict(
+        status="ok",
+        trust_score=score,
+        verdict=verdict,
+        flags=flags,
+        summary=summary if isinstance(summary, str) else "",
+    ).model_dump()
+
+
 async def _run_critic(
     user_query: str,
     tool_trace: str,
@@ -415,9 +485,13 @@ async def _run_critic(
     aclient: AsyncGroq,
     s,
 ) -> dict[str, Any]:
-    """Run the mandatory second-pass critic. Returns the parsed verdict dict
-    (or a defensive default if the critic call fails — never let the critic
-    break the user-facing flow)."""
+    """Run the mandatory second-pass critic.
+
+    Returns a `CriticVerdict` dict. On ANY failure (API error, non-JSON,
+    non-object, missing score) the result is `status="unavailable"` with no
+    score — never a made-up neutral number. The failure is logged
+    server-side; the client only sees the exception class name.
+    """
     prompt = (
         f"USER QUERY:\n{user_query}\n\n"
         f"TOOL CALLS + RESULTS:\n{tool_trace}\n\n"
@@ -436,29 +510,11 @@ async def _run_critic(
             response_format={"type": "json_object"},
             **_model_kwargs(s),
         )
-        raw = response.choices[0].message.content or "{}"
-        verdict = json.loads(raw)
+        raw = response.choices[0].message.content or ""
+        return _normalise_critic_verdict(json.loads(raw))
     except Exception as e:
-        # Never let the critic break the response. Return a neutral fallback.
-        return {
-            "trust_score": 50,
-            "verdict": "WARN",
-            "flags": [{"severity": "low", "issue": "critic_unavailable", "evidence": f"{type(e).__name__}: {str(e)[:120]}"}],
-            "summary": "Critic verification could not complete — score defaulted to neutral.",
-        }
-    # Normalise + clamp
-    score = verdict.get("trust_score", 50)
-    if not isinstance(score, (int, float)):
-        score = 50
-    score = max(0, min(100, int(score)))
-    verdict["trust_score"] = score
-    if verdict.get("verdict") not in ("PASS", "WARN", "FAIL"):
-        verdict["verdict"] = "WARN" if score < 75 else "PASS"
-    if not isinstance(verdict.get("flags"), list):
-        verdict["flags"] = []
-    if not isinstance(verdict.get("summary"), str):
-        verdict["summary"] = ""
-    return verdict
+        logger.warning("critic unavailable: %s", type(e).__name__, exc_info=True)
+        return _critic_unavailable(type(e).__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -630,9 +686,9 @@ async def stream_answer(
             }}
             return
 
-        # Mandatory critic pass — every supervisor answer is verified by a
-        # separate LLM call before reaching the user. This is the architectural
-        # moat: deterministic Trust Score + flags on every recommendation.
+        # Critic pass — every supervisor answer gets a second call to the SAME
+        # Groq model with the critic system prompt. When that call fails the
+        # event carries status="unavailable" (no score) rather than a default.
         if final_text:
             with maybe_span(
                 "critic.verify",
@@ -643,6 +699,7 @@ async def stream_answer(
                 tool_trace = _compress_tool_trace(messages)
                 verdict = await _run_critic(last_user, tool_trace, final_text, aclient, s)
                 critic_span.set_outputs({
+                    "status": verdict.get("status"),
                     "trust_score": verdict.get("trust_score"),
                     "verdict": verdict.get("verdict"),
                     "flag_count": len(verdict.get("flags", [])),
