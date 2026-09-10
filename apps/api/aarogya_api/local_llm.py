@@ -234,12 +234,16 @@ async def vision_triage_cloud(image_b64: str, prompt: str | None = None) -> dict
             # graceful fallback if the model emits prose.
         },
     }
+    # The key goes in the `x-goog-api-key` header, never in the query string:
+    # httpx embeds the request URL in HTTPStatusError messages, so a `?key=`
+    # URL would leak the key into logs and into any error text.
     url = (
         f"https://generativelanguage.googleapis.com/v1beta/"
-        f"models/{s.gemini_vision_model}:generateContent?key={api_key}"
+        f"models/{s.gemini_vision_model}:generateContent"
     )
+    headers = {"x-goog-api-key": api_key, "Content-Type": "application/json"}
     async with httpx.AsyncClient(timeout=30.0) as c:
-        r = await c.post(url, json=payload)
+        r = await c.post(url, json=payload, headers=headers)
         r.raise_for_status()
         data = r.json()
     try:
@@ -251,6 +255,14 @@ async def vision_triage_cloud(image_b64: str, prompt: str | None = None) -> dict
         "runs_on": "cloud",
         "result": _safe_parse_vision_json(raw),
     }
+
+
+def vision_backend() -> dict[str, str]:
+    """Which vision path `vision_triage` will take right now."""
+    s = settings()
+    if _gemini_available():
+        return {"backend": "gemini", "model": s.gemini_vision_model, "runs_on": "cloud"}
+    return {"backend": "ollama", "model": "medgemma:27b", "runs_on": "device"}
 
 
 async def vision_triage(image_b64: str, prompt: str | None = None) -> dict[str, Any]:

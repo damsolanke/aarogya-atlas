@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from typing import Any
 
 from fastapi import FastAPI, Request
@@ -18,7 +19,13 @@ from .agent import stream_answer
 from .db import SessionLocal
 from .local_llm import healthcheck as ollama_healthcheck
 
+logger = logging.getLogger(__name__)
+
 app = FastAPI(title="Aarogya Atlas API", version="0.1.0")
+
+# Client-visible error text is always generic. Exception messages can carry
+# request URLs, DSNs, or API keys, so they are logged server-side only.
+TRIAGE_ERROR_TEXT = "Vision triage failed on the server. Check the API logs for details."
 
 # Per-IP rate limit. Cheap shield against accidental floods on the public
 # Vercel deploy + a backstop for the paid Groq tier. Returns 429 with a
@@ -59,13 +66,16 @@ async def triage_photo(request: Request, req: TriageReq):
     prescription, snake, X-ray, oxygen gauge, etc.) and get a structured
     triage with suspected condition, severity, and recommended specialty.
 
-    PHI-safe: medgemma:27b runs locally; the image bytes never leave the box.
+    Routes to Gemini (cloud) when GOOGLE_API_KEY is set, otherwise to
+    on-device Ollama medgemma:27b. The response's `runs_on` field says which.
     """
-    from .local_llm import vision_triage
+    from .local_llm import vision_backend, vision_triage
+    backend = vision_backend()
     try:
         return await vision_triage(req.image_b64, req.prompt)
-    except Exception as e:
-        return {"error": str(e), "model": "medgemma:27b"}
+    except Exception:
+        logger.exception("vision triage failed (backend=%s)", backend["backend"])
+        return {"error": TRIAGE_ERROR_TEXT, "model": backend["model"], "runs_on": backend["runs_on"]}
 
 
 @app.get("/healthz")
@@ -78,12 +88,13 @@ async def healthz() -> dict[str, Any]:
             out["facilities"] = int(n)
             ns = (await s.execute(text("SELECT count(*) FROM fhir_healthcareservice"))).scalar_one()
             out["services"] = int(ns)
-    except Exception as e:
-        out["db_error"] = str(e)
+    except Exception:
+        logger.warning("healthz: database unreachable", exc_info=True)
+        out["db_error"] = "database unreachable (see server logs)"
     try:
         out["ollama"] = await ollama_healthcheck()
-    except Exception as e:
-        out["ollama_error"] = str(e)
+    except Exception:
+        out["ollama_error"] = "ollama unreachable"
     out["tool_cache"] = cache_stats()
     return out
 
