@@ -422,10 +422,11 @@ export default function MapView({
       map.setPaintProperty(LAYER_DESERT_PULSE, "circle-opacity", Math.max(0, opacity));
     }, 50);
 
+    const rankedMarkers = rankedMarkersRef.current;
     return () => {
       window.clearInterval(pulseInterval);
-      rankedMarkersRef.current.forEach((m) => m.remove());
-      rankedMarkersRef.current.clear();
+      rankedMarkers.forEach((m) => m.remove());
+      rankedMarkers.clear();
       map.remove();
       mapRef.current = null;
     };
@@ -565,7 +566,6 @@ export default function MapView({
       });
     };
     if (mapReady) move();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [center, zoom, pins, mapReady]);
 
   // ---- Isochrones around top ranked facility (modeled approximation) ----
