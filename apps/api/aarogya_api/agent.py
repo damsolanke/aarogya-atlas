@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 import re
 import uuid
@@ -28,6 +29,8 @@ from . import tools as T
 from . import trust as TR
 from .observability import maybe_span
 from .settings import settings
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -531,7 +534,19 @@ async def stream_answer(
         return
 
     s = settings()
-    aclient = client()
+    try:
+        aclient = client()
+    except RuntimeError:
+        # No GROQ_API_KEY: the supervisor has no model to run on. The agent is
+        # disabled outright (it is NOT routed to Ollama) — say so explicitly.
+        yield {"event": "error", "data": {
+            "kind": "agent_disabled",
+            "text": (
+                "The agent is disabled on this server: GROQ_API_KEY is not set. "
+                "The supervisor only runs on Groq; without a key no queries can be answered."
+            ),
+        }}
+        return
 
     system = SYSTEM_PROMPT.format(now_iso=datetime.now().isoformat(timespec="seconds"))
     # OpenAI-style: system goes first, then the full conversation history.
@@ -560,10 +575,13 @@ async def stream_answer(
                 "text": f"Groq {limit_kind} rate limit hit on the free tier.{wait_msg} (We're already retrying transparently with backoff — this means the cooldown is longer than our retry budget.)",
             }}
             return
-        except Exception as e:
+        except Exception:
+            # Exception text can carry URLs, DSNs or keys — log it server-side
+            # and hand the client a generic message.
+            logger.exception("agent loop failed")
             yield {"event": "error", "data": {
                 "kind": "agent_exception",
-                "text": f"{type(e).__name__}: {str(e)[:300]}",
+                "text": "The agent hit an internal error. Details are in the server logs; try again in a moment.",
             }}
             return
 
