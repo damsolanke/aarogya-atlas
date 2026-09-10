@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { CriticVerdict, CriticFlag } from "@/lib/api";
+import { useRuntime } from "@/lib/useRuntime";
 
 /* ----------------------------------------------------------------------------
    Public component
@@ -116,8 +117,6 @@ function NowStamp({
           <span className="v">{toolCalls} tools</span>
         </>
       )}
-      <span className="sep">│</span>
-      <span>VS index synced live</span>
     </div>
   );
 }
@@ -277,6 +276,12 @@ function Header({
   streaming: boolean;
   stats?: SummaryStats;
 }) {
+  const rt = useRuntime();
+  const modelRow = rt
+    ? rt.agent.enabled
+      ? `${rt.agent.model} · ${rt.agent.backend}`
+      : "agent disabled · GROQ_API_KEY unset"
+    : "…";
   return (
     <div className="border-b border-zinc-800/80 bg-gradient-to-r from-emerald-950/20 via-transparent to-violet-950/10 px-3.5 py-2.5">
       <div className="flex items-center gap-2">
@@ -287,9 +292,7 @@ function Header({
           <div className="text-[11px] font-semibold tracking-tight text-zinc-100">
             Aarogya Atlas
           </div>
-          <div className="text-[10px] text-zinc-500">
-            GPT-OSS-120B · Groq
-          </div>
+          <div className="text-[10px] text-zinc-500">{modelRow}</div>
         </div>
         {streaming && (
           <span className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-cyan-950/40 px-2 py-0.5 text-[10px] font-medium text-cyan-300 ring-1 ring-cyan-700/40">

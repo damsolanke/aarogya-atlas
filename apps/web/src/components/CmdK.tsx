@@ -31,20 +31,20 @@ const ACTIONS: Action[] = [
   { label: "Atlas", hint: "Home — agent + map", hotkey: "G  H",
     icon: Activity, group: "navigate",
     run: (r) => r.push("/") },
-  { label: "vs ChatGPT / Maps", hint: "Comparison page · 14 / 0 / 0", hotkey: "G  C",
+  { label: "vs ChatGPT / Maps", hint: "Same query, three systems (hand-scored)", hotkey: "G  C",
     icon: GitCompare, group: "navigate",
     run: (r) => r.push("/compare") },
   { label: "Equity audit", hint: "Disparate impact + counterfactual planner",
     hotkey: "G  Q", icon: ShieldAlert, group: "navigate",
     run: (r) => r.push("/equity") },
-  { label: "Architecture", hint: "12 tools, 4 planes",
+  { label: "Architecture", hint: "Planes, tools, data flow",
     hotkey: "G  A", icon: Network, group: "navigate",
     run: (r) => r.push("/architecture") },
   { label: "Eval", hint: "Auditable evaluation results",
     hotkey: "G  E", icon: CheckCircle2, group: "navigate",
     run: (r) => r.push("/eval") },
 
-  { label: "Triage a photo on-device", hint: "medgemma 27B · ~4 sec",
+  { label: "Triage a photo", hint: "Gemini (cloud) or medgemma (on-device)",
     icon: Camera, group: "feature",
     run: () => {
       // Trigger the camera button click on the home page if present.

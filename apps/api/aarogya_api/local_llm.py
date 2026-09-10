@@ -27,16 +27,30 @@ def client() -> AsyncClient:
     return _client
 
 
-def _gemini_available() -> bool:
-    """Cloud vision/embeddings are available when GOOGLE_API_KEY is set."""
+def gemini_available() -> bool:
+    """Cloud vision is available when GOOGLE_API_KEY is set."""
     s = settings()
     return bool(s.google_api_key or os.environ.get("GOOGLE_API_KEY"))
 
 
-def _groq_available() -> bool:
-    """Cloud chat is available when GROQ_API_KEY is set."""
+def groq_available() -> bool:
+    """Cloud chat (supervisor, critic, capability extraction) is available
+    when GROQ_API_KEY is set."""
     s = settings()
     return bool(s.groq_api_key or os.environ.get("GROQ_API_KEY"))
+
+
+# Backwards-compatible private aliases.
+_gemini_available = gemini_available
+_groq_available = groq_available
+
+
+def chat_backend() -> dict[str, str]:
+    """Which path `chat()` (capability extraction) takes right now."""
+    s = settings()
+    if groq_available():
+        return {"backend": "groq", "model": s.groq_model, "runs_on": "cloud"}
+    return {"backend": "ollama", "model": s.local_chat_model, "runs_on": "device"}
 
 
 async def _ollama_reachable() -> bool:
@@ -140,7 +154,7 @@ async def chat(
     local Ollama is used in the hospital-VPC enterprise mode where PHI
     must not egress.
     """
-    if _groq_available():
+    if groq_available():
         return await chat_cloud(system, user, json_schema=json_schema)
     return await chat_local(system, user, model=model, json_schema=json_schema)
 
@@ -260,7 +274,7 @@ async def vision_triage_cloud(image_b64: str, prompt: str | None = None) -> dict
 def vision_backend() -> dict[str, str]:
     """Which vision path `vision_triage` will take right now."""
     s = settings()
-    if _gemini_available():
+    if gemini_available():
         return {"backend": "gemini", "model": s.gemini_vision_model, "runs_on": "cloud"}
     return {"backend": "ollama", "model": "medgemma:27b", "runs_on": "device"}
 
@@ -276,7 +290,7 @@ async def vision_triage(image_b64: str, prompt: str | None = None) -> dict[str, 
     GOOGLE_API_KEY is missing we fall through to the device path so the
     enterprise scenario keeps working.
     """
-    if _gemini_available():
+    if gemini_available():
         return await vision_triage_cloud(image_b64, prompt)
     return await vision_triage_local(image_b64, prompt)
 

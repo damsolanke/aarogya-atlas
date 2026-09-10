@@ -206,11 +206,16 @@ export default function HomePage() {
                 <div className="flex items-center gap-1.5 text-amber-300">
                   <Package className="h-3 w-3" />
                   <span className="font-semibold uppercase tracking-wider">{stockout.label}</span>
+                  <span className="rounded border border-amber-700/60 px-1 py-px text-[9px] font-semibold uppercase tracking-wider text-amber-400">
+                    simulated
+                  </span>
                 </div>
                 <div className="mt-1 text-zinc-300">
                   <span className="tab-num font-semibold text-amber-200">{stockout.stockout_pct}%</span> stockout · <span className="tab-num">{stockout.in_stock_count}/{stockout.facilities_polled}</span> in stock
                 </div>
-                <div className="mt-0.5 text-[10px] text-zinc-500">last verified ≤72h ago · synthetic for demo</div>
+                <div className="mt-0.5 text-[10px] text-zinc-500">
+                  simulated · deterministic per facility id, not real stock data
+                </div>
               </div>
             </div>
           )}
@@ -249,7 +254,7 @@ export default function HomePage() {
               {/* Stockout / commodity layer */}
               <div className="mt-2 flex items-center gap-1.5 px-1 pb-1.5 text-[10px] uppercase tracking-wider text-zinc-400 border-t border-zinc-800/60 pt-2">
                 <Package className="h-3 w-3 text-amber-400" />
-                Stockout layer
+                Stockout layer · simulated
               </div>
               <div className="flex flex-wrap gap-1">
                 {(["antivenom", "oxytocin", "magsulf", "oxygen", "blood"] as const).map((c) => (

@@ -12,6 +12,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import Suggestions from "./Suggestions";
+import { useRuntime } from "@/lib/useRuntime";
 
 /**
  * Idle hero shown when the chat is empty.
@@ -29,6 +30,7 @@ export default function IdleHero({
   onPick: (q: string) => void;
 }) {
   const [mounted, setMounted] = useState(false);
+  const rt = useRuntime();
   useEffect(() => setMounted(true), []);
 
   return (
@@ -44,11 +46,11 @@ export default function IdleHero({
           <span className="inline-block h-1.5 w-1.5 rounded-full" style={{background: "var(--accent-saffron)"}} />
           <span className="v">Live</span>
           <span className="sep">│</span>
-          <span>Databricks</span>
+          <span>{rt ? (rt.tracing.mlflow ? "MLflow traced" : "tracing off") : "…"}</span>
           <span className="sep">│</span>
-          <span className="v">Critic-verified</span>
+          <span className="v">{rt ? (rt.critic.enabled ? "Critic-verified" : "Critic off") : "…"}</span>
           <span className="sep">│</span>
-          <span className="v">12/12</span>
+          <span className="v">{rt ? rt.tool_count : "…"}</span>
           <span>tools</span>
         </div>
 

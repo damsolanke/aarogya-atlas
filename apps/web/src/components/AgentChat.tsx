@@ -12,6 +12,7 @@ import {
   type TriageResult,
   type CriticVerdict,
 } from "@/lib/api";
+import { useRuntime } from "@/lib/useRuntime";
 import LiveStatus from "./LiveStatus";
 import FinalAnswer from "./FinalAnswer";
 import ReasoningDrawer from "./ReasoningDrawer";
@@ -47,6 +48,7 @@ export default function AgentChat({
   const [turns, setTurns] = useState<Turn[]>([]);
   const [triage, setTriage] = useState<TriageResult | null>(null);
   const [triageLoading, setTriageLoading] = useState(false);
+  const runtime = useRuntime();
 
   const fileRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -277,7 +279,11 @@ export default function AgentChat({
             type="button"
             onClick={() => fileRef.current?.click()}
             disabled={triageLoading || isStreaming}
-            title="Attach a photo (wound, prescription, X-ray) — runs medgemma 27B on-device"
+            title={
+              runtime
+                ? `Attach a photo (wound, prescription, X-ray) — triage via ${runtime.vision.model} (${runtime.vision.runs_on === "device" ? "on-device" : "cloud"})`
+                : "Attach a photo (wound, prescription, X-ray)"
+            }
             className="glass mb-0.5 inline-flex h-11 w-11 items-center justify-center rounded-xl text-zinc-300 transition-colors hover:bg-zinc-800/40 hover:text-cyan-300 disabled:opacity-40"
           >
             {triageLoading ? (
@@ -410,7 +416,7 @@ function TriageCard({
         <div className="flex-1 text-[12.5px] leading-relaxed">
           <div className="flex items-center gap-1.5">
             <span className="text-[9.5px] font-semibold uppercase tracking-wider opacity-90">
-              On-device triage · medgemma 27B
+              {triage.runs_on === "device" ? "On-device" : "Cloud"} triage · {triage.model || "unknown model"}
             </span>
             <span className="text-[9.5px] opacity-60">· severity {r.severity}</span>
           </div>
@@ -433,13 +439,31 @@ function TriageCard({
   );
 }
 
+/* Every pill here is derived from GET /api/runtime — nothing is hard-coded. */
 function SystemBar() {
+  const rt = useRuntime();
+  if (!rt) {
+    return (
+      <div className="mx-auto mt-2 flex max-w-2xl flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[10px] text-zinc-600">
+        <SystemPill dot="amber">runtime · connecting…</SystemPill>
+      </div>
+    );
+  }
   return (
     <div className="mx-auto mt-2 flex max-w-2xl flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[10px] text-zinc-600">
-      <SystemPill dot="emerald">12/12 tools</SystemPill>
-      <SystemPill dot="cyan">critic-verified</SystemPill>
-      <SystemPill dot="emerald">multi-turn</SystemPill>
-      <SystemPill dot="violet">MLflow traced</SystemPill>
+      <SystemPill dot={rt.agent.enabled ? "emerald" : "amber"}>
+        {rt.agent.enabled
+          ? `${rt.agent.model} · ${rt.agent.backend}`
+          : "agent disabled · GROQ_API_KEY unset"}
+      </SystemPill>
+      <SystemPill dot="emerald">{rt.tool_count} tools</SystemPill>
+      <SystemPill dot={rt.critic.enabled ? "cyan" : "amber"}>
+        {rt.critic.enabled ? "critic · 2nd pass, same model" : "critic off"}
+      </SystemPill>
+      {rt.agent.multi_turn && <SystemPill dot="emerald">multi-turn</SystemPill>}
+      <SystemPill dot={rt.tracing.mlflow ? "violet" : "amber"}>
+        {rt.tracing.mlflow ? "MLflow traced" : "tracing off"}
+      </SystemPill>
       <SystemPill dot="amber">EN · हिंदी · தமிழ்</SystemPill>
     </div>
   );
