@@ -64,13 +64,7 @@ function NavLink({
   );
 }
 
-export default function Header({
-  facilityCount,
-  loaded,
-}: {
-  facilityCount: number;
-  loaded: boolean;
-}) {
+export default function Header({ loaded }: { loaded: boolean }) {
   return (
     <header className="relative z-30 border-b border-[var(--border)] bg-[var(--bg)]/60 backdrop-blur-xl">
       <div className="flex items-center justify-between px-6 py-3.5">

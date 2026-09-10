@@ -41,33 +41,47 @@ export default function HomePage() {
   const [origin, setOrigin] = useState<[number, number] | undefined>();
   const [highlightRanks, setHighlightRanks] = useState<Map<string, number>>(new Map());
   const [desertSpecialty, setDesertSpecialty] = useState<string | null>(null);
-  const [deserts, setDeserts] = useState<DesertFeature[]>([]);
-  const [desertLoading, setDesertLoading] = useState(false);
+  // Desert features are stored with the specialty that produced them, so the
+  // loading flag is derived rather than set synchronously in the effect.
+  const [desertLayer, setDesertLayer] = useState<{ specialty: string | null; features: DesertFeature[] }>({
+    specialty: null,
+    features: [],
+  });
+  const deserts = desertLayer.features;
+  const desertLoading = desertSpecialty !== null && desertLayer.specialty !== desertSpecialty;
   const [stockoutCommodity, setStockoutCommodity] = useState<string | null>(null);
   const [stockout, setStockout] = useState<StockoutPayload | null>(null);
 
   useEffect(() => {
-    if (!stockoutCommodity) {
-      setStockout(null);
-      return;
-    }
-    fetchStockout(stockoutCommodity).then(setStockout).catch(() => setStockout(null));
+    if (!stockoutCommodity) return;
+    let cancelled = false;
+    fetchStockout(stockoutCommodity)
+      .then((s) => {
+        if (!cancelled) setStockout(s);
+      })
+      .catch(() => {
+        if (!cancelled) setStockout(null);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [stockoutCommodity]);
 
   useEffect(() => {
-    if (!desertSpecialty) {
-      // Idle showcase: preload the top critical dialysis districts so the
-      // map has narrative even before the user picks an overlay.
-      fetchDeserts("dialysis")
-        .then((d) => setDeserts(d.slice(0, 8)))
-        .catch(() => setDeserts([]));
-      return;
-    }
-    setDesertLoading(true);
-    fetchDeserts(desertSpecialty)
-      .then((d) => setDeserts(d))
-      .catch(() => setDeserts([]))
-      .finally(() => setDesertLoading(false));
+    let cancelled = false;
+    const specialty = desertSpecialty;
+    // With no overlay selected, preload the top critical dialysis districts
+    // so the map has narrative before the user picks one.
+    fetchDeserts(specialty ?? "dialysis")
+      .then((d) => {
+        if (!cancelled) setDesertLayer({ specialty, features: specialty ? d : d.slice(0, 8) });
+      })
+      .catch(() => {
+        if (!cancelled) setDesertLayer({ specialty, features: [] });
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [desertSpecialty]);
 
   const desertPoints = deserts.map((f) => ({
@@ -145,7 +159,7 @@ export default function HomePage() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
-      <Header facilityCount={allFacilities.length} loaded={allFacilities.length > 0} />
+      <Header loaded={allFacilities.length > 0} />
 
       <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
         <aside className="relative flex max-h-[60vh] w-full flex-col overflow-hidden border-b border-[var(--border)] bg-[var(--bg)]/50 md:max-h-none md:w-[44%] md:min-w-[440px] md:max-w-[640px] md:border-b-0 md:border-r">
@@ -260,9 +274,11 @@ export default function HomePage() {
                 {(["antivenom", "oxytocin", "magsulf", "oxygen", "blood"] as const).map((c) => (
                   <button
                     key={c}
-                    onClick={() =>
-                      setStockoutCommodity(stockoutCommodity === c ? null : c)
-                    }
+                    onClick={() => {
+                      const next = stockoutCommodity === c ? null : c;
+                      setStockoutCommodity(next);
+                      if (!next) setStockout(null);
+                    }}
                     className={cn(
                       "rounded px-2 py-0.5 text-[10.5px] transition-colors",
                       stockoutCommodity === c
