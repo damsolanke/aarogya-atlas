@@ -23,8 +23,14 @@ ENV_KEYS = (
 
 @pytest.fixture(autouse=True)
 def _clean_env(monkeypatch):
+    from aarogya_api import observability
+
     for k in ENV_KEYS:
         monkeypatch.delenv(k, raising=False)
+    # MLflow's lazy init would call load_dotenv() and could pick up a local
+    # .env with Databricks credentials. Mark it as already attempted + off.
+    monkeypatch.setattr(observability, "_INIT_ATTEMPTED", True)
+    monkeypatch.setattr(observability, "_MLFLOW_READY", False)
     settings.cache_clear()
     yield
     settings.cache_clear()
