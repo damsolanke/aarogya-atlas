@@ -267,7 +267,7 @@ function CounterfactualSlider() {
     <section className="mt-12">
       <div className="mb-3 flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-wider text-zinc-400">
         <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />
-        Equity counterfactual — what if we add CEmONC beds?
+        Equity counterfactual · simulated — what if we add CEmONC beds?
       </div>
       <div className="rounded-2xl border border-emerald-800/40 bg-emerald-950/15 p-5">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -337,9 +337,10 @@ function CounterfactualSlider() {
           </div>
         )}
         <p className="mt-4 text-[10.5px] leading-relaxed text-zinc-500">
-          Method: gravity-model + Six-Delays attribution against the UN/WHO
-          2024 baseline of 67,000 annual maternal deaths in India. Numbers
-          are illustrative — a planning prior, not an epidemiological forecast.
+          Simulated: a coarse gravity-model + Six-Delays attribution against
+          the UN/WHO 2024 baseline of 67,000 annual maternal deaths in India,
+          scaled by this district&apos;s facility count. Numbers are illustrative
+          — a planning prior, not an epidemiological forecast.
         </p>
       </div>
     </section>

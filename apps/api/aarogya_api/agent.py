@@ -29,7 +29,8 @@ from pydantic import BaseModel, Field
 
 from . import tools as T
 from . import trust as TR
-from .observability import maybe_span
+from .local_llm import chat_backend, groq_available, vision_backend
+from .observability import MLFLOW_EXPERIMENT, maybe_span, mlflow_enabled
 from .settings import settings
 
 logger = logging.getLogger(__name__)
@@ -219,9 +220,66 @@ TOOL_IMPLS = {
     "validate_recommendation": TR.validate_recommendation,
 }
 
-# Tools that route to the on-device model. Used in the trace event so the UI
-# can label them with the "On-device" badge.
-LOCAL_TOOLS = {"extract_capabilities_from_note", "semantic_intake_search"}
+# Where each tool's inference on user text actually happens. This is what the
+# UI badges are derived from — never hard-coded on the client.
+#   device: on-device Ollama (PHI never leaves the box)
+#   cloud:  a hosted inference provider (Groq / Databricks)
+#   host:   the API server itself (Postgres queries, heuristics, Nominatim)
+RunsOn = Literal["device", "cloud", "host"]
+
+# `extract_capabilities_from_note` is NOT always on-device: `local_llm.chat()`
+# routes it to Groq whenever GROQ_API_KEY is set (the deployed demo).
+_ROUTED_BY_GROQ_KEY = {"extract_capabilities_from_note"}
+_ALWAYS_DEVICE = {"semantic_intake_search"}  # bge-m3 embeddings via Ollama only
+_ALWAYS_CLOUD = {"databricks_vector_search"}
+
+# Kept for callers that only care about "could run on-device".
+LOCAL_TOOLS = _ROUTED_BY_GROQ_KEY | _ALWAYS_DEVICE
+
+
+def tool_runs_on(name: str) -> RunsOn:
+    if name in _ALWAYS_DEVICE:
+        return "device"
+    if name in _ALWAYS_CLOUD:
+        return "cloud"
+    if name in _ROUTED_BY_GROQ_KEY:
+        return "cloud" if groq_available() else "device"
+    return "host"
+
+
+DEFAULT_MAX_ITERATIONS = 8
+
+
+def runtime_info() -> dict[str, Any]:
+    """Ground truth for every runtime badge in the UI (served at /api/runtime)."""
+    s = settings()
+    groq = groq_available()
+    tracing = mlflow_enabled()
+    return {
+        "agent": {
+            # No GROQ_API_KEY => the supervisor is disabled, NOT routed to Ollama.
+            "enabled": groq,
+            "backend": "groq" if groq else "disabled",
+            "model": s.groq_model if groq else None,
+            "runs_on": "cloud" if groq else None,
+            "max_iterations": DEFAULT_MAX_ITERATIONS,
+            "multi_turn": True,
+        },
+        "critic": {
+            "enabled": groq,
+            # The critic is a second pass of the SAME model with a different
+            # system prompt — not a separate validator model.
+            "model": s.groq_model if groq else None,
+            "same_model_as_supervisor": True,
+        },
+        "capability_extraction": chat_backend(),
+        "vision": vision_backend(),
+        "embeddings": {"backend": "ollama", "model": s.local_embed_model, "runs_on": "device"},
+        "tools": [{"name": name, "runs_on": tool_runs_on(name)} for name in TOOL_IMPLS],
+        "tool_count": len(TOOL_IMPLS),
+        "tracing": {"mlflow": tracing, "experiment": MLFLOW_EXPERIMENT if tracing else None},
+        "simulated_endpoints": ["/api/stockout", "/api/counterfactual"],
+    }
 
 # name -> declared JSON schema, compiled once. Every tool call is validated
 # against this before the impl runs.
@@ -557,12 +615,11 @@ async def _execute_tool(name: str, args: dict[str, Any]) -> Any:
             "expected_schema": TOOL_SCHEMAS[name],
             "hint": "Fix the arguments to match expected_schema and call the tool again.",
         }
-    is_local = name in LOCAL_TOOLS
     with maybe_span(
         f"tool.{name}",
         span_type="TOOL",
         inputs={"args": args},
-        attributes={"runs_on": "device" if is_local else "host", "tool_name": name},
+        attributes={"runs_on": tool_runs_on(name), "tool_name": name},
     ) as span:
         try:
             result = await impl(**args)
@@ -592,7 +649,7 @@ def _parse_tool_args(raw: Any) -> dict[str, Any]:
 
 async def stream_answer(
     history: list[dict[str, Any]] | str,
-    max_iterations: int = 8,
+    max_iterations: int = DEFAULT_MAX_ITERATIONS,
 ) -> AsyncIterator[dict[str, Any]]:
     """Yield SSE-shaped events: tool requests, tool results, final answer.
 
@@ -933,12 +990,13 @@ async def _agent_loop(s, aclient, messages, max_iterations, agent_span) -> Async
         # Parse args once so we can reuse them in both the trace event and execution.
         parsed_args_list = [_parse_tool_args(tc.function.arguments) for tc in tool_calls]
 
-        # Surface the tool requests in the trace.
+        # Surface the tool requests in the trace. `runs_on` is the real routing
+        # for this process (device / cloud / host) so the UI never guesses.
         yield {"event": "step", "data": {
             "type": "tool_request",
             "content": assistant_msg.content or "",  # any preamble text
             "tool_calls": [
-                {"name": tc.function.name, "args": parsed_args_list[i]}
+                {"name": tc.function.name, "args": parsed_args_list[i], "runs_on": tool_runs_on(tc.function.name)}
                 for i, tc in enumerate(tool_calls)
             ],
         }}
@@ -985,6 +1043,7 @@ async def _agent_loop(s, aclient, messages, max_iterations, agent_span) -> Async
             yield {"event": "step", "data": {
                 "type": "tool_result",
                 "tool": tc.function.name,
+                "runs_on": tool_runs_on(tc.function.name),
                 "content": full_content,
             }}
 

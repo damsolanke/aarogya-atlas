@@ -1,13 +1,17 @@
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+/** Where a tool's inference on user text actually ran — set by the backend
+ *  per event (`aarogya_api.agent.tool_runs_on`), never guessed client-side. */
+export type RunsOn = "device" | "cloud" | "host";
+
 export type TraceEvent =
   | {
       type: "thought" | "tool_request";
       content: string;
-      tool_calls?: { name: string; args: Record<string, unknown> }[];
+      tool_calls?: { name: string; args: Record<string, unknown>; runs_on?: RunsOn }[];
     }
-  | { type: "tool_result"; tool: string; content: string };
+  | { type: "tool_result"; tool: string; runs_on?: RunsOn; content: string };
 
 export type CriticFlag = {
   severity: "high" | "med" | "low";
@@ -110,6 +114,36 @@ export async function triagePhoto(file: File): Promise<TriageResult | null> {
   });
   if (!r.ok) return null;
   return (await r.json()) as TriageResult;
+}
+
+/** Mirrors `aarogya_api.agent.runtime_info()` — served at GET /api/runtime. */
+export type Runtime = {
+  agent: {
+    enabled: boolean;
+    backend: "groq" | "disabled";
+    model: string | null;
+    runs_on: RunsOn | null;
+    max_iterations: number;
+    multi_turn: boolean;
+  };
+  critic: { enabled: boolean; model: string | null; same_model_as_supervisor: boolean };
+  capability_extraction: { backend: string; model: string; runs_on: RunsOn };
+  vision: { backend: string; model: string; runs_on: RunsOn };
+  embeddings: { backend: string; model: string; runs_on: RunsOn };
+  tools: { name: string; runs_on: RunsOn }[];
+  tool_count: number;
+  tracing: { mlflow: boolean; experiment: string | null };
+  simulated_endpoints: string[];
+};
+
+export async function fetchRuntime(): Promise<Runtime | null> {
+  try {
+    const r = await fetch(`${API_URL}/api/runtime`);
+    if (!r.ok) return null;
+    return (await r.json()) as Runtime;
+  } catch {
+    return null;
+  }
 }
 
 export type Health = {

@@ -14,13 +14,11 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/cn";
-import type { TraceEvent } from "@/lib/api";
+import type { RunsOn, TraceEvent } from "@/lib/api";
+import { runsOnLabel } from "@/lib/useRuntime";
 
-const LOCAL_TOOLS = new Set([
-  "extract_capabilities_from_note",
-  "semantic_intake_search",
-]);
-
+// Where a tool ran is taken from the event's `runs_on` (set by the backend),
+// not from a client-side list.
 const TOOL_META: Record<
   string,
   { icon: React.ComponentType<{ className?: string }>; label: string }
@@ -29,14 +27,8 @@ const TOOL_META: Record<
   facility_search: { icon: Search, label: "Searching facilities" },
   check_hours: { icon: Clock, label: "Checking hours" },
   status_feed: { icon: Activity, label: "Reading live status" },
-  extract_capabilities_from_note: {
-    icon: FileText,
-    label: "Extracting capabilities (on-device)",
-  },
-  semantic_intake_search: {
-    icon: FileText,
-    label: "Semantic search (on-device)",
-  },
+  extract_capabilities_from_note: { icon: FileText, label: "Extracting capabilities" },
+  semantic_intake_search: { icon: FileText, label: "Semantic search" },
 };
 
 export default function TraceStep({ step }: { step: TraceEvent }) {
@@ -79,14 +71,14 @@ export default function TraceStep({ step }: { step: TraceEvent }) {
           </div>
         )}
         {step.tool_calls?.map((tc, i) => (
-          <ToolCallCard key={`${tc.name}-${i}`} name={tc.name} args={tc.args} />
+          <ToolCallCard key={`${tc.name}-${i}`} name={tc.name} args={tc.args} runsOn={tc.runs_on} />
         ))}
       </motion.div>
     );
   }
 
   if (step.type === "tool_result") {
-    return <ToolResultCard tool={step.tool} content={step.content} />;
+    return <ToolResultCard tool={step.tool} content={step.content} runsOn={step.runs_on} />;
   }
 
   return null;
@@ -95,12 +87,15 @@ export default function TraceStep({ step }: { step: TraceEvent }) {
 function ToolCallCard({
   name,
   args,
+  runsOn,
 }: {
   name: string;
   args: Record<string, unknown>;
+  runsOn?: RunsOn;
 }) {
   const meta = TOOL_META[name] || { icon: Wrench, label: name };
-  const isLocal = LOCAL_TOOLS.has(name);
+  const isLocal = runsOn === "device";
+  const badge = runsOnLabel(runsOn);
   const Icon = meta.icon;
   return (
     <div
@@ -128,9 +123,16 @@ function ToolCallCard({
           <span className="text-[12px] font-medium text-zinc-100">
             {meta.label}
           </span>
-          {isLocal && (
-            <span className="rounded border border-cyan-700/50 bg-cyan-950/40 px-1.5 py-px text-[9px] font-semibold uppercase tracking-wider text-cyan-300">
-              On-device
+          {badge && (
+            <span
+              className={cn(
+                "rounded border px-1.5 py-px text-[9px] font-semibold uppercase tracking-wider",
+                isLocal
+                  ? "border-cyan-700/50 bg-cyan-950/40 text-cyan-300"
+                  : "border-amber-700/50 bg-amber-950/40 text-amber-300"
+              )}
+            >
+              {badge}
             </span>
           )}
         </div>
@@ -144,10 +146,18 @@ function ToolCallCard({
   );
 }
 
-function ToolResultCard({ tool, content }: { tool: string; content: string }) {
+function ToolResultCard({
+  tool,
+  content,
+  runsOn,
+}: {
+  tool: string;
+  content: string;
+  runsOn?: RunsOn;
+}) {
   const [open, setOpen] = useState(false);
   const meta = TOOL_META[tool] || { icon: CheckCircle2, label: tool };
-  const isLocal = LOCAL_TOOLS.has(tool);
+  const isLocal = runsOn === "device";
 
   let summary = "";
   let parsed: unknown = null;

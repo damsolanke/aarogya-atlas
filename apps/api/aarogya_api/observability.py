@@ -19,7 +19,13 @@ _MLFLOW_READY = False
 _INIT_ATTEMPTED = False
 
 
+MLFLOW_EXPERIMENT = "/Shared/aarogya-atlas"
+
+
 def mlflow_enabled() -> bool:
+    """True when traces are actually being sent to Databricks MLflow.
+    Triggers the lazy init so the answer is accurate before the first span."""
+    _init()
     return _MLFLOW_READY
 
 
@@ -60,11 +66,11 @@ def _init() -> None:
         except Exception:
             pass
         try:
-            mlflow.set_experiment("/Shared/aarogya-atlas")
+            mlflow.set_experiment(MLFLOW_EXPERIMENT)
         except Exception:
             mlflow.set_experiment("aarogya-atlas")
         _MLFLOW_READY = True
-        print(f"[mlflow] tracing enabled → {host}/Shared/aarogya-atlas")
+        print(f"[mlflow] tracing enabled → {host}{MLFLOW_EXPERIMENT}")
     except Exception as e:
         # Never let observability break the demo.
         print(f"[mlflow] init failed: {type(e).__name__}: {e}")

@@ -5,11 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, Brain, Wrench, CheckCircle2, ShieldCheck, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { TraceEvent, CriticVerdict } from "@/lib/api";
-
-const LOCAL_TOOLS = new Set([
-  "extract_capabilities_from_note",
-  "semantic_intake_search",
-]);
+import { runsOnLabel } from "@/lib/useRuntime";
 
 export default function ReasoningDrawer({
   trace,
@@ -159,7 +155,9 @@ function Row({ step, index }: { step: TraceEvent; index: number }) {
           </p>
         )}
         {step.tool_calls?.map((tc, i) => {
-          const isLocal = LOCAL_TOOLS.has(tc.name);
+          // Routing comes from the backend per event, never a client-side list.
+          const isLocal = tc.runs_on === "device";
+          const badge = runsOnLabel(tc.runs_on);
           return (
             <div
               key={i}
@@ -174,9 +172,16 @@ function Row({ step, index }: { step: TraceEvent; index: number }) {
               <span className={cn("font-mono font-medium", isLocal ? "text-cyan-300" : "text-zinc-300")}>
                 {tc.name}
               </span>
-              {isLocal && (
-                <span className="rounded border border-cyan-700/60 bg-cyan-950/40 px-1 py-px text-[9px] font-semibold uppercase tracking-wider text-cyan-300">
-                  on-device
+              {badge && (
+                <span
+                  className={cn(
+                    "rounded border px-1 py-px text-[9px] font-semibold uppercase tracking-wider",
+                    isLocal
+                      ? "border-cyan-700/60 bg-cyan-950/40 text-cyan-300"
+                      : "border-amber-700/60 bg-amber-950/40 text-amber-300"
+                  )}
+                >
+                  {badge}
                 </span>
               )}
               <span className="truncate font-mono text-[10.5px] text-zinc-600">

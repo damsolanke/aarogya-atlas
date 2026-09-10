@@ -15,7 +15,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from sqlalchemy import text
 
-from .agent import stream_answer
+from .agent import runtime_info, stream_answer
 from .db import SessionLocal
 from .local_llm import healthcheck as ollama_healthcheck
 
@@ -97,6 +97,14 @@ async def healthz() -> dict[str, Any]:
         out["ollama_error"] = "ollama unreachable"
     out["tool_cache"] = cache_stats()
     return out
+
+
+@app.get("/api/runtime")
+async def runtime() -> dict[str, Any]:
+    """What is actually running: agent backend (or disabled), critic, where
+    each tool's inference happens, vision/extraction routing, tool count,
+    whether MLflow tracing is live. The UI derives its badges from this."""
+    return runtime_info()
 
 
 @app.post("/api/query")
