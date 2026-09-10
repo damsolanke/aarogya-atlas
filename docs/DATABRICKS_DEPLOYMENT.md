@@ -10,7 +10,7 @@ this system would deploy on Databricks. Every local component has a direct
 | ---------------------------------------------- | ---------------------------------------------------------------- |
 | Postgres 17 (`fhir_location`, `fhir_healthcareservice`, `facility_payer`, `facility_status_event`) | **Lakebase** — serverless Postgres, governed by Unity Catalog. Same SQL works unchanged. |
 | pgvector HNSW index on `intake_note.embedding` | **Mosaic AI Vector Search** index over a Delta table. `bge-m3` registered as a Databricks-served embedding endpoint. |
-| LangGraph supervisor + `ToolNode`              | **Mosaic AI Agent Framework** — the supervisor pattern documented in [Multi-agent supervisor architecture](https://www.databricks.com/blog/multi-agent-supervisor-architecture-orchestrating-enterprise-ai-scale). Tools become Unity Catalog `SQL` and `Python` functions; LangGraph wraps them. |
+| Manual streaming supervisor loop (`agent.py`, Groq SDK, OpenAI-compatible function calling) | **Mosaic AI Agent Framework** — the supervisor pattern documented in [Multi-agent supervisor architecture](https://www.databricks.com/blog/multi-agent-supervisor-architecture-orchestrating-enterprise-ai-scale). Tools become Unity Catalog `SQL` and `Python` functions; the agent framework wraps them. |
 | Local Ollama (`qwen2.5:32b`, `medgemma:27b`, `bge-m3`) | **Provisioned Throughput Model Serving** — same models, served as Databricks endpoints. PHI inference remains in-VPC. |
 | Synthetic intake notes via `seed_synthetic.py` | **Lakeflow Connect** ingestion from hospital EMR → bronze Delta table → silver FHIR-normalised → gold `intake_note` table. |
 | OSM Overpass ingestion script                  | Scheduled **Lakeflow** pipeline; ABDM HFR API replaces OSM as the authoritative facility source. |
@@ -25,18 +25,21 @@ The FHIR boundary is enforced at every layer:
 1. **Ingest:** PHI never leaves the hospital network. The agent's
    capability-extraction tool (`extract_capabilities_from_note`) runs on a
    **Mosaic Provisioned Throughput** endpoint inside the hospital's VPC.
-   In local dev, this is the Ollama call to `medgemma:27b` on the same host.
+   In local dev, this is the Ollama call to `LOCAL_CHAT_MODEL` (default
+   `qwen2.5:32b-instruct-q4_K_M`) on the same host.
 2. **Storage:** PHI-containing free text stays in the silver layer with
    Unity Catalog row-level filters. The gold `intake_note` table stores
    only de-identified summaries + their embedding vectors.
-3. **Inference:** The supervisor (Claude / Mosaic-served Llama) only ever
-   sees the gold layer. The reasoning trace surfaced to the user contains
+3. **Inference:** The supervisor (GPT-OSS-120B via Groq today; a
+   Mosaic-served open-weight model in production) only ever sees the gold
+   layer. The reasoning trace surfaced to the user contains
    no raw PHI.
 
-In local dev the equivalent guarantee is simpler: the supervisor model
-runs in the cloud, but every call to `extract_capabilities_from_note` and
-`semantic_intake_search` routes to **Ollama on the same machine**. Patient
-text never crosses the network boundary.
+In local dev the equivalent guarantee only holds when `GROQ_API_KEY` is
+unset: then `extract_capabilities_from_note` routes to **Ollama on the same
+machine** and `semantic_intake_search` always embeds with Ollama's bge-m3.
+With `GROQ_API_KEY` set (the deployed demo), capability extraction runs on
+Groq in the cloud — see the "Two deployment modes" section of the README.
 
 ## Migration cost (local → Databricks)
 

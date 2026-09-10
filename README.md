@@ -89,8 +89,6 @@ Open Vercel, Linear, Anthropic side-by-side and most healthcare AI demos look id
 - **Live "now" stamp** — every answer card editorial-stamps with *`Computed 2s ago · agent 31s · 7 tools · VS index synced live`*. Counts up in real time.
 - **prefers-reduced-motion** respected globally.
 
-Anti-slop audit + remaining gaps: [`docs/SLOP_AUDIT.md`](docs/SLOP_AUDIT.md).
-
 ## Multi-modal travel — auto · bus · 108 ambulance
 
 Most Indian healthcare apps show "drive 6 min". We show three:
@@ -318,7 +316,6 @@ cd ../web && pnpm install && pnpm dev
 - [`docs/ROBUSTNESS_REPORT.md`](docs/ROBUSTNESS_REPORT.md) — DAS-style adversarial perturbation results
 - [`docs/DATABRICKS_DEPLOYMENT.md`](docs/DATABRICKS_DEPLOYMENT.md) — Mosaic AI Vector Search + MLflow tracing setup
 - [`docs/BRAND.md`](docs/BRAND.md) — 3-color signature, anti-slop typography, voice
-- [`docs/SLOP_AUDIT.md`](docs/SLOP_AUDIT.md) — anti-template manifesto, gap audit
 - [`docs/archive/5th-hackathon/`](docs/archive/5th-hackathon) — frozen pitch deck, scripts, and 5th-edition framing kept for posterity
 
 ---

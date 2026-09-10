@@ -11,10 +11,11 @@ in sync with the live code or README.
 Contents:
 
 - `DEMO_SCRIPT.md`, `LOOM_PRODUCT_SCRIPT.md`, `LOOM_TECH_SCRIPT.md` — recording scripts for the demo and Loom walkthroughs that were submitted.
-- `PITCH_VARIANTS.md`, `PITCH_RECON.md` — pitch deck drafts.
+- `PITCH_VARIANTS.md` — pitch deck drafts.
 - `STORYBOARD.md` — UI storyboard draft.
 - `SUBMISSION_DRAFT.md` — pre-deadline submission checklist + first draft.
 - `pitch/` — deck assets.
 
-Result: project did not finalist. Post-mortem and what changed are summarised
-in the root `README.md` "Honest scoreboard" section.
+Result: the project was not selected as a finalist. What changed afterwards
+(critic pass, GPT-OSS-120B supervisor, $0 hosting stack) is described in the
+root `README.md`.

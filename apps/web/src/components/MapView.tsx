@@ -521,7 +521,7 @@ export default function MapView({
 
   // ---- Cinematic camera: fitBounds over highlights if many, else flyTo ----
   // First user-driven move gets a 2.4s slow zoom from all-India down to the
-  // recommendation — Phase H signature moment. Subsequent moves are 1.4s.
+  // recommendation. Subsequent moves are 1.4s.
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
