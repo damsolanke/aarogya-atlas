@@ -454,7 +454,6 @@ async def estimate_journey(
         "travel_time_min_one_way": travel_minutes_one_way,
         "round_trip_min": travel_minutes_one_way * 2,
         "round_trip_inr": cost_one_way_inr * 2,
-        # Phase G item 3: multi-modal comparison
         "modes": {
             "auto": {
                 "label": "Auto-rickshaw",
