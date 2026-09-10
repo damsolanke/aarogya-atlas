@@ -11,8 +11,9 @@ import {
 } from "lucide-react";
 import Footer from "@/components/Footer";
 
-// The numbers below mirror docs/EVAL_REPORT.md, last refreshed against
-// the parallel-tool-fan-out agent. Re-run `make eval` to update both.
+// The numbers below mirror docs/EVAL_REPORT.md. They were measured on the
+// 5th-edition stack (Claude supervisor + Llama 3.3 70B, no critic) and have
+// NOT been re-run on the current stack. Re-run `make eval` to update both.
 
 const SUMMARY = {
   generated: "2026-04-25 16:43 CDT",
@@ -84,6 +85,12 @@ export default function EvalPage() {
           comes from <code className="rounded bg-zinc-800/80 px-1.5 py-0.5 text-cyan-300">scripts/evaluate.py</code> running
           {" "}{SUMMARY.queries} fixed queries against the live agent. Re-run
           locally with <code className="rounded bg-zinc-800/80 px-1.5 py-0.5 text-cyan-300">make eval</code>.
+        </p>
+        <p className="mt-2 max-w-3xl text-[12.5px] leading-relaxed text-amber-200/80">
+          Measured {SUMMARY.generated} on the previous stack (Anthropic Claude
+          supervisor + Llama 3.3 70B on Groq, no critic pass) over the first{" "}
+          {SUMMARY.queries} of the harness&apos;s 20 fixed queries. These numbers
+          have not been re-run on the current GPT-OSS-120B + critic stack.
         </p>
 
         {/* Top 4 metrics */}

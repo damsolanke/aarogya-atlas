@@ -189,16 +189,16 @@ async def trust_score(facility_id: str) -> dict[str, Any]:
 
     score = max(0, 100 - deduction)
 
-    # ----- Statistical confidence interval -----
-    # Spec research area: "statistics-based methods to create prediction intervals
-    # around our conclusions". We estimate an 80% CI around the point Trust
-    # Score by combining:
-    #   (a) source completeness — how many of [name, address_state, capacity,
-    #       doctors_listed, operator_type, specialties, capability, equipment,
-    #       description, recency] are populated → wider CI when fewer fields
-    #   (b) flag-severity uncertainty — bootstrap-style perturbation of each
-    #       flag's deduction by ±0.4× its weight (a high-severity flag could
-    #       reasonably deduct 12-28 instead of exactly 20)
+    # ----- Uncertainty band (NOT a statistical confidence interval) -----
+    # `trust_score_ci_80` is a deterministic, hand-tuned band around the point
+    # score. No sampling or bootstrap is performed; the name keeps `ci_80`
+    # only for API compatibility. Half-width =
+    #   (a) 4..22 points from source completeness — how many of
+    #       [operator_type, year_established, capacity_beds, doctors_listed,
+    #       specialties, procedure, capability, equipment, description,
+    #       page_recency_days] are populated (fewer fields -> wider band)
+    #   (b) + 0.4 x each fired flag's deduction weight (a high-severity flag
+    #       adds 8 points of width), capped at 35 in total.
     completeness_fields = [
         bool(raw.get("operator_type")),
         bool(raw.get("year_established")),
@@ -235,8 +235,8 @@ async def trust_score(facility_id: str) -> dict[str, Any]:
             "Low trust — multiple contradictions or evidence gaps"
         ),
         "ci_interpretation": (
-            f"80% CI: [{ci_low}, {ci_high}]. CI width reflects source "
-            f"completeness ({int(completeness * 100)}%) + flag-severity uncertainty."
+            f"Uncertainty band (rule-based, not a statistical CI): [{ci_low}, {ci_high}]. "
+            f"Width reflects source completeness ({int(completeness * 100)}%) + flag severity."
         ),
     }
 

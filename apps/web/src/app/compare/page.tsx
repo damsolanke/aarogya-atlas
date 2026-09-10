@@ -38,9 +38,9 @@ const ROWS: Row[] = [
     weight: "Discovery 35%",
   },
   {
-    label: "Trust score with confidence interval",
-    detail: "Flags contradictions in source",
-    aarogya: "65/100, CI [50, 85]",
+    label: "Trust score with uncertainty band",
+    detail: "Flags contradictions in source (band is rule-based, not a statistical CI)",
+    aarogya: "65/100, band [50, 85]",
     chatgpt: "no",
     gmaps: "no",
     weight: "Discovery 35%",
@@ -179,7 +179,7 @@ export default function ComparePage() {
             Back to Aarogya Atlas
           </Link>
           <div className="text-[10.5px] font-semibold uppercase tracking-wider text-zinc-500">
-            Comparison · same query · 3 systems
+            Comparison · same query · 3 systems · hand-scored
           </div>
         </div>
       </header>
@@ -192,6 +192,11 @@ export default function ComparePage() {
           We asked Aarogya Atlas, ChatGPT (free, GPT-5), and Google Maps the
           same Indian-healthcare-discovery query. The query is the kind a real
           ASHA worker or NGO planner would type.
+        </p>
+        <p className="mt-2 max-w-2xl text-[12.5px] leading-relaxed text-amber-200/80">
+          Scores below were hand-assigned by the author for this one query in
+          April 2026 on the previous model stack. This is an illustration of
+          the capability gap, not an automated or independently run benchmark.
         </p>
 
         <div className="mt-6 rounded-xl border border-cyan-900/40 bg-cyan-950/20 px-4 py-3">
