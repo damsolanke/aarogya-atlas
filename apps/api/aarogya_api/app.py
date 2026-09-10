@@ -107,6 +107,16 @@ async def query(request: Request, req: QueryReq):
     Accepts either:
       - {"query": "..."}                                    (single-turn legacy)
       - {"messages": [{"role":"user"|"assistant", ...}]}   (multi-turn)
+
+    Events (`data: {"event": ..., "data": ...}` lines):
+      - step    {"type": "tool_request", "content", "tool_calls": [{name, args, runs_on}]}
+                {"type": "tool_result", "tool", "runs_on", "content": <json string>}
+      - final   {"text": <markdown>}
+      - critic  `aarogya_api.agent.CriticVerdict` — `status` is "ok" (with
+                `trust_score` 0-100 and `verdict` PASS/WARN/FAIL) or
+                "unavailable" (no score; the answer was not critic-verified)
+      - error   {"kind": empty_query|query_too_long|agent_disabled|rate_limited|
+                         iteration_cap|agent_exception, "text": <generic message>}
     """
     if req.messages:
         history = [{"role": m.role, "content": m.content} for m in req.messages]

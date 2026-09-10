@@ -15,11 +15,19 @@ export type CriticFlag = {
   evidence: string;
 };
 
+/**
+ * Mirrors `aarogya_api.agent.CriticVerdict`.
+ * status "ok": trust_score (0-100) + verdict are set.
+ * status "unavailable": the critic call failed — no score exists and the UI
+ * must render "Critic unavailable" instead of a number.
+ */
 export type CriticVerdict = {
-  trust_score: number;
-  verdict: "PASS" | "WARN" | "FAIL";
+  status: "ok" | "unavailable";
+  trust_score: number | null;
+  verdict: "PASS" | "WARN" | "FAIL" | null;
   flags: CriticFlag[];
   summary: string;
+  reason?: string | null;
 };
 
 export type StreamEvent =

@@ -52,7 +52,13 @@ export default function FinalAnswer({
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       className="overflow-hidden rounded-lg border border-zinc-800/80 bg-[var(--bg-card)]/70 shadow-xl shadow-black/30 backdrop-blur-sm"
     >
-      {critic && !streaming && <CriticBanner critic={critic} />}
+      {critic &&
+        !streaming &&
+        (critic.status === "unavailable" ? (
+          <CriticUnavailableBanner critic={critic} />
+        ) : (
+          <CriticBanner critic={critic} />
+        ))}
       <Header streaming={streaming} stats={parsed?.summary} />
 
       <div className="space-y-2.5 p-3.5">
@@ -125,6 +131,35 @@ function NowStamp({
    hero metric on every recommendation card: judges and users see it before
    they see anything else.
 ---------------------------------------------------------------------------- */
+
+function CriticUnavailableBanner({ critic }: { critic: CriticVerdict }) {
+  return (
+    <div className="border-b border-zinc-800/80 bg-gradient-to-r from-zinc-700/20 via-zinc-800/10 to-transparent">
+      <div className="flex w-full items-center gap-3 px-3.5 py-2.5 text-left">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-black/30 ring-1 ring-zinc-600/50">
+          <ShieldCheck className="h-4 w-4 text-zinc-400" />
+        </div>
+        <div className="flex-1 leading-tight">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400">
+              Critic unavailable
+            </span>
+            <span className="inline-flex h-1.5 w-1.5 rounded-full bg-zinc-500" />
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+              not verified
+            </span>
+          </div>
+          <div className="mt-0.5 text-[11.5px] text-zinc-400">
+            {critic.summary || "The critic pass did not complete; this answer carries no trust score."}
+            {critic.reason && (
+              <span className="ml-1 font-mono text-[10px] text-zinc-600">({critic.reason})</span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function CriticBanner({ critic }: { critic: CriticVerdict }) {
   const [open, setOpen] = useState(critic.verdict !== "PASS");
