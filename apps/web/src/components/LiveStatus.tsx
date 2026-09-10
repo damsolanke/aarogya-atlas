@@ -13,18 +13,21 @@ import {
   Wallet,
   CheckCircle2,
 } from "lucide-react";
-import type { TraceEvent } from "@/lib/api";
+import type { RunsOn, TraceEvent } from "@/lib/api";
+import { runsOnLabel } from "@/lib/useRuntime";
 
+// Labels only. Where a tool runs (on-device / cloud / host) comes from the
+// backend's `runs_on` on each event — see `aarogya_api.agent.tool_runs_on`.
 const TOOL_LABELS: Record<
   string,
-  { label: string; icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; local?: boolean }
+  { label: string; icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }> }
 > = {
   geocode:                       { label: "Locating",                icon: MapPin },
   facility_search:               { label: "Searching facilities",    icon: Search },
   check_hours:                   { label: "Checking hours",          icon: Clock },
   status_feed:                   { label: "Reading live status",     icon: Activity },
-  extract_capabilities_from_note:{ label: "Extracting on-device",    icon: FileText, local: true },
-  semantic_intake_search:        { label: "Semantic search on-device", icon: FileText, local: true },
+  extract_capabilities_from_note:{ label: "Extracting capabilities", icon: FileText },
+  semantic_intake_search:        { label: "Semantic search",         icon: FileText },
   estimate_journey:              { label: "Estimating journey",      icon: MapPin },
   total_out_of_pocket:           { label: "Computing total cost",    icon: Wallet },
   trust_score:                   { label: "Trust-scoring",           icon: ShieldCheck },
@@ -35,7 +38,7 @@ const TOOL_LABELS: Record<
 function deriveCurrentActivity(trace: TraceEvent[]): {
   label: string;
   icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
-  local?: boolean;
+  runsOn?: RunsOn;
   finished: boolean;
 } | null {
   for (let i = trace.length - 1; i >= 0; i--) {
@@ -43,7 +46,7 @@ function deriveCurrentActivity(trace: TraceEvent[]): {
     if (ev.type === "tool_request" && ev.tool_calls?.length) {
       const tc = ev.tool_calls[0];
       const meta = TOOL_LABELS[tc.name] || { label: tc.name, icon: Wrench };
-      return { label: meta.label, icon: meta.icon, local: meta.local, finished: false };
+      return { label: meta.label, icon: meta.icon, runsOn: tc.runs_on, finished: false };
     }
     if (ev.type === "thought") {
       return { label: "Reasoning", icon: Brain, finished: false };
@@ -84,9 +87,15 @@ export default function LiveStatus({
               <>
                 <activity.icon className="h-3.5 w-3.5" style={{color: "var(--accent-saffron)"}} />
                 <span className="text-[12px] text-zinc-100">{activity.label}</span>
-                {activity.local && (
-                  <span className="rounded border border-cyan-700/60 bg-cyan-950/60 px-1.5 py-px text-[9px] font-semibold uppercase tracking-wider text-cyan-300">
-                    on-device
+                {runsOnLabel(activity.runsOn) && (
+                  <span
+                    className={
+                      activity.runsOn === "device"
+                        ? "rounded border border-cyan-700/60 bg-cyan-950/60 px-1.5 py-px text-[9px] font-semibold uppercase tracking-wider text-cyan-300"
+                        : "rounded border border-amber-700/60 bg-amber-950/60 px-1.5 py-px text-[9px] font-semibold uppercase tracking-wider text-amber-300"
+                    }
+                  >
+                    {runsOnLabel(activity.runsOn)}
                   </span>
                 )}
               </>

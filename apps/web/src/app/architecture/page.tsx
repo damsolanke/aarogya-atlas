@@ -77,9 +77,12 @@ export default function ArchitecturePage() {
           Five planes — UI, supervisor, twelve tools, critic, data. The supervisor
           (GPT-OSS-120B via Groq, OpenAI-compatible function calling) coordinates
           the tools in a streaming loop, and every final answer is then graded by
-          a separate critic LLM that issues a 0–100 trust score + structured flags
-          before the user sees it. Vision triage routes to Gemini Flash-Lite (cloud)
-          or on-device medgemma; PHI tools run on-device; everything else runs in
+          a critic pass — a second call to the same Groq model with a strict
+          critic prompt — that issues a 0–100 trust score + structured flags
+          before the user sees it (or reports &quot;critic unavailable&quot;). Vision
+          triage routes to Gemini Flash-Lite (cloud) when GOOGLE_API_KEY is set,
+          else on-device medgemma; capability extraction runs on Groq when
+          GROQ_API_KEY is set, else on-device Ollama; everything else runs in
           Postgres or Databricks. Hover any tool to see what it does.
         </p>
 
