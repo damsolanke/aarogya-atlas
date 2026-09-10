@@ -75,6 +75,20 @@ export default function ReasoningDrawer({
 }
 
 function CriticRow({ critic }: { critic: CriticVerdict }) {
+  if (critic.status === "unavailable") {
+    return (
+      <div className="mt-2 rounded-md border border-zinc-700/50 bg-zinc-900/40 px-2.5 py-1.5">
+        <div className="flex items-center gap-2 text-[11.5px]">
+          <ShieldCheck className="h-3.5 w-3.5 text-zinc-500" />
+          <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+            critic unavailable
+          </span>
+          <span className="ml-auto font-mono text-[11px] text-zinc-500 tab-num">no score</span>
+        </div>
+        <div className="mt-1 pl-5 text-[11.5px] leading-snug text-zinc-400">{critic.summary}</div>
+      </div>
+    );
+  }
   const tone =
     critic.verdict === "PASS"
       ? { color: "text-emerald-300", bg: "bg-emerald-950/30", border: "border-emerald-800/40", dot: "bg-emerald-400" }
