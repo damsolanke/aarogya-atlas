@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import CountUp from "react-countup";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -24,14 +24,19 @@ import { useRuntime } from "@/lib/useRuntime";
  *     BEFORE they click anything
  *   - Suggestions row to start the live demo
  */
+const subscribeNoop = () => () => {};
+const getClientTrue = () => true;
+const getServerFalse = () => false;
+
 export default function IdleHero({
   onPick,
 }: {
   onPick: (q: string) => void;
 }) {
-  const [mounted, setMounted] = useState(false);
+  // True only after hydration: CountUp animates client-side, SSR renders
+  // the static number. useSyncExternalStore avoids setState-in-effect.
+  const mounted = useSyncExternalStore(subscribeNoop, getClientTrue, getServerFalse);
   const rt = useRuntime();
-  useEffect(() => setMounted(true), []);
 
   return (
     <div className="mx-auto max-w-2xl space-y-5 pt-2 pb-6">

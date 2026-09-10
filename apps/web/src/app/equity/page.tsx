@@ -253,14 +253,21 @@ const COUNTERFACTUAL_DISTRICTS = [
 function CounterfactualSlider() {
   const [district, setDistrict] = useState("Patna");
   const [beds, setBeds] = useState(10);
-  const [data, setData] = useState<Counterfactual | null>(null);
-  const [loading, setLoading] = useState(false);
+  // The result is keyed by the inputs that produced it, so "loading" is
+  // derived instead of being set synchronously inside the effect.
+  const [result, setResult] = useState<{ key: string; data: Counterfactual | null } | null>(null);
+  const key = `${district}:${beds}`;
+  const loading = result?.key !== key;
+  const data = result?.key === key ? result.data : null;
 
   useEffect(() => {
-    setLoading(true);
-    fetchCounterfactual(district, beds)
-      .then(setData)
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    fetchCounterfactual(district, beds).then((d) => {
+      if (!cancelled) setResult({ key: `${district}:${beds}`, data: d });
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [district, beds]);
 
   return (

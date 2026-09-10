@@ -54,7 +54,7 @@ export default function ReasoningDrawer({
             <ol className="space-y-px border-t border-zinc-800/60 px-2 py-2">
               {trace.map((step, i) => (
                 <li key={i}>
-                  <Row step={step} index={i} />
+                  <Row step={step} />
                 </li>
               ))}
               {critic && (
@@ -130,7 +130,7 @@ function CriticRow({ critic }: { critic: CriticVerdict }) {
   );
 }
 
-function Row({ step, index }: { step: TraceEvent; index: number }) {
+function Row({ step }: { step: TraceEvent }) {
   if (step.type === "thought") {
     return (
       <div className="flex gap-2.5 px-2 py-1.5">

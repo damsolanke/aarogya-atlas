@@ -95,12 +95,13 @@ function NowStamp({
   durationMs?: number;
   toolCalls?: number;
 }) {
-  const [, force] = useState(0);
+  // `now` lives in state so render stays pure; the interval advances it.
+  const [now, setNow] = useState(computedAt);
   useEffect(() => {
-    const id = setInterval(() => force((n) => n + 1), 1000);
+    const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
-  const ago = Math.max(0, Math.floor((Date.now() - computedAt) / 1000));
+  const ago = Math.max(0, Math.floor((now - computedAt) / 1000));
   const agoLabel = ago < 60 ? `${ago}s ago` : `${Math.floor(ago / 60)}m ago`;
   return (
     <div className="ticker mt-1 flex flex-wrap items-center justify-center gap-x-2">
@@ -552,25 +553,24 @@ function RecommendationCard({ rec }: { rec: RecommendationSection }) {
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
-  const Icon = iconForLabel(label);
   return (
     <div className="flex items-baseline gap-2 text-[12.5px] leading-snug">
-      <Icon className="h-3 w-3 shrink-0 translate-y-[2px] text-zinc-500" />
+      <LabelIcon label={label} className="h-3 w-3 shrink-0 translate-y-[2px] text-zinc-500" />
       <span className="shrink-0 text-zinc-500">{label}:</span>
       <span className="text-zinc-200">{value}</span>
     </div>
   );
 }
 
-function iconForLabel(label: string) {
+function LabelIcon({ label, className }: { label: string; className?: string }) {
   const l = label.toLowerCase();
-  if (l.includes("hour")) return Clock;
+  if (l.includes("hour")) return <Clock className={className} />;
   if (l.includes("payer") || l.includes("cost") || l.includes("total"))
-    return Wallet;
-  if (l.includes("trust")) return ShieldCheck;
-  if (l.includes("validator")) return CheckCircle2;
-  if (l.includes("distance") || l.includes("km")) return Navigation;
-  return Info;
+    return <Wallet className={className} />;
+  if (l.includes("trust")) return <ShieldCheck className={className} />;
+  if (l.includes("validator")) return <CheckCircle2 className={className} />;
+  if (l.includes("distance") || l.includes("km")) return <Navigation className={className} />;
+  return <Info className={className} />;
 }
 
 /* ----------------------------------------------------------------------------
@@ -804,7 +804,7 @@ function parseAnswer(text: string): ParsedAnswer {
   const blocks = text.split(/^##\s+/gm).filter((b) => b.trim().length > 0);
 
   const sections: ParsedSection[] = [];
-  let summary: SummaryStats = { trustFlagCount: 0 };
+  const summary: SummaryStats = { trustFlagCount: 0 };
   let primary: { name: string; location?: string } | undefined;
 
   // First block may be intro text without a heading
