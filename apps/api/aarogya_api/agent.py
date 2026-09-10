@@ -26,7 +26,7 @@ from groq import AsyncGroq, BadRequestError, APIStatusError, RateLimitError
 
 from . import tools as T
 from . import trust as TR
-from .observability import maybe_span, mlflow_enabled
+from .observability import maybe_span
 from .settings import settings
 
 
