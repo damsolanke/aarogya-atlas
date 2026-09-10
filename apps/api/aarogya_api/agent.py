@@ -24,6 +24,7 @@ from types import SimpleNamespace
 from typing import Any, AsyncIterator
 
 from groq import AsyncGroq, BadRequestError, APIStatusError, RateLimitError
+from jsonschema import Draft202012Validator
 
 from . import tools as T
 from . import trust as TR
@@ -220,6 +221,39 @@ TOOL_IMPLS = {
 # Tools that route to the on-device model. Used in the trace event so the UI
 # can label them with the "On-device" badge.
 LOCAL_TOOLS = {"extract_capabilities_from_note", "semantic_intake_search"}
+
+# name -> declared JSON schema, compiled once. Every tool call is validated
+# against this before the impl runs.
+TOOL_SCHEMAS: dict[str, dict[str, Any]] = {t["name"]: t["input_schema"] for t in TOOL_DEFS}
+_TOOL_VALIDATORS: dict[str, Draft202012Validator] = {
+    name: Draft202012Validator(schema) for name, schema in TOOL_SCHEMAS.items()
+}
+
+
+def _validate_tool_args(name: str, args: Any) -> list[str]:
+    """Check `args` against the tool's declared JSON schema.
+
+    Returns a list of human-readable problems (empty when valid). Besides the
+    schema itself, keys that are not declared in `properties` are rejected:
+    the impl is called as `impl(**args)`, so an undeclared key would raise a
+    TypeError instead of a structured error the model can act on.
+    """
+    validator = _TOOL_VALIDATORS.get(name)
+    if validator is None:
+        return [f"unknown tool: {name}"]
+    if not isinstance(args, dict):
+        return [f"arguments must be a JSON object, got {type(args).__name__}"]
+    problems: list[str] = []
+    for err in sorted(validator.iter_errors(args), key=lambda e: list(e.path)):
+        where = ".".join(str(p) for p in err.path) or "(root)"
+        problems.append(f"{where}: {err.message}")
+    declared = set(TOOL_SCHEMAS[name].get("properties", {}))
+    unexpected = sorted(set(args) - declared)
+    if unexpected:
+        problems.append(
+            f"unexpected argument(s) {unexpected}; allowed: {sorted(declared)}"
+        )
+    return problems
 
 
 SYSTEM_PROMPT = """Aarogya Atlas — agentic healthcare-facility intelligence for India. \
@@ -455,7 +489,18 @@ def client() -> AsyncGroq:
 async def _execute_tool(name: str, args: dict[str, Any]) -> Any:
     impl = TOOL_IMPLS.get(name)
     if impl is None:
-        return {"error": f"unknown tool: {name}"}
+        return {"error": "unknown_tool", "tool": name, "detail": f"unknown tool: {name}", "available_tools": sorted(TOOL_IMPLS)}
+    problems = _validate_tool_args(name, args)
+    if problems:
+        # Structured error back to the model so the next turn can self-correct
+        # with the exact schema in hand. Nothing is executed.
+        return {
+            "error": "invalid_arguments",
+            "tool": name,
+            "detail": problems,
+            "expected_schema": TOOL_SCHEMAS[name],
+            "hint": "Fix the arguments to match expected_schema and call the tool again.",
+        }
     is_local = name in LOCAL_TOOLS
     with maybe_span(
         f"tool.{name}",
