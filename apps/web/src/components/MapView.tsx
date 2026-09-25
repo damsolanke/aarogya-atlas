@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import maplibregl from "maplibre-gl";
+import * as maplibregl from "maplibre-gl";
+
+// Copied from node_modules by scripts/copy-maplibre-worker.mjs before dev/build.
+maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
 
 export type MapPin = {
   id: string;
