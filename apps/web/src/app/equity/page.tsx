@@ -262,9 +262,16 @@ function CounterfactualSlider() {
 
   useEffect(() => {
     let cancelled = false;
-    fetchCounterfactual(district, beds).then((d) => {
-      if (!cancelled) setResult({ key: `${district}:${beds}`, data: d });
-    });
+    const k = `${district}:${beds}`;
+    fetchCounterfactual(district, beds)
+      .then((d) => {
+        if (!cancelled) setResult({ key: k, data: d });
+      })
+      .catch(() => {
+        // A rejected fetch (API unreachable) must still settle this key, or
+        // `loading` stays true forever and the failure state never renders.
+        if (!cancelled) setResult({ key: k, data: null });
+      });
     return () => {
       cancelled = true;
     };
