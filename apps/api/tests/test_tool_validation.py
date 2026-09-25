@@ -103,3 +103,18 @@ def test_every_schema_is_a_valid_draft2020_schema(name):
     from jsonschema import Draft202012Validator
 
     Draft202012Validator.check_schema(TOOL_SCHEMAS[name])
+
+
+
+async def test_null_optional_arg_is_dropped_not_rejected(monkeypatch):
+    # models send `"when_iso": null`; the impl defaults it to None anyway
+    seen = {}
+
+    async def fake_check_hours(location_id, when_iso=None):
+        seen.update(location_id=location_id, when_iso=when_iso)
+        return {"ok": True}
+
+    monkeypatch.setitem(agent.TOOL_IMPLS, "check_hours", fake_check_hours)
+    out = await _execute_tool("check_hours", {"location_id": "vf-1", "when_iso": None})
+    assert out == {"ok": True}
+    assert seen == {"location_id": "vf-1", "when_iso": None}
