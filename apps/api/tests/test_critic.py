@@ -93,7 +93,7 @@ def test_normalise_clamps_and_derives_verdict():
     assert _normalise_critic_verdict({"trust_score": 60})["verdict"] == "WARN"
     assert _normalise_critic_verdict({"trust_score": 20})["verdict"] == "FAIL"
     out = _normalise_critic_verdict({"trust_score": 70, "flags": ["junk", {"severity": "severe", "issue": 3}], "summary": 5})
-    assert out["flags"] == [{"severity": "low", "issue": "3", "evidence": ""}]
+    assert out["flags"] == [{"severity": "high", "issue": "3", "evidence": ""}]
     assert out["summary"] == ""
 
 
@@ -102,3 +102,10 @@ def test_unavailable_verdict_cannot_carry_a_score():
         CriticVerdict(status="ok", trust_score=101)
     v = CriticVerdict(status="unavailable")
     assert v.trust_score is None and v.verdict is None
+
+
+def test_normalise_maps_severity_spellings():
+    # trust.py and models say "medium"/"HIGH"/"critical"; they must not collapse to low
+    out = _normalise_critic_verdict({"trust_score": 60, "flags": [
+        {"severity": s, "issue": "x"} for s in ("medium", "HIGH", "critical", "Low", "odd")]})
+    assert [f["severity"] for f in out["flags"]] == ["med", "high", "high", "low", "low"]

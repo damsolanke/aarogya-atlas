@@ -37,7 +37,7 @@ const tiroDevanagariHindi = Tiro_Devanagari_Hindi({
 export const metadata: Metadata = {
   title: "Aarogya Atlas — Agentic healthcare intelligence for 1.4B people",
   description:
-    "Trust-scored, cost-aware, multilingual recommender over the Virtue Foundation 10,000-facility India dataset. On-device PHI extraction, Mosaic AI Vector Search, MLflow tracing, district-level desert detection.",
+    "Trust-scored, cost-aware, multilingual recommender over the Virtue Foundation 10,000-facility India dataset. Cloud inference with an optional on-device mode, Mosaic AI Vector Search, MLflow tracing, district-level desert detection.",
   openGraph: {
     title: "Aarogya Atlas",
     description:

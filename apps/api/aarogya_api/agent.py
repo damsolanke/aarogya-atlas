@@ -520,7 +520,8 @@ def _normalise_critic_verdict(raw: Any) -> dict[str, Any]:
     for f in raw.get("flags") or []:
         if not isinstance(f, dict):
             continue
-        sev = f.get("severity")
+        sev = str(f.get("severity") or "").strip().lower()
+        sev = {"medium": "med", "moderate": "med", "critical": "high", "severe": "high"}.get(sev, sev)
         flags.append(CriticFlag(
             severity=sev if sev in ("high", "med", "low") else "low",
             issue=str(f.get("issue") or ""),
@@ -604,6 +605,10 @@ async def _execute_tool(name: str, args: dict[str, Any]) -> Any:
     impl = TOOL_IMPLS.get(name)
     if impl is None:
         return {"error": "unknown_tool", "tool": name, "detail": f"unknown tool: {name}", "available_tools": sorted(TOOL_IMPLS)}
+    if isinstance(args, dict):
+        # null for an optional argument means "not given": every optional impl
+        # parameter defaults to None, so drop it rather than fail the schema
+        args = {k: v for k, v in args.items() if v is not None}
     problems = _validate_tool_args(name, args)
     if problems:
         # Structured error back to the model so the next turn can self-correct

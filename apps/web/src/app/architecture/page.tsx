@@ -32,14 +32,14 @@ type Tool = {
 const TOOLS: Tool[] = [
   { name: "geocode", icon: MapPin, desc: "Nominatim → lat/lon" },
   { name: "facility_search", icon: Search, desc: "Postgres + Haversine" },
-  { name: "extract_capabilities_from_note", icon: FileText, local: true, desc: "Qwen 32B on Ollama (PHI-safe)" },
+  { name: "extract_capabilities_from_note", icon: FileText, desc: "Cloud LLM in the demo; local Qwen on Ollama when configured" },
   { name: "check_hours", icon: Clock, desc: "FHIR HealthcareService hours" },
   { name: "status_feed", icon: Activity, desc: "Crowd-sourced live updates" },
   { name: "semantic_intake_search", icon: FileText, local: true, desc: "bge-m3 on Ollama (multilingual)" },
   { name: "databricks_vector_search", icon: Cloud, databricks: true, desc: "Mosaic AI VS Delta Sync Index" },
   { name: "estimate_journey", icon: MapPin, desc: "KSRTC bus + auto-rickshaw" },
   { name: "total_out_of_pocket", icon: Wallet, desc: "MGNREGA wage-loss + treatment + transport" },
-  { name: "trust_score", icon: ShieldCheck, desc: "7 contradictions + 4 metadata signals + 80% CI" },
+  { name: "trust_score", icon: ShieldCheck, desc: "7 contradictions + 4 metadata signals + rule-based 80% band" },
   { name: "find_medical_deserts", icon: AlertTriangle, desc: "District-level coverage gaps" },
   { name: "validate_recommendation", icon: CheckCircle2, desc: "PASS / WARN / FAIL with cited evidence" },
 ];
@@ -253,9 +253,9 @@ export default function ArchitecturePage() {
             icon={Sparkles}
             tone="violet"
             items={[
-              "Trust Scorer with 80% bootstrap CI",
+              "Trust Scorer with a rule-based 80% band",
               "Validator agent (PASS/WARN/FAIL)",
-              "On-device Qwen 2.5 32B + bge-m3 for PHI",
+              "Optional on-device Qwen 2.5 32B + bge-m3 when run locally",
               "Mosaic AI Vector Search for cloud retrieval",
               "Cost ranker: ₹ + travel time + MGNREGA wage-loss",
             ]}
