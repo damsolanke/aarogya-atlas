@@ -94,6 +94,7 @@ async def healthz() -> dict[str, Any]:
     try:
         out["ollama"] = await ollama_healthcheck()
     except Exception:
+        logger.warning("healthz: ollama unreachable", exc_info=True)
         out["ollama_error"] = "ollama unreachable"
     out["tool_cache"] = cache_stats()
     return out
