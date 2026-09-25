@@ -39,7 +39,7 @@ const TOOLS: Tool[] = [
   { name: "databricks_vector_search", icon: Cloud, databricks: true, desc: "Mosaic AI VS Delta Sync Index" },
   { name: "estimate_journey", icon: MapPin, desc: "KSRTC bus + auto-rickshaw" },
   { name: "total_out_of_pocket", icon: Wallet, desc: "MGNREGA wage-loss + treatment + transport" },
-  { name: "trust_score", icon: ShieldCheck, desc: "7 contradictions + 4 metadata signals + rule-based 80% band" },
+  { name: "trust_score", icon: ShieldCheck, desc: "7 contradictions + 5 metadata signals + rule-based 80% band" },
   { name: "find_medical_deserts", icon: AlertTriangle, desc: "District-level coverage gaps" },
   { name: "validate_recommendation", icon: CheckCircle2, desc: "PASS / WARN / FAIL with cited evidence" },
 ];
