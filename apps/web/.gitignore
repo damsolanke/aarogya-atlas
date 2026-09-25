@@ -20,6 +20,9 @@
 # production
 /build
 
+# maplibre worker, copied from node_modules at dev/build time
+/public/maplibre/
+
 # misc
 .DS_Store
 *.pem
