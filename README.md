@@ -18,7 +18,7 @@
 [![License MIT](https://img.shields.io/badge/License-MIT-zinc?style=for-the-badge)](LICENSE)
 
 **▶ Live demo:** [**aarogya-atlas.vercel.app**](https://aarogya-atlas.vercel.app)
-· API: [**adesolanke-aarogya-atlas-api.hf.space**](https://adesolanke-aarogya-atlas-api.hf.space/healthz)
+· API: [**damsolanke-aarogya-atlas-api.hf.space**](https://damsolanke-aarogya-atlas-api.hf.space/healthz)
 
 [**60s video**](https://www.loom.com/share/5f67de77c1f24328b5d395275d07f249)
 
