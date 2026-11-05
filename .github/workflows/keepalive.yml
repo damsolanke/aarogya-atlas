@@ -1,0 +1,22 @@
+name: keepalive
+
+# The demo API runs on a free Hugging Face Space, which sleeps after 48 hours
+# without traffic. A daily request keeps the live demo answering on first load.
+on:
+  schedule:
+    - cron: "41 13 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    name: ping API Space
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: GET /healthz
+        run: >-
+          curl -fsS --retry 6 --retry-delay 20 --retry-all-errors --max-time 60
+          -o /dev/null -w '%{http_code} in %{time_total}s\n'
+          https://damsolanke-aarogya-atlas-api.hf.space/healthz
