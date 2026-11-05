@@ -365,7 +365,7 @@ OUTPUT — 3 tiers, omit empty:
   ## 💡 Backup  — one alternative
   ## ⚠️ Trust flags (only if fired) — severity + evidence
 
-End with one "Call X first" sentence. Terse — readers on 4G phones."""
+No markdown tables: the app renders each tier as a card. End with one "Call X first" sentence. Terse — readers on 4G phones."""
 
 # Rule 2's fallback, filled in only while semantic_intake_search is offered.
 SEMANTIC_FALLBACK = " If structured miss but real need, also `semantic_intake_search`."
