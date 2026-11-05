@@ -7,6 +7,8 @@ developer's local `.env` / shell exports cannot leak into a test run.
 
 from __future__ import annotations
 
+import time
+
 import pytest
 
 from aarogya_api.settings import Settings, settings
@@ -23,7 +25,7 @@ ENV_KEYS = (
 
 @pytest.fixture(autouse=True)
 def _clean_env(monkeypatch):
-    from aarogya_api import observability
+    from aarogya_api import local_llm, observability, tools
 
     for k in ENV_KEYS:
         monkeypatch.delenv(k, raising=False)
@@ -31,6 +33,14 @@ def _clean_env(monkeypatch):
     # .env with Databricks credentials. Mark it as already attempted + off.
     monkeypatch.setattr(observability, "_INIT_ATTEMPTED", True)
     monkeypatch.setattr(observability, "_MLFLOW_READY", False)
+
+    # Backend probes for the offered tool list: no Ollama, and Vector Search
+    # already checked and unusable, so no test reaches for the network.
+    async def _no_ollama() -> bool:
+        return False
+
+    monkeypatch.setattr(local_llm, "ollama_up", _no_ollama)
+    monkeypatch.setattr(tools, "_vs_usable_cache", (time.monotonic(), False, 3600.0))
     settings.cache_clear()
     yield
     settings.cache_clear()

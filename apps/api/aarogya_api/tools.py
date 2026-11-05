@@ -13,6 +13,7 @@ JSON-serialised and used as the key.
 from __future__ import annotations
 
 import json
+import time
 from collections import OrderedDict
 from datetime import datetime
 from typing import Any, Awaitable, Callable
@@ -296,6 +297,50 @@ async def status_feed(location_id: str, service: str) -> dict[str, Any]:
 # Semantic search over intake notes (the "10k messy records" angle)
 # ---------------------------------------------------------------------------
 
+_VS_INDEX = "workspace.aarogya.facilities_idx"
+
+# (checked_at, usable, ttl_s). An expired or revoked token, or a missing index,
+# fails every query, so the agent is not offered the tool and that answer is
+# kept 10 minutes. Timeouts, 429s, 5xx and an index still syncing can clear up,
+# so they are kept 30 seconds.
+_VS_USABLE_TTL_S = 600.0
+_VS_RETRY_TTL_S = 30.0
+_vs_usable_cache: tuple[float, bool, float] | None = None
+
+
+def _mark_vs_usable(usable: bool, ttl_s: float = _VS_USABLE_TTL_S) -> None:
+    global _vs_usable_cache
+    _vs_usable_cache = (time.monotonic(), usable, ttl_s)
+
+
+async def databricks_vs_usable() -> bool:
+    """True when Vector Search is configured, accepts the token and the index can serve."""
+    s = settings()
+    if not s.databricks_host or not s.databricks_token:
+        return False
+    if _vs_usable_cache is not None and time.monotonic() - _vs_usable_cache[0] < _vs_usable_cache[2]:
+        return _vs_usable_cache[1]
+    usable, ttl_s = False, _VS_RETRY_TTL_S
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as c:
+            r = await c.get(
+                f"{s.databricks_host}/api/2.0/vector-search/indexes/{_VS_INDEX}",
+                headers={"Authorization": f"Bearer {s.databricks_token}"},
+            )
+        if r.status_code == 200:
+            # A Delta Sync index answers 200 with status.ready false until it can serve.
+            ready = (r.json().get("status") or {}).get("ready")
+            usable = ready is not False
+            ttl_s = _VS_USABLE_TTL_S if usable else _VS_RETRY_TTL_S
+        elif r.status_code in (401, 403, 404):
+            ttl_s = _VS_USABLE_TTL_S
+    except Exception:
+        # Network error or an unreadable body: treat as down and check again soon.
+        usable, ttl_s = False, _VS_RETRY_TTL_S
+    _mark_vs_usable(usable, ttl_s)
+    return usable
+
+
 async def databricks_vector_search(query: str, k: int = 5) -> dict[str, Any]:
     """Mosaic AI Vector Search query against `workspace.aarogya.facilities_idx`.
 
@@ -308,7 +353,7 @@ async def databricks_vector_search(query: str, k: int = 5) -> dict[str, Any]:
     token = s.databricks_token
     if not host or not token:
         return {"error": "Databricks not configured (set DATABRICKS_HOST/TOKEN)"}
-    url = f"{host}/api/2.0/vector-search/indexes/workspace.aarogya.facilities_idx/query"
+    url = f"{host}/api/2.0/vector-search/indexes/{_VS_INDEX}/query"
     async with httpx.AsyncClient(timeout=20.0) as c:
         r = await c.post(
             url,
@@ -325,6 +370,8 @@ async def databricks_vector_search(query: str, k: int = 5) -> dict[str, Any]:
             },
         )
         if r.status_code >= 400:
+            if r.status_code in (401, 403):
+                _mark_vs_usable(False)
             return {"error": f"vector-search HTTP {r.status_code}: {r.text[:200]}"}
         j = r.json()
     cols = [c["name"] for c in j.get("manifest", {}).get("columns", [])]

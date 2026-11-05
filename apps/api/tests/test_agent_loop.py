@@ -113,7 +113,10 @@ async def test_tool_turn_then_final_then_critic(groq, fake_tools):
     assert [m["role"] for m in msgs] == ["system", "user", "assistant", "tool"]
     assert msgs[2]["tool_calls"][0]["id"] == "call_1"
     assert msgs[3]["tool_call_id"] == "call_1"
-    assert fake.calls[0]["tools"] == agent.TOOL_DEFS_GROQ and fake.calls[0]["tool_choice"] == "auto"
+    # conftest leaves Ollama and Vector Search down, so those two are not offered.
+    down = {"semantic_intake_search", "databricks_vector_search"}
+    assert fake.calls[0]["tools"] == [t for t in agent.TOOL_DEFS_GROQ if t["function"]["name"] not in down]
+    assert fake.calls[0]["tool_choice"] == "auto"
     # Critic call is a separate request with the critic system prompt.
     assert fake.calls[2]["messages"][0]["content"] == agent.CRITIC_SYSTEM_PROMPT
     assert fake.calls[2]["response_format"] == {"type": "json_object"}

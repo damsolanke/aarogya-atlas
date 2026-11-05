@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json as _json
 import os
+import time
 from typing import Any
 
 import httpx
@@ -62,6 +63,19 @@ async def _ollama_reachable() -> bool:
             return r.status_code == 200
     except Exception:
         return False
+
+
+_OLLAMA_UP_TTL_S = 60.0
+_ollama_up_cache: tuple[float, bool] | None = None
+
+
+async def ollama_up() -> bool:
+    """`_ollama_reachable()`, remembered for a minute: the agent asks on every query."""
+    global _ollama_up_cache
+    now = time.monotonic()
+    if _ollama_up_cache is None or now - _ollama_up_cache[0] > _OLLAMA_UP_TTL_S:
+        _ollama_up_cache = (now, await _ollama_reachable())
+    return _ollama_up_cache[1]
 
 
 async def embed(texts: list[str]) -> list[list[float]]:

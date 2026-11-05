@@ -27,6 +27,7 @@ from groq import AsyncGroq, BadRequestError, APIStatusError, RateLimitError
 from jsonschema import Draft202012Validator
 from pydantic import BaseModel, Field
 
+from . import local_llm
 from . import tools as T
 from . import trust as TR
 from .local_llm import chat_backend, groq_available, vision_backend
@@ -247,6 +248,22 @@ def tool_runs_on(name: str) -> RunsOn:
     return "host"
 
 
+async def offered_tool_names() -> set[str]:
+    """Tools the model is shown on this server right now.
+
+    A tool whose backend is missing (no Ollama on the hosted demo, a Databricks
+    token that no longer works) can only return an error. Offering it costs a
+    full supervisor turn of TPM budget and puts that error in the user's trace,
+    so it is left out instead.
+    """
+    names = set(TOOL_IMPLS)
+    if not await local_llm.ollama_up():
+        names -= _ALWAYS_DEVICE
+    if not await T.databricks_vs_usable():
+        names.discard("databricks_vector_search")
+    return names
+
+
 DEFAULT_MAX_ITERATIONS = 8
 
 
@@ -321,7 +338,7 @@ for NGO planners, ASHA workers, clinic coordinators, families. Data is messy.
 
 RULES
 1. Named place → ALWAYS `geocode` first. Never hallucinate coords.
-2. Facility search → `facility_search(lat,lon,capabilities,payer)`. If structured miss but real need, also `semantic_intake_search`.
+2. Facility search → `facility_search(lat,lon,capabilities,payer)`.{semantic_fallback}
 3. Raw intake notes → `extract_capabilities_from_note` first.
 4. Top 2-3 candidates → `estimate_journey` + `total_out_of_pocket`. Rank by ₹+time, not km. Urgency (PPH,MI,stroke,trauma,snakebite,anaphylaxis,neonatal sepsis) → surface AMBULANCE (108 free). Else show: 🚗 auto · 🚌 bus · 🚑 108.
 5. MANDATORY before recommending → `trust_score(id)`. <60 or high-severity flag → switch facility or surface the contradiction.
@@ -349,6 +366,9 @@ OUTPUT — 3 tiers, omit empty:
   ## ⚠️ Trust flags (only if fired) — severity + evidence
 
 End with one "Call X first" sentence. Terse — readers on 4G phones."""
+
+# Rule 2's fallback, filled in only while semantic_intake_search is offered.
+SEMANTIC_FALLBACK = " If structured miss but real need, also `semantic_intake_search`."
 
 
 # ---------------------------------------------------------------------------
@@ -601,10 +621,20 @@ def client() -> AsyncGroq:
 # Tool execution
 # ---------------------------------------------------------------------------
 
-async def _execute_tool(name: str, args: dict[str, Any]) -> Any:
+async def _execute_tool(name: str, args: dict[str, Any], offered: set[str] | None = None) -> Any:
     impl = TOOL_IMPLS.get(name)
     if impl is None:
-        return {"error": "unknown_tool", "tool": name, "detail": f"unknown tool: {name}", "available_tools": sorted(TOOL_IMPLS)}
+        listed = sorted(TOOL_IMPLS if offered is None else offered)
+        return {"error": "unknown_tool", "tool": name, "detail": f"unknown tool: {name}", "available_tools": listed}
+    if offered is not None and name not in offered:
+        # Reachable through tool_use_failed recovery, which rebuilds calls from
+        # the model's raw text without checking them against the tools sent.
+        return {
+            "error": "tool_unavailable",
+            "tool": name,
+            "detail": f"{name} is not available on this server",
+            "available_tools": sorted(offered),
+        }
     if isinstance(args, dict):
         # null for an optional argument means "not given": every optional impl
         # parameter defaults to None, so drop it rather than fail the schema
@@ -711,7 +741,16 @@ async def stream_answer(
         }}
         return
 
-    system = SYSTEM_PROMPT.format(now_iso=datetime.now().isoformat(timespec="seconds"))
+    offered = await offered_tool_names()
+    tools = [t for t in TOOL_DEFS_GROQ if t["function"]["name"] in offered]
+    system = SYSTEM_PROMPT.format(
+        now_iso=datetime.now().isoformat(timespec="seconds"),
+        semantic_fallback=SEMANTIC_FALLBACK if "semantic_intake_search" in offered else "",
+    )
+    unavailable = [name for name in TOOL_IMPLS if name not in offered]
+    if unavailable:
+        # Backstop: earlier turns of the conversation can still name these tools.
+        system += f"\n\nNot available on this server: {', '.join(unavailable)}. Do not call them."
     # OpenAI-style: system goes first, then the full conversation history.
     messages: list[dict[str, Any]] = [{"role": "system", "content": system}, *norm]
 
@@ -723,7 +762,7 @@ async def stream_answer(
     ) as agent_span:
         final_text: str | None = None
         try:
-            async for ev in _agent_loop(s, aclient, messages, max_iterations, agent_span):
+            async for ev in _agent_loop(s, aclient, messages, max_iterations, agent_span, tools, offered):
                 yield ev
                 if ev.get("event") == "final":
                     final_text = ev.get("data", {}).get("text", "")
@@ -890,6 +929,7 @@ async def _supervisor_turn(
     s,
     aclient: AsyncGroq,
     messages: list[dict[str, Any]],
+    tools: list[dict[str, Any]] = TOOL_DEFS_GROQ,
 ):
     """One supervisor iteration with `tool_use_failed` recovery + self-correcting
     rate-limit / payload-size handling.
@@ -911,7 +951,7 @@ async def _supervisor_turn(
                 # 1200 is plenty for either a tool-call turn or a final answer.
                 max_tokens=1200,
                 messages=messages,
-                tools=TOOL_DEFS_GROQ,
+                tools=tools,
                 tool_choice="auto",
                 temperature=0.0 if attempt > 0 else 0.2,
                 **extra,
@@ -965,7 +1005,9 @@ async def _supervisor_turn(
     raise RuntimeError("supervisor turn: unreachable state")
 
 
-async def _agent_loop(s, aclient, messages, max_iterations, agent_span) -> AsyncIterator[dict[str, Any]]:
+async def _agent_loop(
+    s, aclient, messages, max_iterations, agent_span, tools=TOOL_DEFS_GROQ, offered=None
+) -> AsyncIterator[dict[str, Any]]:
     for _iter in range(max_iterations):
         with maybe_span(
             f"supervisor.turn_{_iter}",
@@ -974,7 +1016,7 @@ async def _agent_loop(s, aclient, messages, max_iterations, agent_span) -> Async
             attributes={"iteration": _iter},
         ) as turn_span:
             assistant_msg, finish_reason, usage, recovered = await _supervisor_turn(
-                s, aclient, messages
+                s, aclient, messages, tools
             )
             turn_span.set_outputs({
                 "finish_reason": finish_reason,
@@ -1028,7 +1070,7 @@ async def _agent_loop(s, aclient, messages, max_iterations, agent_span) -> Async
         # trust_score, validate_recommendation, journey, cost) are independent IO.
         # asyncio.gather collapses the wall-clock.
         results = await asyncio.gather(
-            *(_execute_tool(tc.function.name, args) for tc, args in zip(tool_calls, parsed_args_list)),
+            *(_execute_tool(tc.function.name, args, offered) for tc, args in zip(tool_calls, parsed_args_list)),
             return_exceptions=True,
         )
 
